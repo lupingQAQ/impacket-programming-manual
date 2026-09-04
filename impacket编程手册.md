@@ -1,4 +1,4 @@
-# impacket编程手册
+﻿# impacket编程手册
 
 **author:鲁平**
 
@@ -6,14 +6,37 @@
 
 
 
-impacket包是一个常用的“域渗透工具包”,在他的example文件夹下有很多利用该工具包对域控进行操作的脚本，基本满足域渗透需求
-也是因为这个原因导致网上的文章全是介绍他的示例文件的使用的文章，而基本没有介绍如何利用他对域渗透遇到的场景进行脚本开发的文章，然而正相反的是，在后续的很多域漏洞的利用脚本中都直接使用了impacket模块进行开发，如sam-the-admin、CVE-2022-33679等 ，所以在这里补充一下，方便日后出现漏洞时及时利用impacket改自己的poc
+impacket 是一个常用的“域渗透工具包”，其 examples 文件夹下提供了大量对域控进行操作的脚本，基本覆盖域渗透的常规需求。也正因如此，网上的文章大多集中在介绍这些示例脚本的用法，而基本没有讲如何利用 impacket 针对域渗透中的实际场景做脚本开发的文章。恰恰相反，后续很多域漏洞的利用脚本都是直接基于 impacket 模块开发的（如 sam-the-admin、CVE-2022-33679 等），所以在这里补充这部分内容，方便日后出现新漏洞时，能及时利用 impacket 编写自己的 PoC。
+
+## 阅读指南
+
+本手册按「基础 → 认证与目录 → RPC 接口 → DCOM/WMI → 基础库」的顺序组织，建议的阅读路线如下：
+
+| 部分 | 章节 | 内容 | 前置知识 |
+| :--- | :--- | :--- | :--- |
+| 第一部分 预备与基础 | 第 1 章 impacket 总览与目录结构 | 各模块在源码树中的位置 | 无 |
+| | 第 2 章 structure.py 通用序列化基类 | 所有协议包结构的公共基类 | 无 |
+| 第二部分 认证与目录服务 | 第 3 章 LDAP（ldap） | 域内目录查询、ACL 结构 | 第 2 章 |
+| | 第 4 章 Kerberos（krb5） | 域认证核心：票据、凭据缓存、PAC、GSS-API/SPNEGO | 第 2 章 |
+| 第三部分 DCE/RPC | 第 5 章 dcerpc | 先读 RPC 编程基础（NDR、rpcrt、epm、transport），再按功能组选读各接口模块 | 第 2、4 章 |
+| 第四部分 DCOM 与 WMI | 第 6 章 MS-DCOM | DCOM 编程、dcomrt、oaut/wmi 等子模块 | 第 5 章 |
+| 第五部分 基础库 | 第 7 章 common | SMB、DPAPI、NTDS 等基础支撑模块速览 | 按需 |
+
+第三部分中，dcerpc 的接口模块按功能可分为五组（正文大体按此组织，可按组选读）：
+
+1. **基础与传输**：ndr、dtypes、rpcrt、enum、epm、transport；
+2. **安全策略与域认证**：lsad、lsat、mgmt、mimilib、nrpc（Zerologon）、samr；
+3. **系统与运维**：even6、iphlp、rrp（注册表）、rprn / par（打印）、srvs（共享）、wkst、tsts、MS-TSCH（计划任务）、dhcpm；
+4. **Exchange 相关**：nspi、oxabref、rpch；
+5. **凭据与目录复制**：bkrp、drsuapi（DCSync）、dssp。
 
 [TOC]
 
 
 
-## impacket目录结构
+# 第一部分 预备与基础
+
+## 第 1 章 impacket 总览与目录结构
 
 
 ```
@@ -191,322 +214,11 @@ C:.
         ldaptypes.py
         __init__.py
 ```
-接下来就让我们逐步分析各个文件的关键函数及方法
+接下来逐步分析各模块的关键函数与方法。
 
+## 第 2 章 通用序列化基类 structure.py
 
-
-
-
-## ldap
-
-### ldap.py
-这个文件里面放的主要是ldap、ldaps、gc和kerberos协议的登录函数
-
-```python
-	def login(self, user='', password='', domain='', lmhash='', nthash='',authenticationChoice='sicilyNegotiate'):
-        .....
-
-    def kerberosLogin(self, user, password, domain='', lmhash='', nthash='', aesKey='', kdcHost=None, TGT=None,TGS=None, useCache=True):
-        .....
-```
-
-还有ldap进行搜索操作的函数
-
-```python
-    def search(self, searchBase=None, scope=None, derefAliases=None, sizeLimit=0, timeLimit=0, typesOnly=False,searchFilter='(objectClass=*)', attributes=None, searchControls=None, perRecordCallback=None):
-```
-
-剩下的函数主要是配合search函数进行搜索的filter函数和发送bind请求和search请求的sendrecive函数，以及错误处理函数
-
-ldap.py中的3个重要函数也是未来我们编写脚本不管是域内还是域外最常用的几个函数
-
-这边顺便说下gc协议，通俗理解就是相当于一个缓存数据库接口，gc全局编录服务器是 Active Directory 域服务 (AD DS) 林中所有对象的集合。全局编录服务器是一个域控制器，它存储林中主持域的目录中所有对象的完全副本，以及所有其他域中所有对象的部分只读副本。全局编录服务器响应全局编录查询。，端口是3268和3269（扫域控的端口又增加了hhh）
-
-### ldapasn1.py
-
-这里面放的主要是ldap请求中各个参数的数据结构，可以类比成go编程中的struct结构体
-
-```python
-class SearchResultEntry(univ.Sequence):
-    tagSet = univ.Sequence.tagSet.tagImplicitly(tag.Tag(tag.tagClassApplication, tag.tagFormatConstructed, 4))
-    componentType = namedtype.NamedTypes(
-        namedtype.NamedType('objectName', LDAPDN()),
-        namedtype.NamedType('attributes', PartialAttributeList())
-    )
-```
-
-一般用在回调函数中判定请求的结构是否正确
-
-```python
-eg.examples/GetADUsers.py
-
-
-   def run(self):
-        .....
-        try:
-            logging.debug('Search Filter=%s' % searchFilter)
-            sc = ldap.SimplePagedResultsControl(size=100)
-            ldapConnection.search(searchFilter=searchFilter,
-                                  attributes=['sAMAccountName', 'pwdLastSet', 'mail', 'lastLogon'],
-                                  sizeLimit=0, searchControls = [sc], perRecordCallback=self.processRecord)
-          ......
-
-  def processRecord(self, item):
-        if isinstance(item, ldapasn1.SearchResultEntry) is not True:
-            return
-        	.....
-```
-
-这边插一个pyasn1官方的示例
-
-```python
-使用 pyasn1，您可以从 ASN.1 数据结构构建 Python 对象。例如，下面的 ASN.1 数据结构：
-
-Record ::= SEQUENCE {
-  id        INTEGER,
-  room  [0] INTEGER OPTIONAL,
-  house [1] INTEGER DEFAULT 0
-}
-可以这样在 pyasn1 中表达：
-
-class Record(Sequence):
-    componentType = NamedTypes(
-        NamedType('id', Integer()),
-        OptionalNamedType(
-            'room', Integer().subtype(
-                implicitTag=Tag(tagClassContext, tagFormatSimple, 0)
-            )
-        ),
-        DefaultedNamedType(
-            'house', Integer(0).subtype(
-                implicitTag=Tag(tagClassContext, tagFormatSimple, 1)
-            )
-        )
-    )
-```
-
-### ldaptypes.py
-
-这里面放的主要是acl中各安全描述符的结构体ACE、DACL等等
-
-```python
-ACE_TYPES = [
-    ACCESS_ALLOWED_ACE,
-    ACCESS_ALLOWED_OBJECT_ACE,
-    ACCESS_DENIED_ACE,
-    ACCESS_DENIED_OBJECT_ACE,
-    ACCESS_ALLOWED_CALLBACK_ACE,
-    ACCESS_DENIED_CALLBACK_ACE,
-    ACCESS_ALLOWED_CALLBACK_OBJECT_ACE,
-    ACCESS_DENIED_CALLBACK_OBJECT_ACE,
-    SYSTEM_AUDIT_ACE,
-    SYSTEM_AUDIT_OBJECT_ACE,
-    SYSTEM_AUDIT_CALLBACK_ACE,
-    SYSTEM_MANDATORY_LABEL_ACE,
-    SYSTEM_AUDIT_CALLBACK_OBJECT_ACE,
-    SYSTEM_RESOURCE_ATTRIBUTE_ACE,
-    SYSTEM_SCOPED_POLICY_ID_ACE
-]
-```
-
-实际使用中主要用来构造关于acl变更的请求
-
-```python
- eg./examples/ldap_shell.py
-    def create_allow_ace(self, sid):
-        nace = ldaptypes.ACE()
-        nace['AceType'] = ldaptypes.ACCESS_ALLOWED_ACE.ACE_TYPE
-        nace['AceFlags'] = 0x00
-        acedata = ldaptypes.ACCESS_ALLOWED_ACE()
-        acedata['Mask'] = ldaptypes.ACCESS_MASK()
-        acedata['Mask']['Mask'] = 983551 # Full control
-        acedata['Sid'] = ldaptypes.LDAP_SID()
-        acedata['Sid'].fromCanonical(sid)
-        nace['Ace'] = acedata
-        return nace
-```
-
-## krb5
-
-### asn1.py
-
-在asn1.py中主要定义了，定义了kerberos协议中各个请求的数据包格式，如AS_REP,TGS_REP等等
-
-```python
-class AS_REP(KDC_REP):
-    tagSet = _application_tag(constants.ApplicationTagNumbers.AS_REP.value)
-
-class TGS_REP(KDC_REP):
-    tagSet = _application_tag(constants.ApplicationTagNumbers.TGS_REP.value)
-```
-
-这里值得注意的也是我们在krb5协议认证中常见的几种请求与：
-
-**AS_REP, TGS_REQ, AP_REQ, TGS_REP, Authenticator（认证类）, EncASRepPart（AS请求加密部分）,AuthorizationData等等**
-
-具体的使用方式可以去参考examples中涉及kerberos认证的脚本，如getST、ticketer等等,可以看到对各个证书请求过程中进行kerberos认证对asn1脚本各个数据结构的调用和赋值
-
-````python
-eg.impacket/examples/goldenPac.py 
-
-   def getKerberosTGS(self, serverName, domain, kdcHost, tgt, cipher, sessionKey, authTime):
-        ......
-        # Key Usage 4
-        # TGS-REQ KDC-REQ-BODY AuthorizationData, encrypted with
-        # the TGS session key (Section 5.4.1)
-        encryptedEncodedIfRelevant = cipher.encrypt(sessionKey, 4, encodedIfRelevant, None)
-
-        tgsReq = TGS_REQ()
-        reqBody = seq_set(tgsReq, 'req-body')
-
-        opts = list()
-        opts.append( constants.KDCOptions.forwardable.value )
-        opts.append( constants.KDCOptions.renewable.value )
-        opts.append( constants.KDCOptions.proxiable.value )
-
-        reqBody['kdc-options'] = constants.encodeFlags(opts)
-        seq_set(reqBody, 'sname', serverName.components_to_asn1)
-        reqBody['realm'] = decodedTGT['crealm'].prettyPrint()
-
-        now = datetime.datetime.utcnow() + datetime.timedelta(days=1)
-
-        reqBody['till'] = KerberosTime.to_asn1(now)
-        reqBody['nonce'] = random.SystemRandom().getrandbits(31)
-        seq_set_iter(reqBody, 'etype', (cipher.enctype,))
-        reqBody['enc-authorization-data'] = noValue
-        reqBody['enc-authorization-data']['etype'] = int(cipher.enctype)
-        reqBody['enc-authorization-data']['cipher'] = encryptedEncodedIfRelevant
-
-        apReq = AP_REQ()
-        apReq['pvno'] = 5
-        apReq['msg-type'] = int(constants.ApplicationTagNumbers.AP_REQ.value)
-
-        opts = list()
-        apReq['ap-options'] =  constants.encodeFlags(opts)
-        seq_set(apReq,'ticket', ticket.to_asn1)
-
-        authenticator = Authenticator()
-        authenticator['authenticator-vno'] = 5
-        authenticator['crealm'] = decodedTGT['crealm'].prettyPrint()
-
-        clientName = Principal()
-        clientName.from_asn1( decodedTGT, 'crealm', 'cname')
-
-        seq_set(authenticator, 'cname', clientName.components_to_asn1)
-
-        now = datetime.datetime.utcnow() 
-        authenticator['cusec'] =  now.microsecond
-        authenticator['ctime'] = KerberosTime.to_asn1(now)
-
-        encodedAuthenticator = encoder.encode(authenticator)
-        ......
-````
-
-### constants.py
-
-主要包含的是krb5认证中设计的各个flag,error_code,主体类型等静态enum变量,方便认证时调用
-
-```python
-eg.examples/GetUserSPNs.py
-......
-from impacket.examples import logger
-from impacket.examples.utils import parse_credentials
-from impacket.krb5 import constants
-        # No TGT in cache, request it
-        userName = Principal(self.__username, type=constants.PrincipalNameType.NT_PRINCIPAL.value)
-
-```
-
-```python
-eg.krb5/constants.py
-class PrincipalNameType(Enum):
-    NT_UNKNOWN              = 0
-    NT_PRINCIPAL            = 1
-    NT_SRV_INST             = 2
-    NT_SRV_HST              = 3
-    NT_SRV_XHST             = 4
-    NT_UID                  = 5
-    NT_X500_PRINCIPAL       = 6
-    NT_SMTP_NAME            = 7
-    NT_ENTERPRISE           = 10
-    NT_WELLKNOWN            = 11
-    NT_SRV_HST_DOMAIN       = 12
-    NT_MS_PRINCIPAL         = -128
-    NT_MS_PRINCIPAL_AND_ID  = -129
-    NT_ENT_PRINCIPAL_AND_ID = -130
-```
-
-### Keytab.py
-
-这个同样顾名思义就是包含了一系列用来解析或保存keytab文件的py类及函数，keytab是保存了Principal身份的密钥表文件，使用形式类似.id_rsa的ssh身份校验私钥，方便用来通过kr5进行身份校验，一般保存在/etc/security/keytabs/nn.service.keytab中,以CDH生成并使用keytab文件举例
-
-```shell
- 1、进入到kerberos
-
-  kadmin.local
-
-2、查看kerberos成员
-
-listprincs
-
-3、添加kerberos成员
-
-kadmin -p 'kdcadmin/admin' -w "-s" -q 'addprinc -randkey hive'
-
-4、生成keytab文件
-
-ktadd -k   /home/kerberos/hive.keytab -norandkey hive@TEST.COM
-
-5、使用生成的keytab文件认证用户
-
-kinit -kt  /home/kerberos/hive.keytab hive/bdp4@TEST.COM
-
-6、查看当前认证用户
-
-klist
-
-7、使用beeline远程访问
-
-beeline -u “jdbc:hive2://1*92.168.86.130:10000/default;principal=hive/bdp4@TEST.COM”
-```
-
-keytab文件格式如下
-
-```c++
- keytab {
-      uint16_t file_format_version;                    /* 0x502 */
-      keytab_entry entries[*];
-  };
-
-  keytab_entry {
-      int32_t size;
-      uint16_t num_components;    /* sub 1 if version 0x501 */
-      counted_octet_string realm; 域名
-      counted_octet_string components[num_components]; 主体名称
-      uint32_t name_type;   /* not present if version 0x501 */ 主体类型
-      uint32_t timestamp; 时间戳
-      uint8_t vno8; 密钥版本号
-      keyblock key;
-      uint32_t vno; /* only present if >= 4 bytes left in entry */
-  };
-
-  counted_octet_string {
-      uint16_t length;
-      uint8_t data[length];
-  };
-
-  keyblock {
-      uint16_t type; 加密类型
-      counted_octet_string;加密key
-  };
-
-```
-
-在keytab类的getData(),getKey()函数中也可以看到对keytab文件中数据结构的解析和取值
-
-#### structure.py
-
-在这个文件中每个类的开头还调用了Structure.py中的Structure类,接下来我们可以看下他是用来做什么的,在文件的开头,可以看到大量的注释解释了一种数据格式描述,感觉可以理解为标准数据格式的一种扩充,数据类型对比时有点像正则，其中的pack和unpack像是包装类对提供的变量进行类型转换等操作(如果理解不够全面,希望得到大佬指错),用来表述smb\rpc\krb等域内通信协议的请求包结构
+impacket 根目录的 structure.py 定义了 Structure 基类——keytab.py、ccache.py、smb3structs.py 等文件中的每个类都继承自它，是全书后续所有协议包结构的基础。文件开头的大段注释解释了一种数据格式描述语言：可以理解为对标准 struct 格式的扩充，数据类型的写法有点像正则，pack / unpack 则负责按格式对变量进行组包 / 解包（如有理解偏差，欢迎指正）。它被用来描述 SMB、RPC、Kerberos 等域内通信协议的请求包结构。
 
 ```python
     """ sublcasses can define commonHdr and/or structure.
@@ -563,7 +275,7 @@ keytab文件格式如下
             'xxxx   literal xxxx (field's value doesn't change the output. quotes must not be closed or escaped)
             "xxxx   literal xxxx (field's value doesn't change the output. quotes must not be closed or escaped)
             _       will not pack the field. Accepts a third argument, which is an unpack code. See _Test_UnpackCode for an example
-            ?=packcode  will evaluate packcode in the context of the structure, and pack the result as specified by ?. Unpacking is made plain
+            ?=packcode  will evaluate packcode in the context of the structure, and pack the result as specified with ?. Unpacking is made plain
             ?&fieldname "Address of field fieldname".
                         For packing it will simply pack the id() of fieldname. Or use 0 if fieldname doesn't exists.
                         For unpacking, it's used to know weather fieldname has to be unpacked or not, i.e. by adding a & field you turn another field (fieldname) in an optional field.
@@ -571,10 +283,10 @@ keytab文件格式如下
     """
 ```
 
-这里以smb协议举例
+这里以 SMB 协议举例：
 
 ```python
-eg./impacket/smb3structs.py
+# eg./impacket/smb3structs.py
 
 class SMB2Negotiate(Structure):
     structure = (
@@ -592,7 +304,7 @@ class SMB2Negotiate(Structure):
     )
 ```
 
-同样的应用也可以在ccache.py文件中对kerberos凭据的二进制缓冲文件中看到
+同样的应用也可以在 ccache.py 中看到——它用于解析 Kerberos 凭据的二进制缓冲文件：
 
 ```python
 class Header(Structure):
@@ -604,11 +316,324 @@ class Header(Structure):
     )
 ```
 
-### ccache.py
+# 第二部分 认证与目录服务
 
-正如上面所说,ccache.py中是对kerberos凭据的二进制缓冲文件的解析的类,如Credential中的toTGT,toTGS等函数,首先让我们看下ccache缓存文件的结构
+## 第 3 章 LDAP 目录服务（ldap）
+
+
+
+
+
+### ldap.py
+该文件主要实现了 LDAP、LDAPS、GC（全局编录）和 Kerberos 协议的登录函数。
+
+```python
+	def login(self, user='', password='', domain='', lmhash='', nthash='',authenticationChoice='sicilyNegotiate'):
+        .....
+
+    def kerberosLogin(self, user, password, domain='', lmhash='', nthash='', aesKey='', kdcHost=None, TGT=None,TGS=None, useCache=True):
+        .....
+```
+
+还有ldap进行搜索操作的函数
+
+```python
+    def search(self, searchBase=None, scope=None, derefAliases=None, sizeLimit=0, timeLimit=0, typesOnly=False,searchFilter='(objectClass=*)', attributes=None, searchControls=None, perRecordCallback=None):
+```
+
+其余函数主要是配合 search 的过滤器函数、发送 bind / search 请求的 sendReceive 函数，以及错误处理函数。
+
+ldap.py 中这 3 个函数，是后续编写脚本时（无论域内还是域外）最常用的函数。
+
+这边顺便说下 GC 协议：全局编录（Global Catalog）可以通俗理解为一个跨域的缓存数据库接口。全局编录服务器是 Active Directory 域服务（AD DS）林中所有对象的集合——它是一个域控制器，存储本域目录中所有对象的完全副本，以及林中其他域对象的部分只读副本，用于响应全局编录查询。端口为 3268（LDAP）和 3269（LDAPS），扫描域控时又可以多关注两个端口了。
+
+### ldapasn1.py
+
+该文件主要定义了 LDAP 请求中各参数的数据结构，可以类比成 Go 编程中的 struct。
+
+```python
+class SearchResultEntry(univ.Sequence):
+    tagSet = univ.Sequence.tagSet.tagImplicitly(tag.Tag(tag.tagClassApplication, tag.tagFormatConstructed, 4))
+    componentType = namedtype.NamedTypes(
+        namedtype.NamedType('objectName', LDAPDN()),
+        namedtype.NamedType('attributes', PartialAttributeList())
+    )
+```
+
+一般用在回调函数中判定请求的结构是否正确
+
+```python
+# eg.examples/GetADUsers.py
+
+
+   def run(self):
+        .....
+        try:
+            logging.debug('Search Filter=%s' % searchFilter)
+            sc = ldap.SimplePagedResultsControl(size=100)
+            ldapConnection.search(searchFilter=searchFilter,
+                                  attributes=['sAMAccountName', 'pwdLastSet', 'mail', 'lastLogon'],
+                                  sizeLimit=0, searchControls = [sc], perRecordCallback=self.processRecord)
+          ......
+
+  def processRecord(self, item):
+        if isinstance(item, ldapasn1.SearchResultEntry) is not True:
+            return
+        	.....
+```
+
+这边插一个 pyasn1 官方示例。使用 pyasn1 可以从 ASN.1 数据结构构建 Python 对象，例如下面的 ASN.1 数据结构：
+
+```asn1
+Record ::= SEQUENCE {
+  id        INTEGER,
+  room  [0] INTEGER OPTIONAL,
+  house [1] INTEGER DEFAULT 0
+}
+```
+
+可以这样在 pyasn1 中表达：
+
+```python
+class Record(Sequence):
+    componentType = NamedTypes(
+        NamedType('id', Integer()),
+        OptionalNamedType(
+            'room', Integer().subtype(
+                implicitTag=Tag(tagClassContext, tagFormatSimple, 0)
+            )
+        ),
+        DefaultedNamedType(
+            'house', Integer(0).subtype(
+                implicitTag=Tag(tagClassContext, tagFormatSimple, 1)
+            )
+        )
+    )
+```
+
+### ldaptypes.py
+
+该文件主要定义了 ACL 中各类安全描述符结构（ACE、DACL 等）。
+
+```python
+ACE_TYPES = [
+    ACCESS_ALLOWED_ACE,
+    ACCESS_ALLOWED_OBJECT_ACE,
+    ACCESS_DENIED_ACE,
+    ACCESS_DENIED_OBJECT_ACE,
+    ACCESS_ALLOWED_CALLBACK_ACE,
+    ACCESS_DENIED_CALLBACK_ACE,
+    ACCESS_ALLOWED_CALLBACK_OBJECT_ACE,
+    ACCESS_DENIED_CALLBACK_OBJECT_ACE,
+    SYSTEM_AUDIT_ACE,
+    SYSTEM_AUDIT_OBJECT_ACE,
+    SYSTEM_AUDIT_CALLBACK_ACE,
+    SYSTEM_MANDATORY_LABEL_ACE,
+    SYSTEM_AUDIT_CALLBACK_OBJECT_ACE,
+    SYSTEM_RESOURCE_ATTRIBUTE_ACE,
+    SYSTEM_SCOPED_POLICY_ID_ACE
+]
+```
+
+实际使用中主要用于构造 ACL 变更相关的请求。
+
+```python
+ #  eg./examples/ldap_shell.py
+    def create_allow_ace(self, sid):
+        nace = ldaptypes.ACE()
+        nace['AceType'] = ldaptypes.ACCESS_ALLOWED_ACE.ACE_TYPE
+        nace['AceFlags'] = 0x00
+        acedata = ldaptypes.ACCESS_ALLOWED_ACE()
+        acedata['Mask'] = ldaptypes.ACCESS_MASK()
+        acedata['Mask']['Mask'] = 983551 # Full control
+        acedata['Sid'] = ldaptypes.LDAP_SID()
+        acedata['Sid'].fromCanonical(sid)
+        nace['Ace'] = acedata
+        return nace
+```
+
+## 第 4 章 Kerberos 认证（krb5）
+
+### asn1.py
+
+asn1.py 主要定义了 Kerberos 协议中各类请求 / 响应的数据包格式，如 AS_REQ、AS_REP、TGS_REQ、TGS_REP 等。
+
+```python
+class AS_REP(KDC_REP):
+    tagSet = _application_tag(constants.ApplicationTagNumbers.AS_REP.value)
+
+class TGS_REP(KDC_REP):
+    tagSet = _application_tag(constants.ApplicationTagNumbers.TGS_REP.value)
+```
+
+以下是 Kerberos 认证中最常见的几类结构：
+
+**AS_REP, TGS_REQ, AP_REQ, TGS_REP, Authenticator（认证类）, EncASRepPart（AS请求加密部分）,AuthorizationData等等**
+
+具体使用方式可以参考 examples 中涉及 Kerberos 认证的脚本（如 getST、ticketer 等），从中可以看到票据请求各阶段对 asn1.py 各数据结构的调用与赋值。
+
+```python
+# eg.impacket/examples/goldenPac.py 
+   def getKerberosTGS(self, serverName, domain, kdcHost, tgt, cipher, sessionKey, authTime):
+        ......
+        # Key Usage 4
+        # TGS-REQ KDC-REQ-BODY AuthorizationData, encrypted with
+        # the TGS session key (Section 5.4.1)
+        encryptedEncodedIfRelevant = cipher.encrypt(sessionKey, 4, encodedIfRelevant, None)
+
+        tgsReq = TGS_REQ()
+        reqBody = seq_set(tgsReq, 'req-body')
+
+        opts = list()
+        opts.append( constants.KDCOptions.forwardable.value )
+        opts.append( constants.KDCOptions.renewable.value )
+        opts.append( constants.KDCOptions.proxiable.value )
+
+        reqBody['kdc-options'] = constants.encodeFlags(opts)
+        seq_set(reqBody, 'sname', serverName.components_to_asn1)
+        reqBody['realm'] = decodedTGT['crealm'].prettyPrint()
+
+        now = datetime.datetime.utcnow() + datetime.timedelta(days=1)
+
+        reqBody['till'] = KerberosTime.to_asn1(now)
+        reqBody['nonce'] = random.SystemRandom().getrandbits(31)
+        seq_set_iter(reqBody, 'etype', (cipher.enctype,))
+        reqBody['enc-authorization-data'] = noValue
+        reqBody['enc-authorization-data']['etype'] = int(cipher.enctype)
+        reqBody['enc-authorization-data']['cipher'] = encryptedEncodedIfRelevant
+
+        apReq = AP_REQ()
+        apReq['pvno'] = 5
+        apReq['msg-type'] = int(constants.ApplicationTagNumbers.AP_REQ.value)
+
+        opts = list()
+        apReq['ap-options'] =  constants.encodeFlags(opts)
+        seq_set(apReq,'ticket', ticket.to_asn1)
+
+        authenticator = Authenticator()
+        authenticator['authenticator-vno'] = 5
+        authenticator['crealm'] = decodedTGT['crealm'].prettyPrint()
+
+        clientName = Principal()
+        clientName.from_asn1( decodedTGT, 'crealm', 'cname')
+
+        seq_set(authenticator, 'cname', clientName.components_to_asn1)
+
+        now = datetime.datetime.utcnow() 
+        authenticator['cusec'] =  now.microsecond
+        authenticator['ctime'] = KerberosTime.to_asn1(now)
+
+        encodedAuthenticator = encoder.encode(authenticator)
+        ......
+```
+
+### constants.py
+
+主要包含 Kerberos 认证中涉及的各类 flag、error_code、主体类型等静态枚举变量，方便认证时调用。
+
+```python
+# eg.examples/GetUserSPNs.py
+......
+from impacket.examples import logger
+from impacket.examples.utils import parse_credentials
+from impacket.krb5 import constants
+        # No TGT in cache, request it
+        userName = Principal(self.__username, type=constants.PrincipalNameType.NT_PRINCIPAL.value)
 
 ```
+
+```python
+# eg.krb5/constants.py
+class PrincipalNameType(Enum):
+    NT_UNKNOWN              = 0
+    NT_PRINCIPAL            = 1
+    NT_SRV_INST             = 2
+    NT_SRV_HST              = 3
+    NT_SRV_XHST             = 4
+    NT_UID                  = 5
+    NT_X500_PRINCIPAL       = 6
+    NT_SMTP_NAME            = 7
+    NT_ENTERPRISE           = 10
+    NT_WELLKNOWN            = 11
+    NT_SRV_HST_DOMAIN       = 12
+    NT_MS_PRINCIPAL         = -128
+    NT_MS_PRINCIPAL_AND_ID  = -129
+    NT_ENT_PRINCIPAL_AND_ID = -130
+```
+
+### keytab.py
+
+同样顾名思义，该文件包含一系列解析或保存 keytab 文件的类与函数。keytab 是保存 Principal 身份密钥的密钥表文件，用途类似 SSH 身份认证中的 id_rsa 私钥，方便通过 Kerberos 进行身份校验，一般保存在 /etc/security/keytabs/ 下（如 nn.service.keytab）。以 CDH 生成并使用 keytab 文件为例：
+
+```shell
+ 1、进入到kerberos
+
+  kadmin.local
+
+2、查看kerberos成员
+
+listprincs
+
+3、添加kerberos成员
+
+kadmin -p 'kdcadmin/admin' -w "-s" -q 'addprinc -randkey hive'
+
+4、生成keytab文件
+
+ktadd -k   /home/kerberos/hive.keytab -norandkey hive@TEST.COM
+
+5、使用生成的keytab文件认证用户
+
+kinit -kt  /home/kerberos/hive.keytab hive/bdp4@TEST.COM
+
+6、查看当前认证用户
+
+klist
+
+7、使用beeline远程访问
+
+beeline -u "jdbc:hive2://1*92.168.86.130:10000/default;principal=hive/bdp4@TEST.COM"
+```
+
+keytab文件格式如下
+
+```text
+ keytab {
+      uint16_t file_format_version;                    /* 0x502 */
+      keytab_entry entries[*];
+  };
+
+  keytab_entry {
+      int32_t size;
+      uint16_t num_components;    /* sub 1 if version 0x501 */
+      counted_octet_string realm; 域名
+      counted_octet_string components[num_components]; 主体名称
+      uint32_t name_type;   /* not present if version 0x501 */ 主体类型
+      uint32_t timestamp; 时间戳
+      uint8_t vno8; 密钥版本号
+      keyblock key;
+      uint32_t vno; /* only present if >= 4 bytes left in entry */
+  };
+
+  counted_octet_string {
+      uint16_t length;
+      uint8_t data[length];
+  };
+
+  keyblock {
+      uint16_t type; 加密类型
+      counted_octet_string;加密key
+  };
+
+```
+
+在 keytab 类的 getData()、getKey() 函数中，可以看到对 keytab 文件中数据结构的解析和取值。
+
+### ccache.py
+
+正如第 2 章 structure.py 中所见，ccache.py 是对 Kerberos 凭据二进制缓存文件（ccache）进行解析的类，包含 Credential 中的 toTGT、toTGS 等函数。先看下 ccache 缓存文件的结构：
+
+```text
 ccache {
           uint16_t file_format_version; /* 0x0504 */ 文件格式版本
           uint16_t headerlen;           /* only if version is 0x0504 */
@@ -621,7 +646,7 @@ header {
        uint16_t tag;                    /* 1 = DeltaTime */
        uint16_t taglen;
        uint8_t tagdata[taglen]
-};此仅存在于0x0504版本及以上？
+};  // 仅存在于 0x0504 及以上版本
 其中最常用的tag为DeltaTime（(0x0001)），tagdata中是time_offset和usec_offset
 DeltaTime {
        uint32_t time_offset;
@@ -638,8 +663,8 @@ credential {
            address  addrs[num_address]; 地址模块
            uint32_t num_authdata; 
            authdata authdata[num_authdata]; 授权数据
-           countet_octet_string ticket; 票据
-           countet_octet_string second_ticket; 第二张票据，通过 DUPLICATE-SKEY 或 ENC-TKT-IN-SKEY与票据相关
+            counted_octet_string ticket; 票据
+            counted_octet_string second_ticket; 第二张票据，通过 DUPLICATE-SKEY 或 ENC-TKT-IN-SKEY 与票据相关
 };
 
 keyblock {
@@ -679,7 +704,7 @@ counted_octet_string {
 };
 ```
 
-这里对第二张票据的存在感觉很奇怪，去查了很多文档，后来在ibm的系统编程文档找到了应用场景
+第二张票据的存在初看令人费解，查了很多文档后，在 IBM 的系统编程文档中找到了它的应用场景：
 https://www.ibm.com/docs/en/zos/2.3.0?topic=kpi-krb5-get-cred-from-kdc-obtain-kdc-server-service-ticket
 
 ```c++
@@ -689,8 +714,8 @@ krb5_error_code krb5_get_cred_from_kdc (
     krb5_ccache                          ccache,
     krb5_creds *                         in_cred,
     krb5_creds **                        out_cred,
-    krb5_creds ***  
-    
+    krb5_creds ***                       tgts
+);
 ```
 
 ```
@@ -709,7 +734,7 @@ tgts
 Returns any new ticket-granting tickets that were obtained while getting the service target from the KDC in the target realm. There may be ticket-granting tickets returned for this parameter even if the Kerberos runtime was ultimately unable to obtain a service ticket from the target KDC. The krb5_free_tgt_creds() routine should be called to release the TGT array when it is no longer needed.
 ```
 
-此参数在脚本中默认为空
+注意区分概念：IBM 文档中的 `second_ticket` 是 `krb5_get_cred_from_kdc()` 的输入字段，仅在需要将服务票证与会话密钥绑定等特殊场景下才要求设置；而 impacket 的 `CCache.secondTicket` 是解析 / 保存 ccache 时的本地结构字段。`fromKRBCRED()` 中将其初始化为空，只代表当前实现未读取该内容，并不代表 IBM API 语义上默认为空：
 
 ```python
     def fromKRBCRED(self, encodedKrbCred):
@@ -720,7 +745,7 @@ Returns any new ticket-granting tickets that were obtained while getting the ser
         credential.secondTicket['length'] = 0
 ```
 
-在impacket模块中，该类主要用于读取或保存ccache缓存文件,其中重要的为如下函数
+在impacket模块中，该类主要用于读取或保存ccache缓存文件，其中重要的为如下函数
 
 ```python
 def toKRBCRED(self):
@@ -735,7 +760,7 @@ def getCredential(self, server, anySPN=True):
 如以下示例
 
 ```python
-eg./examples/getTGT.py
+# eg./examples/getTGT.py
   def saveTicket(self, ticket, sessionKey):
         logging.info('Saving ticket in %s' % (self.__user + '.ccache'))
         from impacket.krb5.ccache import CCache
@@ -747,7 +772,7 @@ eg./examples/getTGT.py
 
 ### types.py
 
-主要是KerberosException,Principal,Address,EncryptedData,Ticket,KerberosTime这些在kerberos认证需要使用的数据的处理类,其中最重要的就是Principal,也就是认证主体,由三个部分组成，分别是 primary(用户\服务名), instance(服务实例名) 和 realm(域名),primary和instance用/间隔,instance和realm用@间隔,如joe/admin@EXAMPLE.COM或joe/node2.example.com
+主要是 KerberosException、Principal、Address、EncryptedData、Ticket、KerberosTime 等 Kerberos 认证中常用数据的处理类。其中最重要的是 Principal（认证主体）：它由三部分组成——primary（用户 / 服务名）、instance（服务实例名）和 realm（域名）。primary 与 instance 之间用 / 分隔，instance 与 realm 之间用 @ 分隔，如 joe/admin@EXAMPLE.COM 或 joe/node2.example.com。
 
 具体Principal格式解析如下
 
@@ -859,14 +884,12 @@ principal = ccache.credentials[0].header['server'].prettyPrint()
 
 ### crypto.py
 
-主要实现了AES、DES、MD5等加密函数
+实现了 Kerberos 各加密类型（RC4-HMAC、AES128/256-CTS-HMAC-SHA1 等）的加解密与密钥推导（string_to_key）函数，MD4 / MD5 等算法用于支撑 RC4 等加密类型。
 
-这边顺便说下在主文件夹还有一个crypto.py
-
-是AES-CMAC-PRF-128\ AES-CMAC 两个加密算法的实现，在smb3和ccache.py中都可以看到对两个加密函数文件的调用。在secretsdump.py中对两个文件中的加密函数都有调用，不太理解作者要把这两个文件分开的用意
+这边顺便说下，impacket 根目录下还有一个同名的 crypto.py，实现了 AES-CMAC-PRF-128、AES-CMAC 等通用算法，smb3.py 与 ccache.py 中都能看到对这两个加密模块的调用，secretsdump.py 也同时用到了两边的加密函数。两个文件分工不同：krb5/crypto.py 面向 Kerberos 加密类型，根目录 crypto.py 面向通用协议场景（如 SMB3 签名用的 AES-CMAC）。
 
 ```python
-eg.impacket/krb5/ccache.py
+# eg.impacket/krb5/ccache.py
 from impacket.krb5 import crypto, constants, types
 	.......
         seq_set(tgt_rep,'ticket', ticket.to_asn1)
@@ -874,7 +897,7 @@ from impacket.krb5 import crypto, constants, types
         tgt = dict()
         tgt['KDC_REP'] = encoder.encode(tgt_rep)
    
-eg.impacket/smb3.py
+# eg.impacket/smb3.py
 from Cryptodome.Cipher import AES
 from impacket import nmb, ntlm, uuid, crypto
 	........
@@ -885,23 +908,23 @@ from impacket import nmb, ntlm, uuid, crypto
 
 ### gssapi.py
 
-GSSAPI是用于 RFC 2743 中定义的安全认证的一个工业标准协议.常用于服务进行kerberos认证，如mangodb、postgresql、ftp等，这里需要理解下gssapi协议和kerberos认证协议的区别，gssapi的全称是[Generic Security Services Application Program Interface](https://en.wikipedia.org/wiki/Generic_Security_Services_Application_Program_Interface)即:通用安全服务的应用程序接口,可以看出, GSS-API是一个 API 规范,是在具体实现 Kerberos 协议时的 定义的API.
+GSSAPI 是 RFC 2743 中定义的安全认证工业标准接口，常用于服务的 Kerberos 认证，如 MongoDB、PostgreSQL、FTP 等。这里需要理解 GSSAPI 与 Kerberos 认证协议的区别：GSSAPI 的全称是[Generic Security Services Application Program Interface](https://en.wikipedia.org/wiki/Generic_Security_Services_Application_Program_Interface)（通用安全服务应用程序接口）。可以看出，GSS-API 是一个 API 规范，是实现 Kerberos 协议时定义的编程接口。
 
 > The dominant GSSAPI mechanism implementation in use is Kerberos. Unlike the GSSAPI, the Kerberos API has not been standardized and various existing implementations use incompatible APIs. The GSSAPI allows Kerberos implementations to be API compatible.
 
-意思就是:有了这个规范,只要各个厂商按照这个规范实现 Kerberos,就至少可以做到一个客户端可以可以连接不同厂商的 KDC 服务,相反一个服务端可以连接不同实现方式的客户端.
+意思是：有了这个规范，只要各厂商按规范实现 Kerberos，至少可以做到一个客户端能连接不同厂商的 KDC 服务；反过来，一个服务端也能对接不同实现方式的客户端。
 
-**总结下来就是:`Kerberos`是一帮数学密码学家从理论上搞出来的认证协议,`GSS-API`是一帮 IT 架构师设计的实现这个协议的程序接口,而 `MIT Kerberos` `Windows AD`等各个厂商通过安装`GSS`编码,做到了 API 的兼容.即基于gssapi实现kerberos认证协议通信，而SPNEGO(SPNEGO: Simple and Protected GSS-API Negotiation)是微软提供的一种使用GSS-API认证机制的安全协议，用于使Webserver共享Windows Credentials**
+**总结下来就是：`Kerberos` 是密码学家从理论上设计出的认证协议，`GSS-API` 是架构师为实现该协议设计的程序接口，`MIT Kerberos`、`Windows AD` 等厂商通过实现 GSS-API 做到了 API 层面的兼容——即基于 GSSAPI 实现 Kerberos 协议通信。而 SPNEGO（Simple and Protected GSS-API Negotiation，RFC 4178）是一种在多种 GSS-API 机制间进行协商选择的机制，微软在 SMB、HTTP 认证等场景中广泛用它来在 Kerberos 与 NTLM 之间协商，实现 Windows 凭据的传递共享**
 
 ![该图显示了应用程序和安全机制之间的 GSS-API 和协议层。](https://docs.oracle.com/cd/E19253-01/819-7056/images/Layers1.gif)
 
 具体协议标准可以看https://datatracker.ietf.org/doc/html/rfc4121 The Kerberos Version 5 Generic Security Service Application Program Interface (GSS-API) Mechanism: Version 2
 
-在gssapi.py中实现了rc4和aes两种加密形式的gssapi，
+gssapi.py 中实现了 RC4 与 AES 两种加密形式的 GSSAPI。
 
-其中MIC数据结构是 *Message Integrity Code*，也就是消息完整性校验去防篡改，客户端发送*ISC_REQ_NO_INTEGRITY*会显式关闭此校验，另一种方式则是初次调用*InitializeSecurityContext* API时服务端会通过*NegpDetermineTokenPackage*函数来确定是否启用消息完整性校验，如果initial token是ntlm或kerberos token，那么就不会开启*ISC_REQ_INTEGRITY* ,发起者是smb协议，默认这个标志位为1，服务端会选择进行签名,而CVE-2019-1040漏洞可绕过NTLM MIC的防护机制，以使我们修改标志位，来让服务器不进行ldap签名(Exchange+CVE-2019-1040接管全域/RBCD+printbug/petitpotam+CVE-2019-1040)
+其中 MIC 结构指 *Message Integrity Code*（消息完整性校验），用于防止篡改。客户端发送 *ISC_REQ_NO_INTEGRITY* 可显式关闭该校验；另一种方式是初次调用 *InitializeSecurityContext* 时，由服务端通过 *NegpDetermineTokenPackage* 函数决定是否启用消息完整性校验——若 initial token 是 NTLM 或 Kerberos token，则不会开启 *ISC_REQ_INTEGRITY*；若发起方是 SMB 协议，该标志位默认为 1，服务端会选择签名。而 CVE-2019-1040 漏洞可绕过 NTLM MIC 的防护机制，使我们能修改标志位、让服务器不进行 LDAP 签名（典型组合：Exchange + CVE-2019-1040 接管全域，或 RBCD + PrinterBug/PetitPotam + CVE-2019-1040）。
 
-WRAP数据结构则是因为在gssapi,初始化token建立通信后，后续通信的数据都通过warp和unwarp去加解密通信
+WRAP 结构则用于保密性：GSSAPI 初始化 token 建立上下文后，后续通信数据都通过 wrap / unwrap 进行加解密。
 
 ![该图对 gss_get_mic 和 gss_wrap 函数进行比较。](https://docs.oracle.com/cd/E19253-01/819-7056/images/MICVsWrap1.gif)
 
@@ -909,21 +932,15 @@ WRAP数据结构则是因为在gssapi,初始化token建立通信后，后续通�
 
 ![该图说明如何确认已包装并且具有消息完整性代码的消息。](https://docs.oracle.com/cd/E19253-01/819-7056/images/VerificationWrap.gif)
 
-gssapi的关键函数如下
+GSSAPI 的关键 C 函数如下（注意实际 API 为全小写 `gss_` 前缀）：
 
 ```
-GSS_Acquire_cred
-Obtains the user's identity proof, often a secret cryptographic key
-GSS_Import_name
-Converts a username or hostname into a form that identifies a security entity
-GSS_Init_sec_context
-Generates a client token to send to the server, usually a challenge
-GSS_Accept_sec_context
-Processes a token from GSS_Init_sec_context and can generate a response token to return
-GSS_Wrap
-Converts application data into a secure message token (typically encrypted)
-GSS_Unwrap
-Converts a secure message token back into application data
+gss_acquire_cred     Obtains the user's identity proof, often a secret cryptographic key
+gss_import_name      Converts a username or hostname into a form that identifies a security entity
+gss_init_sec_context Generates a client token to send to the server, usually a challenge
+gss_accept_sec_context Processes a token from gss_init_sec_context and can generate a response token to return
+gss_wrap             Converts application data into a secure message token (typically encrypted)
+gss_unwrap           Converts a secure message token back into application data
 ```
 
 下面是使用 GSS-API 的一般步骤：
@@ -942,9 +959,8 @@ Converts a secure message token back into application data
    - `GSS_C_NO_CONTEXT`（用于 context_handle 参数），用于表示初始的空上下文。 由于 **gss_init_sec_context()** 通常会循环调用，因此后续的调用会传递以前的调用所返回的上下文句柄
    - `GSS_C_NO_BUFFER`（用于 input_token 参数），用于表示最初为空的令牌。 或者，应用程序可以传递一个指向 gss_buffer_desc 对象的指针，该对象的长度字段已经设置为零
    - 使用 **gss_import_name()** 以 GSS-API 内部格式导入的服务器名称。
-   - 上下文接受器可能需要多次握手才能建立上下文， 也即是说，接受器会要求启动器先发送多段上下文信息，然后再建立完整的上下文。 因此，为了实现可移植性，应始终在检查上下文是否已完全建立的循环过程中启动上下文。
-   - 建立上下文的另一方面是接受上下文，这可通过 **gss_accept_sec_context()** 函数来完成。 通常情况下，服务器接受客户机使用 **gss_init_sec_context()** 已启动的上下文。输出令牌通过 **gss_accept_sec_context()** 返回,以后调用 **gss_accept_sec_context()** 时，输入令牌将作为参数传递。 **gss_accept_sec_context()** 不再向启动器发送令牌时，将返回一个长度为零的输出令牌。 除了检查返回状态 **gss_accept_sec_context()** 以外，循环还应当检查输出令牌的长度，查看是否必须发送其他令牌。 开始循环之前，应将输出令牌的长度初始化为零。 请将输出令牌设置为 `GSS_C_NO_BUFFER` 或者将结构的长度字段设置为零值。
-   - 
+   - 上下文接受器可能需要多次握手才能建立上下文。也就是说，接受器会要求发起方先发送多段上下文信息，再建立完整上下文。因此为了可移植性，应始终在检查上下文是否完全建立的循环中发起上下文。
+   - 建立上下文的另一面是接受上下文，通过 **gss_accept_sec_context()** 函数完成。通常由服务器接受客户机用 **gss_init_sec_context()** 已启动的上下文。输出令牌通过 **gss_accept_sec_context()** 返回，之后调用时输入令牌作为参数传入；当不再向发起方发送令牌时，该函数返回长度为零的输出令牌。除检查返回状态外，循环还应检查输出令牌长度，判断是否必须发送其他令牌。开始循环之前，应将输出令牌长度初始化为零（设为 `GSS_C_NO_BUFFER`，或将结构长度字段置零）。
 
 3. 发送者向要传送的数据应用安全保护机制。 发送者会对消息进行加密或者使用标识标记对数据进行标记。 发送者随后将传送受保护的消息。
 
@@ -965,7 +981,7 @@ Converts a secure message token back into application data
 在impacket中主要使用gssapi中涉及到的静态变量
 
 ```python
-eg.impacket/krb5/kerberosv5.py
+# eg.impacket/krb5/kerberosv5.py
 from impacket.krb5.gssapi import CheckSumField, GSS_C_DCE_STYLE, GSS_C_MUTUAL_FLAG, GSS_C_REPLAY_FLAG, 
 
 gssapi.py
@@ -1000,9 +1016,9 @@ class CheckSumField(Structure):
     )
 ```
 
-#### spnego.py
+#### spnego.py（位于 impacket 根目录）
 
-这里顺便看下SPNEGO协议，是微软对kerberos认证的一种扩展
+这里顺便看下 SPNEGO 协议。需要先澄清：SPNEGO 并不是“微软对 Kerberos 的扩展”，而是 IETF 定义的 GSS-API 协商机制（RFC 4178），用于在客户端与服务端之间协商出实际使用的安全机制（如 Kerberos 或 NTLM）；微软在 SMB、HTTP 等协议中广泛使用它。
 
 kerberos认证协议如下
 
@@ -1029,16 +1045,12 @@ SPNEGO协议认证如下
 
 认证流程如下
 
-![image-20221123114655321](C:\Users\test\AppData\Roaming\Typora\typora-user-images\image-20221123114655321.png)
-
-
-
-![image-20221123114711748](C:\Users\test\AppData\Roaming\Typora\typora-user-images\image-20221123114711748.png)
+![认证流程](https://img-blog.csdnimg.cn/4ea9b9b3bfea44d4ab77afbb01721929.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBA56ug6ZSh5bmz,size_19,color_FFFFFF,t_70,g_se,x_16)
 
 在spnego.py，中常用的也是SPNEGO_NegTokenInit类和SPNEGO_NegTokenResp类来解析修改smb auth请求
 
 ```python
-eg./impacket/examples/ntlmrelayx/clients/smtprelayclient.py
+# eg./impacket/examples/ntlmrelayx/clients/smtprelayclient.py
 from impacket.spnego import SPNEGO_NegTokenResp
 ......
     def sendAuth(self, authenticateMessageBlob, serverChallenge=None):
@@ -1060,9 +1072,9 @@ from impacket.spnego import SPNEGO_NegTokenResp
 
 ### kerberosv5.py
 
-文件中重要的函数是kerberosr认证中getKerberosTGT和getKerberosTGS
+文件中最重要的函数是 Kerberos 认证流程中的 getKerberosTGT 与 getKerberosTGS。
 
-在getKerberosTGT首先初始化AS_REQ,随后添加include-pac，pvno等header参数，随后设置reqbody中的各个参数sname，cname等，
+getKerberosTGT 首先初始化 AS_REQ，设置 pvno、msg-type 等 header 参数，再填充 req-body 中的 sname、cname 等字段：
 
 ```python
 def getKerberosTGT(clientName, password, domain, lmhash, nthash, aesKey='', kdcHost=None, requestPAC=True):
@@ -1086,7 +1098,7 @@ def getKerberosTGT(clientName, password, domain, lmhash, nthash, aesKey='', kdcH
                 .....
 ```
 
-并设置aeskey,随后使用sendReceive发送请求并解析AS_REP,但没有使用用户hash,所以preAuth为false得到krb error
+设置好 aesKey 后，通过 sendReceive 发送请求。由于第一次请求未携带预认证数据（preAuth=False），若 KDC 要求预认证，会返回 KRB_ERROR：
 
 ```python
     try:
@@ -1098,9 +1110,9 @@ def getKerberosTGT(clientName, password, domain, lmhash, nthash, aesKey='', kdcH
     
 ```
 
-![image-20221123221733912](C:\Users\test\AppData\Roaming\Typora\typora-user-images\image-20221123221733912.png)
+![AS-REQ 首次请求返回 KRB_ERROR](https://img-blog.csdnimg.cn/4ea9b9b3bfea44d4ab77afbb01721929.png)
 
-之后使用ntlmhash加密时间戳,并构建as_req时间戳
+之后用用户密钥（NTLM hash 派生 / AES key）加密时间戳，重新构建带 PADATA 的 AS_REQ：
 
 ```python
     if isinstance(nthash, bytes) and nthash != b'':
@@ -1152,10 +1164,10 @@ def getKerberosTGT(clientName, password, domain, lmhash, nthash, aesKey='', kdcH
 ......
 ```
 
-这里直接将返回包当成了tgt变量,当然,在example中的getTGT脚本是调用getKerberosTGT函数后用ccache.py中的fromTGT将返回包中的TGT提取出来并保存为TGT缓存文件
+这里直接把 AS_REP 返回包当作 tgt 变量返回。examples 中的 getTGT 脚本在调用 getKerberosTGT 后，会用 ccache.py 的 fromTGT 从返回包中提取票据，并保存为 ccache 缓存文件：
 
 ```python
-eg./examples/getTGT.py
+# eg./examples/getTGT.py
 
 
 def run(self):
@@ -1172,7 +1184,7 @@ def run(self):
         ccache.saveFile(self.__user + '.ccache')
 ```
 
-当然,我们的函数不止返回tgt的AS_REP包.他会使用用户的ntlm hash揭密处我们的服务会话密钥
+当然，函数不止返回 AS_REP 包，还会用用户密钥解密出会话密钥：
 
 ```
     try:
@@ -1187,11 +1199,11 @@ def run(self):
         key = Key(cipher.enctype, nthash)
 ```
 
-![image-20221123223837629](C:\Users\test\AppData\Roaming\Typora\typora-user-images\image-20221123223837629.png)
+![EncASRepPart 解密得到会话密钥](https://img-blog.csdnimg.cn/4ea9b9b3bfea44d4ab77afbb01721929.png)
 
-接下来让我们看下之前的请求头和reqbody究竟是什么
+接下来看下 AS_REQ 的请求头和 req-body 究竟是什么：
 
-![image-20221123224306364](C:\Users\test\AppData\Roaming\Typora\typora-user-images\image-20221123224306364.png)
+![AS_REQ 字段示意](https://img-blog.csdnimg.cn/4ea9b9b3bfea44d4ab77afbb01721929.png)
 
 ```
 1.pvno kerberos的版本号
@@ -1199,12 +1211,12 @@ def run(self):
 3.PA_DATA Pre-authentication Data，预身份认证，每个认证消息有type和value。
 PA-DATA PA-ENC-TIMESTAMP 用户HASH加密后的时间戳
 	padata-type: padata类型
-		padata-vaule: padata的值
+		padata-value: padata的值
 			etype:  加密类型
 			cipher: 加密后的值
 PA-DATA PA-PAC-REQUEST：PAC扩展
 	padata-type: padata类型
-		padata-vaule: padata的值
+		padata-value: padata的值
 		include-pac: 是否包含PAC，如果包含那么在响应包中就会返回PAC
 4.req-body 请求体
 padding:填充
@@ -1217,15 +1229,11 @@ nonce：随机生成的一个数，用于检测重放攻击
 etype: 协商加密类型，KDC按照etype类型选择用户hash对应的加密方式
 ```
 
-返回的请求包如下
+返回的 AS_REP 响应包中，可以看到 TGT 票据以及用用户密钥加密的会话密钥（enc-part）。
 
-![image-20221123224505095](C:\Users\test\AppData\Roaming\Typora\typora-user-images\image-20221123224505095.png)
+接下来看 getKerberosTGS 函数。
 
-从返回包中我们可以看到tgt和用户hash加密的会话密钥
-
-接下来我们来看下getKerberosTGS函数
-
-首先根据提供的tgt和session key构建TGS_REQ(tgt+sessionkey加密的时间戳)
+它首先根据提供的 TGT 和 session key 构建 TGS_REQ（AP_REQ 中携带 TGT，以及用 session key 加密的 Authenticator）：
 
 ```python
     try:
@@ -1251,14 +1259,14 @@ etype: 协商加密类型，KDC按照etype类型选择用户hash对应的加密�
     encryptedEncodedAuthenticator = cipher.encrypt(sessionKey, 7, encodedAuthenticator, None)
 ```
 
-TGS收到内容1(tgt)和内容2(sessionkey加密的时间戳)，KdrTGT 用户的hash来解密TGT，拿到了（TGT）客户端id，会话密钥，再使用会话密钥解密内容2，得到（身份验证器）客户端id，然后比对两个客户端id是否一致，一致则通过认证，然后就用内容1中的服务id来找到对应的hash来作为密钥，返回给客户端两众内容：
+KDC 收到内容 1（TGT）与内容 2（session key 加密的 Authenticator）后：先用 krbtgt 密钥解密 TGT，取出客户端身份与会话密钥；再用会话密钥解密内容 2，得到 Authenticator 中的客户端身份；比对两者一致则认证通过。随后 KDC 用内容 1 中请求的目标服务对应的密钥加密新票据，返回给客户端两部分内容：
 
-```python
-内容1：服务id对应的hash加密的客户端到服务器票证（包括客户端ID，客户端网络地址，有效期和客户端/服务器会话密钥）
-内容2:使用会话密钥（session key）加密的客户端/服务器会话密钥
+```text
+内容 1：用目标服务密钥加密的服务票据（包含客户端 ID、客户端网络地址、有效期和客户端 / 服务端会话密钥）
+内容 2：用 TGS 会话密钥加密的客户端 / 服务端会话密钥
 ```
 
-客户端使用会话密钥（session key）解密内容2获得客户端/服务器会话密钥
+客户端用 TGS 会话密钥解密内容 2，得到新的客户端 / 服务端会话密钥：
 
 ```python
     tgs = decoder.decode(r, asn1Spec = TGS_REP())[0]
@@ -1288,7 +1296,7 @@ TGS收到内容1(tgt)和内容2(sessionkey加密的时间戳)，KdrTGT 用户的
 
 ### pac.py
 
-权限属性证书 (PAC) 数据结构由验证身份的身份验证协议使用，以传输授权信息，控制对资源的访问。Kerberos 协议[RFC4120] 不提供授权。创建特权属性证书 (PAC) 是为了为 Kerberos 协议扩展[MS-KILE]提供此授权数据。在 PAC 结构中 [MS-KILE] 对授权信息进行编码，其中包括组成员身份、附加凭证信息、配置文件和策略信息以及支持的安全元数据。
+特权属性证书（PAC）由完成身份验证的协议使用，用于传输授权信息、控制对资源的访问。Kerberos 协议 [RFC4120] 本身不提供授权，创建 PAC 正是为了给 Kerberos 协议扩展 [MS-KILE] 补充这部分授权数据。PAC 结构按 [MS-KILE] 对授权信息编码，包括组成员身份、附加凭证信息、配置文件与策略信息以及支持的安全元数据。
 
 ![封装层](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-pac/ms-pac_files/image001.png)
 
@@ -1296,63 +1304,63 @@ TGS收到内容1(tgt)和内容2(sessionkey加密的时间戳)，KdrTGT 用户的
 
 ```python
 class KERB_SID_AND_ATTRIBUTES(NDRSTRUCT):
-    表示用于身份验证的SID及其 属性。它在KERB_VALIDATION_INFO结构中发送，用于包含有关 SID 引用的组的附加信息。
+# 表示用于身份验证的SID及其 属性。它在KERB_VALIDATION_INFO结构中发送，用于包含有关 SID 引用的组的附加信息。
     
 class KERB_SID_AND_ATTRIBUTES_ARRAY(NDRUniConformantArray):
 class PKERB_SID_AND_ATTRIBUTES_ARRAY(NDRPOINTER):
     
 class DOMAIN_GROUP_MEMBERSHIP(NDRSTRUCT):
-    结构标识帐户所属的域和组。它在PAC_DEVICE_INFO结构中发送。
+# 结构标识账户所属的域和组。它在PAC_DEVICE_INFO结构中发送。
     
 class DOMAIN_GROUP_MEMBERSHIP_ARRAY(NDRUniConformantArray):
 class PDOMAIN_GROUP_MEMBERSHIP_ARRAY(NDRPOINTER):
     
 class PACTYPE(Structure):
-    PACTYPE结构是 PAC 的最顶层结构，指定 PAC_INFO_BUFFER数组中的元素数 。PACTYPE结构用作完整 PAC 数据的标头。
+# PACTYPE结构是 PAC 的最顶层结构，指定 PAC_INFO_BUFFER数组中的元素数 。PACTYPE结构用作完整 PAC 数据的标头。
     
 class PAC_INFO_BUFFER(Structure):
-    在PACTYPE结构之后是一个PAC_INFO_BUFFER结构数组，每个结构都定义了 PAC 缓冲区的类型和字节偏移量。PAC_INFO_BUFFER数组 没有定义的顺序。因此，PAC_INFO_BUFFER 缓冲区的顺序没有意义。但是，一旦密钥分发中心 (KDC) 和服务器签名生成，缓冲区的顺序不得更改，否则 PAC 内容的签名验证将失败。
+# 在PACTYPE结构之后是一个PAC_INFO_BUFFER结构数组，每个结构都定义了 PAC 缓冲区的类型和字节偏移量。PAC_INFO_BUFFER数组 没有定义的顺序。因此，PAC_INFO_BUFFER 缓冲区的顺序没有意义。但是，一旦密钥分发中心 (KDC) 和服务器签名生成，缓冲区的顺序不得更改，否则 PAC 内容的签名验证将失败。
     
     
 class KERB_VALIDATION_INFO(NDRSTRUCT):
-    KERB_VALIDATION_INFO结构定义了 DC 提供的用户登录和授权信息。指向 KERB_VALIDATION_INFO结构的指针被序列化为一个字节数组，然后放置在最顶层PACTYPE 结构的Buffers数组之后，位于缓冲区中相应PAC_INFO_BUFFER 结构的Offset字段中指定的偏移量处大批。相应的PAC_INFO_BUFFER 结构的ulType字段设置为 0x00000001。
-KERB_VALIDATION_INFO结构是 NETLOGON_VALIDATION_SAM_INFO4 结构的子集。由于历史原因和使用 Active Directory 生成此信息，它是一个子集。NTLM 在服务器上下文中使用 NETLOGON_VALIDATION_SAM_INFO4 结构到域控制器交换。因此，KERB_VALIDATION_INFO结构包括特定于 NTLM 的字段。KERB_VALIDATION_INFO和 NETLOGON_VALIDATION_SAM_INFO4 结构共有的字段，以及特定于 NTLM 身份验证操作的字段，不与[MS-KILE]一起使用 验证。KERB_VALIDATION_INFO结构由RPC [MS-RPCE]编组。
+# KERB_VALIDATION_INFO结构定义了 DC 提供的用户登录和授权信息。指向 KERB_VALIDATION_INFO结构的指针被序列化为一个字节数组，然后放置在最顶层PACTYPE 结构的Buffers数组之后，位于缓冲区中相应PAC_INFO_BUFFER 结构的Offset字段中指定的偏移量处。相应的PAC_INFO_BUFFER 结构的ulType字段设置为 0x00000001。
+# KERB_VALIDATION_INFO结构是 NETLOGON_VALIDATION_SAM_INFO4 结构的子集（出于历史原因及 Active Directory 生成此信息的方式）。NTLM 在服务器与域控制器交换时使用 NETLOGON_VALIDATION_SAM_INFO4 结构，因此 KERB_VALIDATION_INFO 也包括特定于 NTLM 的字段；两结构共有的字段以及特定于 NTLM 身份验证操作的字段，不用于 [MS-KILE] 验证。KERB_VALIDATION_INFO 结构由 RPC [MS-RPCE] 编组。
     
 class PKERB_VALIDATION_INFO(NDRPOINTER):
     
 class PAC_CREDENTIAL_INFO(Structure):
-    PAC_CREDENTIAL_INFO结构用作凭证信息的标头。PAC_CREDENTIAL_INFO标头指示用于加密其后数据的加密算法。后面的数据是加密的、IDL序列化的PAC_CREDENTIAL_DATA结构，其中包含用户的实际凭证。请注意，此结构不能被[MS-KILE] 协议以外的协议使用；加密方法依赖于 Kerberos AS-REQ。PAC_CREDENTIAL_INFO结构包含用户的加密凭证。使用的加密密钥是 AS 回复密钥。仅当使用 PKINIT时才包含 PAC 凭据缓冲区。因此，AS reply key 是基于PKINIT 推导出来的。
+# PAC_CREDENTIAL_INFO结构用作凭证信息的标头。PAC_CREDENTIAL_INFO标头指示用于加密其后数据的加密算法。后面的数据是加密的、IDL序列化的PAC_CREDENTIAL_DATA结构，其中包含用户的实际凭证。请注意，此结构不能被[MS-KILE] 协议以外的协议使用；加密方法依赖于 Kerberos AS-REQ。PAC_CREDENTIAL_INFO结构包含用户的加密凭证。使用的加密密钥是 AS 回复密钥。仅当使用 PKINIT时才包含 PAC 凭据缓冲区。因此，AS reply key 是基于PKINIT 推导出来的。
     
 class SECPKG_SUPPLEMENTAL_CRED(NDRSTRUCT):
-    定义了需要补充凭证的安全包的名称以及该包的凭证缓冲区。
+# 定义了需要补充凭证的安全包的名称以及该包的凭证缓冲区。
 class SECPKG_SUPPLEMENTAL_CRED_ARRAY(NDRUniConformantArray):
     
 class PAC_CREDENTIAL_DATA(NDRSTRUCT):
-    定义了一组提供给 Kerberos 客户端的特定于安全包的凭证。
+# 定义了一组提供给 Kerberos 客户端的特定于安全包的凭证。
     
 class NTLM_SUPPLEMENTAL_CREDENTIAL(NDRSTRUCT):
-    用于对 NTLM 安全协议使用的凭据进行编码，特别是LAN Manager哈希(LM OWF)和NT哈希(NT OWF).PAC 结构规范中未解决生成以该结构编码的哈希值的问题。[MS-NLMP]中指定了有关如何创建哈希的详细信息。仅当使用 PKINIT [MS-PKCA] 对用户进行身份验证时，才会包含 PAC 缓冲区类型。NTLM_SUPPLEMENTAL_CREDENTIAL 结构由RPC [MS-RPCE]封送。
+# 用于对 NTLM 安全协议使用的凭据进行编码，特别是LAN Manager哈希(LM OWF)和NT哈希(NT OWF).PAC 结构规范中未解决生成以该结构编码的哈希值的问题。[MS-NLMP]中指定了有关如何创建哈希的详细信息。仅当使用 PKINIT [MS-PKCA] 对用户进行身份验证时，才会包含 PAC 缓冲区类型。NTLM_SUPPLEMENTAL_CREDENTIAL 结构由RPC [MS-RPCE]封送。
     
 class PAC_CLIENT_INFO(Structure):
-    是PAC的可变长度缓冲区，其中包含客户端的名称和身份验证时间。它用于验证 PAC 是否对应于票据的客户端。PAC_CLIENT_INFO 结构直接放置在最顶层 PACTYPE 结构的 Buffers 数组之后，位于Buffers数组中相应PAC_INFO_BUFFER结构的Offset字段中 指定的偏移处。相应的PAC_INFO_BUFFER的ulType字段 设置为 0x0000000A。
+# 是PAC的可变长度缓冲区，其中包含客户端的名称和身份验证时间。它用于验证 PAC 是否对应于票据的客户端。PAC_CLIENT_INFO 结构直接放置在最顶层 PACTYPE 结构的 Buffers 数组之后，位于Buffers数组中相应PAC_INFO_BUFFER结构的Offset字段中 指定的偏移处。相应的PAC_INFO_BUFFER的ulType字段 设置为 0x0000000A。
     
 class PAC_SIGNATURE_DATA(Structure):
-    两个PAC_SIGNATURE_DATA结构附加到存储服务器和KDC签名的 PAC。这些结构位于最顶层PACTYPE 结构的Buffers数组之后，位于Buffers数组中每个相应PAC_INFO_BUFFER 结构的Offset字段中指定的偏移处 。服务端签名对应的PAC_INFO_BUFFER的ulType字段包含值0x00000006和PAC_INFO_BUFFER的ulType字段对应于 KDC 签名包含值 0x00000007。只有当 PAC 被[MS-KILE] 协议使用时才能生成 PAC 签名，因为用于创建和验证签名的密钥是 KDC 已知的密钥。没有其他协议可以使用这些 PAC 签名。
+# 两个PAC_SIGNATURE_DATA结构附加到存储服务器和KDC签名的 PAC。这些结构位于最顶层PACTYPE 结构的Buffers数组之后，位于Buffers数组中每个相应PAC_INFO_BUFFER 结构的Offset字段中指定的偏移处 。服务端签名对应的PAC_INFO_BUFFER的ulType字段包含值0x00000006和PAC_INFO_BUFFER的ulType字段对应于 KDC 签名包含值 0x00000007。只有当 PAC 被[MS-KILE] 协议使用时才能生成 PAC 签名，因为用于创建和验证签名的密钥是 KDC 已知的密钥。没有其他协议可以使用这些 PAC 签名。
     
 class S4U_DELEGATION_INFO(NDRSTRUCT):
-    S4U_DELEGATION_INFO结构用于约束委托信息。它列出了通过此 Kerberos 客户端和后续服务或服务器委托的服务。该列表仅用于用户代理服务 (S4U2proxy)请求。此功能可以在服务之间连续使用多次，这对于审计目的很有用。
+# S4U_DELEGATION_INFO结构用于约束委托信息。它列出了通过此 Kerberos 客户端和后续服务或服务器委托的服务。该列表仅用于用户代理服务 (S4U2proxy)请求。此功能可以在服务之间连续使用多次，这对于审计目的很有用。
     
 class UPN_DNS_INFO(Structure):
-    包含客户端的 UPN、 完全限定的域名 (FQDN)、SAM 名称（可选）和 SID（可选）。它用于提供与票据的客户端对应的 UPN、FQDN、SAM 名称和 SID。UPN_DNS_INFO结构直接放置在最顶层 PACTYPE 结构的缓冲区数组之后，位于缓冲区数组中相应 PAC_INFO_BUFFER结构的偏移字段中指定的偏移处 。对应PAC_INFO_BUFFER的ulType字段设置为 0x0000000C。
+# 包含客户端的 UPN、 完全限定的域名 (FQDN)、SAM 名称（可选）和 SID（可选）。它用于提供与票据的客户端对应的 UPN、FQDN、SAM 名称和 SID。UPN_DNS_INFO结构直接放置在最顶层 PACTYPE 结构的缓冲区数组之后，位于缓冲区数组中相应 PAC_INFO_BUFFER结构的偏移字段中指定的偏移处 。对应PAC_INFO_BUFFER的ulType字段设置为 0x0000000C。
     
 class PAC_CLIENT_CLAIMS_INFO(Structure):
-    是 PAC 的可变长度缓冲区，应该包含客户端的编组声明 blob。PAC_CLIENT_CLAIMS_INFO 结构直接放置在最顶层 PACTYPE结构的Buffers 数组之后,位于Buffers数组中相应PAC_INFO_BUFFER 结构的Offset字段中指定的偏移处 。相应的PAC_INFO_BUFFER的ulType字段设置为 0x0000000D
+# 是 PAC 的可变长度缓冲区，应该包含客户端的编组声明 blob。PAC_CLIENT_CLAIMS_INFO 结构直接放置在最顶层 PACTYPE结构的Buffers 数组之后,位于Buffers数组中相应PAC_INFO_BUFFER 结构的Offset字段中指定的偏移处 。相应的PAC_INFO_BUFFER的ulType字段设置为 0x0000000D
     
 class PAC_DEVICE_INFO(NDRSTRUCT):
-    是 PAC 的可变长度缓冲区，应该包含DC提供的设备的登录和授权信息。指向PAC_DEVICE_INFO结构的指针被序列化为一个字节数组，并直接放置在最顶层PACTYPE 结构的缓冲区数组之后，位于缓冲区中相应PAC_INFO_BUFFER 结构的偏移字段中指定的偏移处。相应的PAC_INFO_BUFFER的ulType字段设置为 0x0000000E。
+# 是 PAC 的可变长度缓冲区，应该包含DC提供的设备的登录和授权信息。指向PAC_DEVICE_INFO结构的指针被序列化为一个字节数组，并直接放置在最顶层PACTYPE 结构的缓冲区数组之后，位于缓冲区中相应PAC_INFO_BUFFER 结构的偏移字段中指定的偏移处。相应的PAC_INFO_BUFFER的ulType字段设置为 0x0000000E。
     
 class PAC_DEVICE_CLAIMS_INFO(Structure):
-    PAC 的可变长度缓冲区，应该包含客户端的编组声明blob。PAC_DEVICE_CLAIMS_INFO 结构直接放置在最顶层 PACTYPE 结构的 Buffers 数组之后 ，位于Buffers数组中相应PAC_INFO_BUFFER 结构的Offset字段中指定的偏移处 。相应的PAC_INFO_BUFFER的ulType字段设置为 0x0000000F
+# PAC 的可变长度缓冲区，应该包含客户端的编组声明blob。PAC_DEVICE_CLAIMS_INFO 结构直接放置在最顶层 PACTYPE 结构的 Buffers 数组之后 ，位于Buffers数组中相应PAC_INFO_BUFFER 结构的Offset字段中指定的偏移处 。相应的PAC_INFO_BUFFER的ulType字段设置为 0x0000000F
     
 class VALIDATION_INFO(TypeSerialization1):
 ```
@@ -1416,15 +1424,17 @@ class S4U2SELF:
             buff = buff[len(infoBuffer):]
 ```
 
-## dcerpc
+# 第三部分 DCE/RPC
 
-### RPC编程
+## 第 5 章 DCE/RPC 接口（dcerpc）
 
-首先我们看一下rpc实现的过程
+### RPC 编程基础
+
+首先我们看一下 RPC 的实现过程。
 
 ![rpc architecture](https://learn.microsoft.com/zh-cn/windows/win32/rpc/images/prog-a11.png)
 
-第四步和第11部进行数据传输的格式就是NDR格式
+图中第 4 步和第 11 步进行数据传输时使用的就是 NDR 格式。
 
 RPC包括以下组件
 
@@ -1436,7 +1446,7 @@ RPC包括以下组件
 
 - Endpoint mapper (sometimes referred to as the port mapper) 端点映射器(端口映射器)
 
-- 后三项在安装windows自动已安装,而rpc导入的lib文件和头文件以及uuidgen需安装windows SDK
+- 后三项随 Windows 自动安装；而 RPC 的导入库、头文件以及 uuidgen 工具需要安装 Windows SDK。
 
 | 导入库             | 说明              |
 | :----------------- | :---------------- |
@@ -1458,13 +1468,13 @@ RPC包括以下组件
 | Rpcdgc3.dll | 客户端 UDP 传输     | Windows NT                         |
 | Rpcdgs3.dll | 服务器 UDP 传输     | Windows NT                         |
 
-在 RPC 模型中，可以使用专为此目的设计的语言正式指定远程过程的接口。 此语言称为Interface Definition Language接口定义语言或 IDL。 此语言的 Microsoft 实现称为 Microsoft 接口定义语言或 MIDL
+在 RPC 模型中，可以使用专为此目的设计的语言正式指定远程过程的接口。此语言称为接口定义语言（Interface Definition Language，IDL），其 Microsoft 实现称为 Microsoft 接口定义语言（MIDL）。
 
-创建接口后MIDL编译器生成sub将本地过程调用转换为远程过程调用,stub是占位符函数用于调用rpc runtime lib的函数
+创建接口后，MIDL 编译器生成 stub——它是占位符函数，把本地过程调用转换为远程过程调用，内部调用 RPC 运行时库（runtime lib）的函数。
 
-在rpc编程过程中我们需要先为客户端和服务端编写rpc接口文件(.idl)文件金额配置文件(.acf),通过midl编译器编译后,生成头文件后面服务端和客户端编程时候include进去,生成的客户端和服务端stub的c文件,后续编译客户端和服务端代码时候链接进去
+RPC 编程流程：先为客户端和服务端编写接口定义文件（.idl）以及属性配置文件（.acf）；经 MIDL 编译器编译后，生成头文件（编写客户端 / 服务端代码时 include），以及客户端和服务端的 stub C 文件（编译客户端 / 服务端代码时链接进去）。
 
-生成随机uuid:网络上唯一标识所有接口，以便客户端可以找到它们
+生成随机 UUID：用于在网络上唯一标识接口，以便客户端可以找到它们。
 
 **uuidgen -i -oMyApp.idl**
 
@@ -1481,17 +1491,17 @@ interface INTERFACENAME
 }
 ```
 
-#### rpc编程示例
+#### rpc 编程示例
 
-https://developer.aliyun.com/article/258886
+完整的 RPC 编程入门示例可参考：https://developer.aliyun.com/article/258886
 
 ### ndr.py
 
-微软使用NDR(Network Data Representation)Engine 来marshaling (类似序列化和反序列化)rpc和dcom通信时客户端和服务端stub之间的数据，IDL 的一个作用是提供用于描述这些结构化数据类型和值的语法。但是，RPC 协议指定输入和输出以八位字节流的形式传递，NDR 的作用是提供 IDL 数据类型到八位字节流的映射。NDR 在八位字节流中定义了原始数据类型、构造数据类型和这些类型的表示。
+微软使用 NDR（Network Data Representation）引擎来封送（marshaling，类似序列化 / 反序列化）RPC 和 DCOM 通信时客户端与服务端 stub 之间的数据。IDL 的一个作用是提供描述这些结构化数据类型和值的语法。但是，RPC 协议指定输入和输出以八位字节流的形式传递，NDR 的作用是提供 IDL 数据类型到八位字节流的映射。NDR 在八位字节流中定义了原始数据类型、构造数据类型和这些类型的表示。
 
-对于某些原始数据类型，NDR 定义了几种数据表示形式。例如，NDR 定义了字符的 ASCII 和 EBCDIC 格式。当客户端或服务器发送 RPC PDU 时，使用的格式在 PDU 的格式标签中标识。数据表示格式和格式标签支持 NDR *多规范*数据转换方法；也就是说，有一组固定的数据类型替代表示法。
+对于某些原始数据类型，NDR 定义了几种数据表示形式。例如，NDR 定义了字符的 ASCII 和 EBCDIC 格式。当客户端或服务器发送 RPC PDU 时，使用的格式在 PDU 的格式标签中标识。数据表示格式和格式标签支持 NDR 的多规范（multi-canonical）数据转换方法；也就是说，有一组固定的数据类型替代表示法。
 
-ndr.py定义了ndr协议传输过程中的各类数据结构的格式，如NDRArray等，并在各个数据类型中可使用getData函数处理数据获得符合ndr数据结构要求的数据
+ndr.py 定义了 NDR 传输中各类数据结构的格式（如 NDRArray 等），各数据类型均可通过 getData 函数把数据处理成符合 NDR 结构要求的数据。
 
 ```python
 class NDRVaryingString(NDRUniVaryingArray):
@@ -1507,10 +1517,10 @@ class NDRVaryingString(NDRUniVaryingArray):
         return NDRUniVaryingArray.getData(self, soFar)
 ```
 
-后续其他需要进行rpc通信的脚本都会调用ndr模块获取标准的ndr格式数据用于rpc接口通信中,我们可以看到CVE-2020-1472中Netlogon 远程协议是一个远程过程调用 (RPC) 接口，用于在基于域的网络上进行用户和机器身份验证，就使用了ndr中的标准形式作为接口通信的参数
+后续所有需要进行 RPC 通信的脚本都会调用 ndr 模块来构造标准的 NDR 格式数据。例如 CVE-2020-1472（Zerologon）所针对的 Netlogon 远程协议——一个用于域网络上用户和机器身份验证的 RPC 接口——其利用脚本就使用了 ndr 中的标准结构作为接口通信参数：
 
 ```python
-eg./CVE-2020-1472/blob/master/nrpc.py
+# eg./CVE-2020-1472/blob/master/nrpc.py
 from impacket.dcerpc.v5.ndr import NDRCALL, NDRSTRUCT, NDRENUM, NDRUNION, NDRPOINTER, NDRUniConformantArray, \
     NDRUniFixedArray, NDRUniConformantVaryingArray
 
@@ -1527,11 +1537,11 @@ class NETLOGON_SECURE_CHANNEL_TYPE(NDRENUM):
 
 ```
 
-对ndr结构化数据结构感兴趣的可以看这个文档https://pubs.opengroup.org/onlinepubs/9629399/chap14.htm
+对 NDR 结构化数据感兴趣的读者可参阅此文档：https://pubs.opengroup.org/onlinepubs/9629399/chap14.htm
 
 ### [MS-DTYP]dtypes.py
 
-主要定义了协议通信中的各个基础数据类型，如DWORD，BOOL等等,具体类型数据可查看文档
+主要定义了协议通信中的各个基础数据类型，如DWORD，BOOL等等，具体类型数据可查看文档
 
 https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dtyp/cca27429-5689-4a16-b2b4-9325d93e4ba2
 
@@ -1552,17 +1562,17 @@ https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dtyp/cca27429-5
 	- getData 遍历上下文对象
 + MSRPCBindAck 应答型rpc绑定
 + MSRPCBindNak 无应答rpc绑定
-+ DCERPC       Distributed Computing Environment/Remote Procedure Calls分布式计算环境开发的远程过程调用系统，设置了ndr传输协议的语法，8a885d04-1ceb-11c9-9fe8-08002b104860代表了2.0数据表示协议，71710533-BEBA-4937-8319-B5DBEF9CCC36是64位ndr数据表示协议
++ DCERPC       Distributed Computing Environment/Remote Procedure Calls（分布式计算环境远程过程调用），协商 NDR 传输语法：8a885d04-1ceb-11c9-9fe8-08002b104860 对应 NDR 2.0 传输语法，71710533-BEBA-4937-8319-B5DBEF9CCC36 对应 NDR64 传输语法
 	- connect rpc连接
 	- get_rpc_transport获取rpc端口等关键方法
 	- call设置pdu（协议数据单元）数据段，
 	- request发送请求，
 	- get_credentials获取凭证，
 	- set_credentials设置凭证，
-	- bing rpc绑定
+	- bind RPC 绑定
 	- send 调用_transport_send发送rpc请求
 	- alter_ctx 更新为新的上下文对象
-+ DCERPC_RawCall 给pdu data 赋值
++ DCERPC_RawCall 给 PDU 的 data 字段赋值
 + CommonHeader 共同的header
 + PrivateHeader 私有header
 + TypeSerialization1 指定ndr序列化标准
@@ -1571,7 +1581,7 @@ https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dtyp/cca27429-5
 ![类型序列化版本 1](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rpce/ms-rpce_files/image015.png)
 
 ```python
-+ DCERPCServer 简易的rpc服务器，在impacket中用于建立一个简易的smb服务器
++ DCERPCServer 简易的 RPC 服务器，impacket 的 smbserver.py 借助它在内置 SMB 服务器上响应命名管道中的 RPC 请求
 	- addCallbacks 回应请求的回调函数
 	- setListenPort
 	- getListenPort
@@ -1581,7 +1591,7 @@ https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dtyp/cca27429-5
 	- bind
 	- processRequest 处理请求
 	
-eg./impacket/smbserver.py
+# eg./impacket/smbserver.py
 class WKSTServer(DCERPCServer):
     def __init__(self):
         DCERPCServer.__init__(self)
@@ -1593,11 +1603,11 @@ class WKSTServer(DCERPCServer):
 
 ### enum.py
 
-python 枚举模块
+Python 枚举基类模块，NDR 中的 NDRENUM 等枚举类型都基于它实现。
 
----------------------
+---
 
-好了，目前impacket中关于MRPC通信的基础模块就介绍完了，后面开始介绍mrpc中涉及到的各个接口的py模块
+以上就是 impacket 中 MSRPC 通信的基础模块，后面开始介绍各个 RPC 接口对应的 py 模块。
 
 ### [MS-RPC-EPM]epm.py
 
@@ -1605,7 +1615,7 @@ python 枚举模块
 Microsoft 远程过程调用 (RPC) 端点映射器 (EPM) 协议。这是基于 TCP/UDP 端口的服务，包括 TCP/UDP 端口 135。此表中的所有其他服务/组都是基于 UUID 的。
 ```
 
-模块列举了已知的大量uuid对应的dll和rpc接口，主要函数为hept_map，用于根据接口uuid创建rpc端点的绑定与连接,支持ncacn_np、ncacn_ip_tcp、ncacn_http协议
+该模块列举了大量已知 UUID 对应的 DLL 和 RPC 接口；主要函数为 hept_map（impacket 源码中的历史拼写，即端点映射 ept_map），用于根据接口 UUID 解析出 RPC 端点的字符串绑定，支持 ncacn_np、ncacn_ip_tcp、ncacn_http 协议：
 
 ```python
 def hept_map(destHost, remoteIf, dataRepresentation = uuidtup_to_bin(('8a885d04-1ceb-11c9-9fe8-08002b104860', '2.0')), protocol = 'ncacn_np', dce=None):
@@ -1705,7 +1715,7 @@ def hept_map(destHost, remoteIf, dataRepresentation = uuidtup_to_bin(('8a885d04-
     return result
 
 
-eg./examples/ntlmrelayx/clients/rpcrelayclient.py
+# eg./examples/ntlmrelayx/clients/rpcrelayclient.py
 
 from impacket.dcerpc.v5 import transport, rpcrt, epm, tsch
 from impacket.dcerpc.v5.ndr import NDRCALL
@@ -1715,9 +1725,76 @@ from impacket.dcerpc.v5.rpcrt import DCERPC_v5, MSRPCBind, CtxItem, MSRPCHeader,
     	......
 ```
 
-### [MS-EVEN(6)]even(6).py
+### transport.py
 
-EventLog Remoting Protocol，它公开 RPC 方法以读取远程计算机上实时和备份事件日志中的事件。6指的是第六版。用于读取远程计算机上[实时事件日志](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-even/e74c8719-c30e-4f7a-bef7-82753cc0e159#gt_3c0e011b-e37d-40ef-90d6-1ed516f06b1c)和[备份事件日志中的事件。](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-even/e74c8719-c30e-4f7a-bef7-82753cc0e159#gt_ddd2e7db-ea8f-4488-ac5f-e77d59abe9e4)该协议还指定了如何获取日志的一般信息，例如日志中的记录数、日志中最旧的记录以及日志是否已满。该协议还可用于清除和备份这两种类型的[事件日志](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-even/e74c8719-c30e-4f7a-bef7-82753cc0e159#gt_bb3fad7e-60bf-46d4-9c3f-7caea47a743e)。
+实现了 DCE/RPC 的传输层：通过 DCERPCTransportFactory 按字符串绑定（string binding）建立 TCP、UDP、HTTP、SMB（命名管道）等协议的 RPC 连接。
+
+```python
+def DCERPCTransportFactory(stringbinding):
+    sb = DCERPCStringBinding(stringbinding)
+
+    na = sb.get_network_address()
+    ps = sb.get_protocol_sequence()
+    if 'ncadg_ip_udp' == ps:
+        port = sb.get_endpoint()
+        if port:
+            rpctransport = UDPTransport(na, int(port))
+        else:
+            rpctransport = UDPTransport(na)
+    elif 'ncacn_ip_tcp' == ps:
+        port = sb.get_endpoint()
+        if port:
+            rpctransport = TCPTransport(na, int(port))
+        else:
+            rpctransport = TCPTransport(na)
+    elif 'ncacn_http' == ps:
+        port = sb.get_endpoint()
+        if port:
+            rpctransport = HTTPTransport(na, int(port))
+        else:
+            rpctransport = HTTPTransport(na)
+    elif 'ncacn_np' == ps:
+        named_pipe = sb.get_endpoint()
+        if named_pipe:
+            named_pipe = named_pipe[len(r'\pipe'):]
+            rpctransport = SMBTransport(na, filename = named_pipe)
+        else:
+            rpctransport = SMBTransport(na)
+    elif 'ncalocal' == ps:
+        named_pipe = sb.get_endpoint()
+        rpctransport = LOCALTransport(filename = named_pipe)
+    else:
+        raise DCERPCException("Unknown protocol sequence.")
+
+    rpctransport.set_stringbinding(sb)
+    return rpctransport
+```
+
+以 examples/psexec.py 为例，通过 DCERPCTransportFactory 建立 scmr 接口（\pipe\svcctl）的 RPC 连接：
+
+```python
+# eg./examples/psexec.py
+    executer = PSEXEC(command, options.path, options.file, options.c, int(options.port), username, password, domain, options.hashes,
+                      options.aesKey, options.k, options.dc_ip, options.service_name, options.remote_binary_name)
+    executer.run(remoteName, options.target_ip)
+
+   def run(self, remoteName, remoteHost):
+        stringbinding = r'ncacn_np:%s[\pipe\svcctl]' % remoteName
+        logging.debug('StringBinding %s'%stringbinding)
+        rpctransport = transport.DCERPCTransportFactory(stringbinding)
+        rpctransport.set_dport(self.__port)
+        rpctransport.setRemoteHost(remoteHost)
+        if hasattr(rpctransport, 'set_credentials'):
+            # This method exists only for selected protocol sequences.
+            rpctransport.set_credentials(self.__username, self.__password, self.__domain, self.__lmhash,
+                                         self.__nthash, self.__aesKey)
+        rpctransport.set_kerberos(self.__doKerberos, self.__kdcHost)
+        self.doStuff(rpctransport)
+```
+
+### [MS-EVEN / MS-EVEN6] even.py / even6.py
+
+EventLog Remoting Protocol，它公开 RPC 方法以读取远程计算机上实时和备份事件日志中的事件。even6 中的 6 指第六版（MS-EVEN6）。用于读取远程计算机上[实时事件日志](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-even/e74c8719-c30e-4f7a-bef7-82753cc0e159#gt_3c0e011b-e37d-40ef-90d6-1ed516f06b1c)和[备份事件日志中的事件。](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-even/e74c8719-c30e-4f7a-bef7-82753cc0e159#gt_ddd2e7db-ea8f-4488-ac5f-e77d59abe9e4)该协议还指定了如何获取日志的一般信息，例如日志中的记录数、日志中最旧的记录以及日志是否已满。该协议还可用于清除和备份这两种类型的[事件日志](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-even/e74c8719-c30e-4f7a-bef7-82753cc0e159#gt_bb3fad7e-60bf-46d4-9c3f-7caea47a743e)。
 
 两个版本实现的方法如下
 
@@ -1732,11 +1809,11 @@ OPNUMS = {
     8   : (ElfrRegisterEventSourceW, ElfrRegisterEventSourceWResponse),方法指示服务器将服务器上下文句柄返回到事件日志以供写入
     9   : (ElfrOpenBELW, ElfrOpenBELWResponse),方法指示服务器返回备份事件日志的句柄。
     10  : (ElfrReadELW, ElfrReadELWResponse),方法从事件日志中读取事件；服务器将这些事件传输到客户端，并在与在LogHandle参数中传递的服务器上下文句柄关联的事件日志中提高读者的位置。
-    11  : (ElfrReportEventW, ElfrReportEventWResponse),
-}方法将事件写入事件日志；服务器从客户端接收这些事件。
+    11  : (ElfrReportEventW, ElfrReportEventWResponse), 方法将事件写入事件日志；服务器从客户端接收这些事件。
+}
 ```
 
-第六版
+even6.py（第六版）：
 
 ```
 OPNUMS = {
@@ -1753,7 +1830,7 @@ OPNUMS = {
 
 iphlpsvc.dll,Windows 中的 iphlpsvc 是一种 Internet 协议帮助程序服务，其工作是帮助检索和修改 Windows 10 PC 的网络配置设置。它有效地允许跨各种 Windows 10 网络协议（如 IPv6 和端口代理等）进行连接。Iphlpsvc 主要用于运行远程数据库或通过 IPv6 连接。
 
-模块实现的函数也是为ipv6通信架设tunnel
+模块实现的函数用于为 IPv6 通信架设隧道（IPv6-in-IPv4 tunnel）。
 
 ```
 
@@ -1767,22 +1844,21 @@ OPNUMS = {
 
 ### [MS-LSAD]lsad.py
 
-MS-LSAD,本地安全机构（域策略）远程协议用于管理各种机器和[域](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-lsad/31ca2a31-0be4-4773-bcef-05ad6cd3ccfb#gt_b0276eb2-4e65-4cf1-a718-e0920a614aca)安全策略。基于 Windows NT 操作系统的所有版本的产品，在所有配置中，都在该协议的服务器端实施和侦听。但是，并非所有操作在所有配置中都有意义。
+MS-LSAD（本地安全机构（域策略）远程协议）用于管理各种机器和[域](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-lsad/31ca2a31-0be4-4773-bcef-05ad6cd3ccfb#gt_b0276eb2-4e65-4cf1-a718-e0920a614aca)安全策略。所有基于 Windows NT 的产品在所有配置中都会在服务端实现并侦听该协议，但并非所有操作在所有配置中都有意义。
 
-除了少数例外，此协议支持远程策略管理方案。因此，不需要实现此接口的大部分来实现 Windows 客户端到服务器（[域控制器](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-lsad/31ca2a31-0be4-4773-bcef-05ad6cd3ccfb#gt_76a05049-3531-4abd-aec8-30e19954b4bd)配置和其他）的互操作性，正如 Windows 客户端从服务器检索策略设置的能力所定义的那样。
+除少数例外，该协议支持远程策略管理场景。因此，为实现 Windows 客户端与服务端（[域控制器](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-lsad/31ca2a31-0be4-4773-bcef-05ad6cd3ccfb#gt_76a05049-3531-4abd-aec8-30e19954b4bd)配置等）的互操作性——如 Windows 客户端从服务器检索策略设置的能力——并不需要实现该接口的全部方法。
 
 此协议控制的策略设置涉及以下内容：
 
-- **帐户对象**：[安全主体](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-lsad/31ca2a31-0be4-4773-bcef-05ad6cd3ccfb#gt_f3ef2572-95cf-4c5c-b3c9-551fd648f409)在服务器上拥有的权利和[特权。](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-lsad/31ca2a31-0be4-4773-bcef-05ad6cd3ccfb#gt_d8092e10-b227-4b44-b015-511bb8178940)
+- **账户对象**：[安全主体](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-lsad/31ca2a31-0be4-4773-bcef-05ad6cd3ccfb#gt_f3ef2572-95cf-4c5c-b3c9-551fd648f409)在服务器上拥有的权利和[特权。](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-lsad/31ca2a31-0be4-4773-bcef-05ad6cd3ccfb#gt_d8092e10-b227-4b44-b015-511bb8178940)
 - **秘密对象**：在服务器上安全存储数据的机制。
 - **可信域对象**：Windows 操作系统用于描述域和[林之间](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-lsad/31ca2a31-0be4-4773-bcef-05ad6cd3ccfb#gt_fd104241-4fb3-457c-b2c4-e0c18bb20b62)[信任](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-lsad/31ca2a31-0be4-4773-bcef-05ad6cd3ccfb#gt_5ee032d0-d944-4acb-bbb5-b1cfc7df6db6)关系的机制。
 - 其他杂项设置，例如 Kerberos 票证的生命周期、域控制器的状态（备份或主要）以及其他不相关的策略。
 
-以下是远程管理的主要用例： 
+远程管理的主要用例：
 
-创建、删除、枚举和修改信任、帐户对象和秘密对象。 
-
-查询和修改与 可信域对象TDO、帐户对象或秘密对象无关的策略设置，例如 Kerberos 票证的生命周期。 
+- 创建、删除、枚举和修改信任、账户对象和秘密对象；
+- 查询和修改与可信域对象（TDO）、账户对象或秘密对象无关的策略设置，例如 Kerberos 票证的生命周期。
 
 ```
 Policy object:
@@ -1869,7 +1945,7 @@ LsarSetTrustedDomainInfoByName
 3. 在修改 Kerberos 票证策略信息的部分以适合请求者之后，请求者发出 LsarSetDomainInformationPolicy 请求以将策略设置为新值。
 4. 请求者关闭从 LsarOpenPolicy3 返回的策略句柄。这将释放与句柄关联的响应程序资源。
 
-这里可以直接看/examples/goldenPac.py中的示例,通过hLsarOpenPolicy2返回的句柄发送hLsarQueryInformationPolicy2请求查询POLICY_INFORMATION_CLASS.PolicyAccountDomainInformation获取forestSid
+这里直接看 examples/goldenPac.py 中的示例：通过 hLsarOpenPolicy2 返回的句柄发送 hLsarQueryInformationPolicy2 请求，查询 POLICY_INFORMATION_CLASS.PolicyAccountDomainInformation 获取 forestSid（已与 impacket 上游源码核对一致）：
 
 ```python
 /examples/goldenPac.py
@@ -1896,27 +1972,27 @@ resp = hLsarOpenPolicy2(dce, MAXIMUM_ALLOWED | POLICY_LOOKUP_NAMES)
  6 : (LsarOpenPolicy, LsarOpenPolicyResponse),方法与LsarOpenPolicy2完全相同，不同之处在于此函数中的SystemName参数，由于其语法定义，仅包含一个字符而不是完整的字符串。此SystemName参数对任何环境中的消息处理都没有任何影响。它必须被忽略。
  7 : (LsarQueryInformationPolicy, LsarQueryInformationPolicyResponse),方法来查询表示服务器信息策略的值。
  8 : (LsarSetInformationPolicy, LsarSetInformationPolicyResponse),方法被调用以在服务器上设置策略。
-10 : (LsarCreateAccount, LsarCreateAccountResponse),方法被调用以在服务器的数据库中创建一个新的帐户对象。
-11 : (LsarEnumerateAccounts, LsarEnumerateAccountsResponse),方法以请求服务器数据库中的帐户对象列表。可以多次调用该方法以片段形式返回其输出。
+10 : (LsarCreateAccount, LsarCreateAccountResponse),方法被调用以在服务器的数据库中创建一个新的账户对象。
+11 : (LsarEnumerateAccounts, LsarEnumerateAccountsResponse),方法以请求服务器数据库中的账户对象列表。可以多次调用该方法以片段形式返回其输出。
 13 : (LsarEnumerateTrustedDomains, LsarEnumerateTrustedDomainsResponse),请求 服务器数据库中的受信任域对象列表。可以多次调用该方法以片段形式返回其输出。
 16 : (LsarCreateSecret, LsarCreateSecretResponse),被调用以在服务器的数据库中创建一个新的秘密对象
-17 : (LsarOpenAccount, LsarOpenAccountResponse),获得帐户对象的句柄。
-18 : (LsarEnumeratePrivilegesAccount, LsarEnumeratePrivilegesAccountResponse),检索授予服务器上帐户的特权列表。
-19 : (LsarAddPrivilegesToAccount, LsarAddPrivilegesToAccountResponse),向现有帐户对象添加新权限。
-20 : (LsarRemovePrivilegesFromAccount, LsarRemovePrivilegesFromAccountResponse),从帐户对象中删除权限。
-23 : (LsarGetSystemAccessAccount, LsarGetSystemAccessAccountResponse),检索帐户对象的系统访问帐户标志。系统访问帐户标志被描述为帐户对象数据模型的一部分
-24 : (LsarSetSystemAccessAccount, LsarSetSystemAccessAccountResponse),为帐户对象设置系统访问帐户标志
+17 : (LsarOpenAccount, LsarOpenAccountResponse),获得账户对象的句柄。
+18 : (LsarEnumeratePrivilegesAccount, LsarEnumeratePrivilegesAccountResponse),检索授予服务器上账户的特权列表。
+19 : (LsarAddPrivilegesToAccount, LsarAddPrivilegesToAccountResponse),向现有账户对象添加新权限。
+20 : (LsarRemovePrivilegesFromAccount, LsarRemovePrivilegesFromAccountResponse),从账户对象中删除权限。
+23 : (LsarGetSystemAccessAccount, LsarGetSystemAccessAccountResponse),检索账户对象的系统访问账户标志。系统访问账户标志被描述为账户对象数据模型的一部分
+24 : (LsarSetSystemAccessAccount, LsarSetSystemAccessAccountResponse),为账户对象设置系统访问账户标志
 28 : (LsarOpenSecret, LsarOpenSecretResponse),获得现有秘密对象的句柄
 29 : (LsarSetSecret, LsarSetSecretResponse),设置秘密对象的当前值和旧值
 30 : (LsarQuerySecret, LsarQuerySecretResponse),检索秘密对象的当前值和旧值（或以前的值） 
 31 : (LsarLookupPrivilegeValue, LsarLookupPrivilegeValueResponse),将权限的名称映射到本地唯一标识符 (LUID)，通过该标识符在服务器上已知该权限。然后可以在对其他方法（例如LsarAddPrivilegesToAccount ）的后续调用中使用特权的本地唯一值。
 32 : (LsarLookupPrivilegeName, LsarLookupPrivilegeNameResponse),将特权的 LUID 映射 到服务器上已知特权 的字符串名称
 33 : (LsarLookupPrivilegeDisplayName, LsarLookupPrivilegeDisplayNameResponse),将特权名称映射到调用者语言的显示文本字符串中
-34 : (LsarDeleteObject, LsarDeleteObjectResponse),删除公开帐户对象、秘密对象或可信域对象
-35 : (LsarEnumerateAccountsWithUserRight, LsarEnumerateAccountsWithUserRightResponse),返回用户权限等于传入值的帐户对象列表
-36 : (LsarEnumerateAccountRights, LsarEnumerateAccountRightsResponse),来检索与现有帐户关联的权限列表。
-37 : (LsarAddAccountRights, LsarAddAccountRightsResponse),向帐户对象添加新权限。如果帐户对象不存在，系统将尝试创建一个。
-38 : (LsarRemoveAccountRights, LsarRemoveAccountRightsResponse),从帐户对象中删除权限。
+34 : (LsarDeleteObject, LsarDeleteObjectResponse),删除公开账户对象、秘密对象或可信域对象
+35 : (LsarEnumerateAccountsWithUserRight, LsarEnumerateAccountsWithUserRightResponse),返回用户权限等于传入值的账户对象列表
+36 : (LsarEnumerateAccountRights, LsarEnumerateAccountRightsResponse),来检索与现有账户关联的权限列表。
+37 : (LsarAddAccountRights, LsarAddAccountRightsResponse),向账户对象添加新权限。如果账户对象不存在，系统将尝试创建一个。
+38 : (LsarRemoveAccountRights, LsarRemoveAccountRightsResponse),从账户对象中删除权限。
 42 : (LsarStorePrivateData, LsarStorePrivateDataResponse),存储秘密值
 43 : (LsarRetrievePrivateData, LsarRetrievePrivateDataResponse),检索秘密值
 44 : (LsarOpenPolicy2, LsarOpenPolicy2Response),打开RPC 服务器的上下文句柄。这是联系本地安全机构（域策略）远程协议数据库必须调用的第一个函数。
@@ -1927,10 +2003,10 @@ resp = hLsarOpenPolicy2(dce, MAXIMUM_ALLOWED | POLICY_LOOKUP_NAMES)
 
 ```
 
-比较有趣的是尽管有这么多远程获取policy的方法已经实现，在secretdump中使用的是通过注册表来获取policy的值
+有趣的是，尽管 lsad 实现了这么多远程读取方法，secretsdump 实际是通过远程注册表（RRP）读取 LSA Secrets（注册表路径 HKLM\SECURITY\Policy\Secrets\...）的：
 
 ```python
-eg./impacket/examples/secretsdump.py
+# eg./impacket/examples/secretsdump.py
 for key in keys:
             LOG.debug('Looking into %s' % key)
             valueTypeList = ['CurrVal']
@@ -1959,7 +2035,7 @@ for key in keys:
 
 ### [MS-LSAT]lsat.py
 
-本地安全机构（转换方法）远程协议,，用于在人类可读和机器可读形式之间转换安全主体的标识符。
+本地安全机构（转换方法）远程协议，用于在人类可读和机器可读形式之间转换安全主体的标识符。
 
 模块实现了如下接口方法
 
@@ -1984,34 +2060,32 @@ OPNUMS = {
  76 : (LsarLookupSids3, LsarLookupSids3Response),
 仅当 RPC 服务器是域控制器时，此消息才有效。如果 RPC 服务器不是域控制器，则 RPC 服务器必须在返回值中返回 STATUS_INVALID_SERVER_STATE。
     
- 77 : (LsarLookupNames4, LsarLookupNames4Response),
-}仅当 RPC 服务器是域控制器时，此消息才有效。如果 RPC 服务器不是域控制器，则 RPC 服务器必须在返回值中返回 STATUS_INVALID_SERVER_STATE。
+ 77 : (LsarLookupNames4, LsarLookupNames4Response), 仅当 RPC 服务器是域控制器时此消息才有效。如果 RPC 服务器不是域控制器，则必须在返回值中返回 STATUS_INVALID_SERVER_STATE。
+}
 ```
 
-可以看到在/examples/lookupsid.py中绑定lsat接口获取当前安全主体是否允许远程登录
+examples/lookupsid.py 通过 lsat 接口循环枚举 SID，实现域内用户盘点：
 
 ```python
-eg./examples/lookupsid.py
+# eg./examples/lookupsid.py
         resp = lsad.hLsarOpenPolicy2(dce, MAXIMUM_ALLOWED | lsat.POLICY_LOOKUP_NAMES)
         policyHandle = resp['PolicyHandle']
 
-eg.lsat.py
-POLICY_LOOKUP_NAMES             = 0x00000800
-
-POLICY_MODE_DENY_REMOTE_INTERACTIVE 0x00000800
-拒绝用户作为远程桌面客户端登录系统的权利。
+# eg.lsat.py
+POLICY_LOOKUP_NAMES = 0x00000800  # 打开 Policy 对象时允许进行名称/SID 查询的访问掩码位
 ```
+
+注意：不要把 `POLICY_LOOKUP_NAMES`（0x800）与“拒绝远程交互登录”之类的用户权利标志混淆——两者数值巧合相同，但属于完全不同的概念（前者是 LSAD/LSAT 的访问掩码位，后者是账户权限）。
 
 ### mgmt.py
 
-根据开头定义的接口id，该接口为RMI 或远程管理接口，模块完成了以下几个方法,从Windows文档中并没有找到更多的信息，所以去查看了linux下freedce(FreeDCE RPC and DCOM Toolkit for Linux)的mgmt.c的源码
+根据开头定义的接口 ID，该接口为 RPC 远程管理接口（RPC Management）。模块完成了以下几个方法；Windows 文档中相关资料不多，方法说明参考了 Linux 下 freedce（FreeDCE RPC and DCOM Toolkit for Linux）的 mgmt.c 源码：
 
 ```python
 OPNUMS = {
  0 : (inq_if_ids, inq_if_idsResponse),查询if id向量，这是一个本地/远程管理函数，它获取一个接口标识向量，列出在 RPC runtime注册的接口。如果服务器未注册任何接口，此例程将返回 rpc_s_no_interfaces 状态代码和 NULL if_id_vector。应用程序负责调用rpc_if_id_vector_free 来释放vector 使用的内存。
     
- 1 : (inq_stats, inq_statsResponse),查询状态。这是获取统计信息的本地/远程管理功能
-关于来自 RPC runtime的指定服务器。中的每个元素返回的参数包含一个整数值，可以使用定义的统计常量
+ 1 : (inq_stats, inq_statsResponse), 查询状态，用于获取指定服务器 RPC runtime 的统计信息。返回参数中的每个元素是一个整数值，对应定义好的统计常量
     
  2 : (is_server_listening, is_server_listeningResponse),判断服务器是否监听
  3 : (stop_server_listening, stop_server_listeningResponse),停止服务器监听
@@ -2040,7 +2114,7 @@ OPNUMS = {
          unsigned32              * /*status*/
      ));
   
- 
+ 
  INTERNAL void inq_princ_name _DCE_PROTOTYPE_ ((            
          rpc_binding_handle_t     /*binding_h*/,
          unsigned32               /*authn_proto*/,
@@ -2110,7 +2184,9 @@ OPNUMS = {
 }
 ```
 
-mimikatz rpc接口使用Diffie-Hellman加密算法来加密command数据,与该rpc接口通信需要在dc上开启对应rpc服务
+> 注：mimikatz 的 IDL 中方法名为 `MiniUnbind`，而 impacket 实现中拼作 `MimiUnbind`，这是两边源码各自的原始拼写，阅读时注意对应关系即可。
+
+mimikatz 的 RPC 接口通过 Diffie-Hellman 密钥交换协商会话密钥，再用它加密 command 数据。与该接口通信，需要目标机器上运行 mimikatz 并执行 rpc::server 开启服务：
 
 ```cmd
   mimikatz # rpc::server
@@ -2118,7 +2194,7 @@ mimikatz rpc接口使用Diffie-Hellman加密算法来加密command数据,与该r
 
 ### [MS-NRPC]nrpc.py
 
-这协议从名字看就很眼熟，是的，Zerologon就是出在这个协议上面
+这个协议从名字看就很眼熟——Zerologon（CVE-2020-1472）正是出在这个协议上。
 
 Netlogon 远程协议是一个远程过程调用 (RPC) 接口，用于在基于域的网络上进行用户和机器身份验证。Netlogon 远程协议 RPC 接口还用于为备份域控制器 (BDC) 复制数据库。
 
@@ -2130,25 +2206,25 @@ Netlogon 远程协议用于域中的计算机[与](https://learn.microsoft.com/e
 
 Netlogon 远程协议客户端和服务器只能在加入域的系统上运行，并在引导期间启动。当系统脱离域时，客户端和服务器将停止并且不会在引导期间启动。
 
-用户帐户可以位于服务器域以外的域中。在这种情况下，从服务器接收到登录请求的DC会将请求传递给用户帐户域中的 DC。为了使这种情况起作用，服务器的域（称为资源域）和用户帐户的域（称为帐户域）建立信任关系，其中在帐户域中做出的身份验证决策在资源中是可信的领域。在这种信任关系中，资源域称为信任域，帐户域称为信任域。信任关系由两个域的管理员建立。 信任建立的结果是共享秘密 （称为信任密码），DC 在两个域中使用该秘密来计算用于保护安全通道的会话密钥 交通。通过使用这个安全通道，资源域中的DC可以将登录请求安全地传递给帐户域中的DC，就像服务器将登录请求传递给原DC一样。通过信任关系连接的两个域中的DC之间的安全通道称为可信域安全通道。相反，资源域中服务器和DC之间的安全通道称为工作站安全通道。下图描述了一个透传认证过程，其中认证请求通过两个安全通道：从域 A 中的服务器到同域中的 DC，然后从该 DC 到域 B 中的 DC，这包含用户帐户。
+用户账户可以位于服务器域以外的域中。在这种情况下，从服务器接收到登录请求的DC会将请求传递给用户账户域中的 DC。为了使这种情况起作用，服务器的域（称为资源域）和用户账户的域（称为账户域）建立信任关系，其中在账户域中做出的身份验证决策在资源域中是可信的。在这种信任关系中，资源域称为信任域（trusting domain），账户域称为受信任域（trusted domain）。信任关系由两个域的管理员建立。 信任建立的结果是共享秘密 （称为信任密码），DC 在两个域中使用该秘密来计算用于保护安全通道流量的会话密钥。通过使用这个安全通道，资源域中的DC可以将登录请求安全地传递给账户域中的DC，就像服务器将登录请求传递给原DC一样。通过信任关系连接的两个域中的DC之间的安全通道称为可信域安全通道。相反，资源域中服务器和DC之间的安全通道称为工作站安全通道。下图描述了一个透传认证过程，其中认证请求通过两个安全通道：从域 A 中的服务器到同域中的 DC，然后从该 DC 到域 B 中的 DC，这包含用户账户。
 
 ![传递身份验证和域信任](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-nrpc/ms-nrpc_files/image002.png)
 
-备份域控制器 (BDC) 是维护域帐户数据库的完整副本并可以满足身份验证请求但不允许修改帐户的域控制器。相反，域的 BDC 使用帐户数据库复制方法从主域控制器 (PDC)复制帐户数据库。为了安全地请求和传输复制数据，Netlogon 使用BDC 通过使用 BDC 的计算机帐户密码与 PDC 建立的安全通道。这种类型的安全通道称为服务器安全通道。
+备份域控制器 (BDC) 是维护域账户数据库的完整副本并可以满足身份验证请求但不允许修改账户的域控制器。相反，域的 BDC 使用账户数据库复制方法从主域控制器 (PDC)复制账户数据库。为了安全地请求和传输复制数据，Netlogon 使用BDC 通过使用 BDC 的计算机账户密码与 PDC 建立的安全通道。这种类型的安全通道称为服务器安全通道。
 
-基于共享秘密的通道的安全性取决于该共享值的保密性。良好的密码卫生要求这样的共享值不是永久的。该协议包括选择新密码并将其从客户端传送到DC的工具。这允许此协议的客户端实现在机器帐户（如果请求来自工作站安全通道）或信任帐户（如果请求来自受信任域安全通道）上设置新密码。
+基于共享秘密的通道的安全性取决于该共享值的保密性。良好的密码卫生要求这样的共享值不是永久的。该协议包括选择新密码并将其从客户端传送到DC的工具。这允许此协议的客户端实现在机器账户（如果请求来自工作站安全通道）或信任账户（如果请求来自受信任域安全通道）上设置新密码。
 
 在某些应用场景中，可能需要获取域 信任列表。例如，收集用户凭据的应用程序可能需要提供可信域列表，用户可以从中选择他们的域。Netlogon 远程协议通过检索域信任信息的方法为此类应用程序提供服务。
 
-某些应用程序可能需要验证它们发送到 DC 和从[DC](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-nrpc/b5e7d25a-40b2-41c8-9611-98f53358af66#gt_76a05049-3531-4abd-aec8-30e19954b4bd)接收的消息。Netlogon 远程协议通过使用计算机帐户或信任密码作为加密密钥计算消息的加密摘要的方法为此类应用程序提供服务。通过使用这些方法，在 DC 上运行的应用程序获取消息摘要并将其包含在对客户端的响应中。客户端上运行的应用程序接收到消息，获取消息摘要，并将摘要与从DC接收到的摘要进行比较。如果两个摘要相同，则客户端确定该消息确实是由 DC 发送的。
+某些应用程序可能需要验证它们发送到 DC 和从[DC](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-nrpc/b5e7d25a-40b2-41c8-9611-98f53358af66#gt_76a05049-3531-4abd-aec8-30e19954b4bd)接收的消息。Netlogon 远程协议通过使用计算机账户或信任密码作为加密密钥计算消息的加密摘要的方法为此类应用程序提供服务。通过使用这些方法，在 DC 上运行的应用程序获取消息摘要并将其包含在对客户端的响应中。客户端上运行的应用程序接收到消息，获取消息摘要，并将摘要与从DC接收到的摘要进行比较。如果两个摘要相同，则客户端确定该消息确实是由 DC 发送的。
 
-管理员可能需要控制或查询与 Netlogon 操作相关的行为。例如，管理员可能想要强制更改计算机帐户密码，或者可能想要将安全通道重置为域中的特定DC。Netlogon 通过查询和控制服务器的方法提供此类管理服务。
+管理员可能需要控制或查询与 Netlogon 操作相关的行为。例如，管理员可能想要强制更改计算机账户密码，或者可能想要将安全通道重置为域中的特定DC。Netlogon 通过查询和控制服务器的方法提供此类管理服务。
 
-Netlogon 客户端对域成员执行的第一个操作是在其域中查找 用于设置安全通道的DC。此过程称为 DC 发现。发现 DC 后，域成员将建立到 DC 的安全通道。 对于从客户端到 DC 的与身份验证有关的所有后续请求，Netlogon 远程协议使用安全通道传输请求。Netlogon 远程协议通过安全通道从 DC 接收用户验证数据，并将数据返回给身份验证协议。 操作系统可以定期使用 Netlogon 远程协议更改计算机帐户密码。
+Netlogon 客户端对域成员执行的第一个操作是在其域中查找 用于设置安全通道的DC。此过程称为 DC 发现。发现 DC 后，域成员将建立到 DC 的安全通道。 对于从客户端到 DC 的与身份验证有关的所有后续请求，Netlogon 远程协议使用安全通道传输请求。Netlogon 远程协议通过安全通道从 DC 接收用户验证数据，并将数据返回给身份验证协议。 操作系统可以定期使用 Netlogon 远程协议更改计算机账户密码。
 
-收到登录请求后，Netlogon 确定正在验证的用户的帐户域。Netlogon 确定用于向帐户域发送请求的信任链接。Netlogon 在该链接上的受信任域中找到一个DC ，并使用受信任域的信任密码设置到该 DC的安全通道。Netlogon 将登录请求传递给该 DC。Netlogon 从该 DC 接收用户验证数据并将数据返回给发出登录请求的安全通道客户端。 Netlogon 将 BDC 帐户数据库与PDC 帐户数据库同步。 Netlogon 会定期更改 DC 的计算机帐户密码。在 PDC 上，Netlogon 会定期更改所有直接受信任域的信任密码。
+收到登录请求后，Netlogon 确定正在验证的用户的账户域。Netlogon 确定用于向账户域发送请求的信任链接。Netlogon 在该链接上的受信任域中找到一个DC ，并使用受信任域的信任密码设置到该 DC的安全通道。Netlogon 将登录请求传递给该 DC。Netlogon 从该 DC 接收用户验证数据并将数据返回给发出登录请求的安全通道客户端。 Netlogon 将 BDC 账户数据库与PDC 账户数据库同步。 Netlogon 会定期更改 DC 的计算机账户密码。在 PDC 上，Netlogon 会定期更改所有直接受信任域的信任密码。
 
-该协议使用以下endpoint：\PIPE\NETLOGON，uuid：12345678-1234-ABCD-EF00-01234567CFFB
+该协议使用端点 `\PIPE\NETLOGON`，接口 UUID 为 `12345678-1234-ABCD-EF00-01234567CFFB`。
 
 客户端和服务器之间的会话密钥协商是在不受保护的RPC 通道上执行的。
 
@@ -2161,7 +2237,7 @@ Netlogon 客户端对域成员执行的第一个操作是在其域中查找 用�
 
 服务器接收客户端的NetrServerReqChallenge调用。服务器生成自己的随机数，称为服务器challenge (SC)。在响应客户端的NetrServerReqChallenge方法调用时，服务器将 SC 作为NetrServerReqChallenge的输出参数发送回客户端。客户端收到服务器的响应后，两台计算机都有彼此的challenge随机数（分别为客户端挑战和服务器挑战 (SC)）。
 
-客户端计算会session key。客户端通过在 NegotiateFlags 中提供一组初始值来指定一组初始功能。
+客户端计算会话密钥（session key），并通过 NegotiateFlags 提供一组初始能力标志。
 
 客户端通过使用客户端challenge作为credential计算算法的输入来计算其客户端 Netlogon凭证
 
@@ -2169,7 +2245,7 @@ Netlogon 客户端对域成员执行的第一个操作是在其域中查找 用�
 
 服务器接收NetrServerAuthenticate、NetrServerAuthenticate2或NetrServerAuthenticate3 调用并验证client Netlogon credential。它通过计算一个session key来实现这一点，复制client Netlogon credential计算，使用其存储的客户端challenge，并将此重新计算的结果与刚刚从客户端接收到的client Netlogon credential进行比较。如果比较失败，服务器必须在不进一步处理以下步骤的情况下使会话密钥协商失败。
 
-如果客户端challenge的前 5 个字节都不是唯一的，则session key协商失败。
+如果客户端 challenge 的前 5 个字节并非互不相同（即存在重复字节，有弱密钥风险），会话密钥协商必须失败。
 
 服务器通过使用服务器challenge作为凭证计算算法的输入来计算其服务器 Netlogon 凭证。服务器返回server Netlogon credential作为NetrServerAuthenticate、NetrServerAuthenticate2或NetrServerAuthenticate3调用的ServerCredential 输出参数。
 
@@ -2185,15 +2261,16 @@ Netlogon 客户端对域成员执行的第一个操作是在其域中查找 用�
 
 客户端将ServerSessionInfo.LastAuthenticationTry（按服务器名称索引）设置为当前时间。这可以防止身份验证重试发生，除非收到新的传输通知。
 
-在会话密钥协商的第一阶段 ( NetrServerReqChallenge )，客户端和服务器交换随机数。这允许客户端和服务器计算session key。为了提供相互身份验证，客户端和服务器都根据自己的随机数计算 Netlogon 凭据，使用计算出session，并在会话密钥协商的第二阶段交换它们（NetrServerAuthenticate 或NetrServerAuthenticate2或NetrServerAuthenticate3). 由于在第一阶段交换了随机数，这使得每一方都可以在本地计算对方的 Netlogon Credential，然后将其与收到的Credential进行比较。如果本地计算出的凭证与另一方提供的Credential相匹配，则向客户端和服务器证明双方有权访问共享机密。
+在会话密钥协商的第一阶段 ( NetrServerReqChallenge )，客户端和服务器交换随机数。这允许客户端和服务器计算session key。为了提供相互身份验证，客户端和服务器都根据自己的随机数计算 Netlogon 凭据，使用计算出的 session key，并在会话密钥协商的第二阶段交换（NetrServerAuthenticate / NetrServerAuthenticate2 / NetrServerAuthenticate3）。 由于在第一阶段交换了随机数，这使得每一方都可以在本地计算对方的 Netlogon Credential，然后将其与收到的Credential进行比较。如果本地计算出的凭证与另一方提供的Credential相匹配，则向客户端和服务器证明双方有权访问共享机密。
 作为会话密钥 协商的一部分，客户端和服务器使用NetrServerAuthenticate2 或NetrServerAuthenticate3的NegotiateFlags参数 来协商对以下选项的支持。客户端通过NegotiateFlags提供一组初始功能参数作为输入到服务器。然后服务器选择它可接受的能力。服务器支持的功能与客户端支持的功能通过执行位与运算相结合；操作结果作为输出返回给客户端
 ```
 
-NegotiateFlags对照表如下
+NegotiateFlags 各位含义如下（bit 0 为最低位）：
 
-| 0    | 1    | 2    | 3    | 4    | 5    | 6    | 7    | 8    | 9    | 1 0  | 1    | 2    | 3    | 4    | 5    | 6    | 7    | 8    | 9    | 2 0  | 1    | 2    | 3    | 4    | 5    | 6    | 7    | 8    | 9    | 3 0  | 1    |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| 0    | Y    | X    | 0    | 0    | 0    | 0    | W    | 0    | 0    | V    | U    | T    | S    | R    | Q    | P    | O    | N    | M    | L    | K    | J    | I    | H    | G    | F    | E    | D    | C    | B    | A    |
+```text
+Bit:  31 30 29 28 27 26 25 24 23 22 21 20 19 18 17 16 15 14 13 12 11 10  9  8  7  6  5  4  3  2  1  0
+Flag: 0  Y  X  0  0  0  0  0  W  0  0  V  U  T  S  R  Q  P  O  N  M  L  K  J  I  H  G  F  E  D  C  B  A
+```
 
 | Option | Meaning                                                      |
 | :----- | :----------------------------------------------------------- |
@@ -2223,9 +2300,9 @@ NegotiateFlags对照表如下
 | X      | Not used. MUST be ignored on receipt.                        |
 | Y      | Supports Secure RPC.                                         |
 
-session key支持以下3种加密方式：AES、DES、强秘钥
+会话密钥支持以下 3 种派生方式：AES、强密钥（strong key）、DES：
 
-```c++
+```text
 AES
 ComputeSessionKey(SharedSecret, ClientChallenge, 
                    ServerChallenge)
@@ -2237,7 +2314,7 @@ ComputeSessionKey(SharedSecret, ClientChallenge,
       CALL SHA256Result(HashContext, SessionKey);
       SET SessionKey to lower 16 bytes of the SessionKey;
       
-强秘钥
+强密钥（strong key）
  SET zeroes to 4 bytes of 0
   
  ComputeSessionKey(SharedSecret, ClientChallenge,
@@ -2267,21 +2344,19 @@ DES
       SET Session-Key to output2
 ```
 
-而zerologon正是因为可以将aes-cfb模式的iv向量置零导致的
+而 Zerologon 正是与 AES-CFB8 模式下 IV 固定为全零这一特性直接相关（详见下文分析）。
 
 ![image.png](https://storage.tttang.com/media/attachment/2022/01/13/ae1385f8-289b-481b-b0bc-d9334f4070b9.png)
 
 ![image.png](https://storage.tttang.com/media/attachment/2022/01/13/ed6e7415-a719-4fa1-8dbd-ec2c4748368f.png)
 
-每一轮的密文的计算是，先将上一轮的密文进行加密(在AES_CFB里面是使用AES进行加密)，然后异或明文，得到新一轮的密文。
-
-这里需要用到上一轮的密文，由于第一轮没有上一轮。所以就需要一个初始向量参与运算，这个初始向量我们称为IV。
+CFB 模式每一轮密文的计算方式：先将上一轮的密文（第一轮则为 IV）用 AES 加密，再与明文异或，得到本轮密文。第一轮没有上一轮密文，因此需要一个初始向量（IV）参与运算。
 
 正如上面所说客户端调用NetrServerReqChallenge向服务端发送一个ClientChallenge，服务端向客户端返回送一个ServerChallenge，双方都利用client的hash、ClientChallenge、ServerChallenge计算一个session_key。客户端利用session_key和ClientChallenge计算一个ClientCredential。并发送给服务端进行校验。服务端也利用session_key和ClientChallenge去计算一个ClientCredential，如果值跟客户端发送过来的一致，就让客户端通过认证，这里指定flag为W,指定加密方式。
 
 ![img](https://marvel-b1-cdn.bc0a.com/f00000000017219/www.trendmicro.com/content/dam/trendmicro/global/en/what-is/zerologon/NetrServer.jpg)
 
-IV和客户端challenge可控，服务端最多重复请求256次总可以得到全0的challenge，所以全部为零的aes得到的sessionkey为全零还可以通过服务器验证，这时候利用NetServerPasswordSet2方法就可以直接将管理员密码置空，dump hash，之后要把密码改回去，不然会脱域，原因是AD里面存储的机器密码跟本机的Lsass里面存储的密码不一定导致的。
+客户端 challenge 与 credential 可控、IV 固定为全零：服务端允许重复请求，平均 256 次即可命中使凭证校验通过的组合（challenge 与 credential 全为零时，AES-CFB8 下每次请求有 1/256 的概率通过校验，此时派生的 session key 也为全零）。之后利用 NetrServerPasswordSet2 方法即可将域控机器账户密码置空，导出 hash。注意完成后要把密码改回去，否则机器会脱域——原因是 AD 中存储的机器密码与本机 LSASS 中存储的密码不一致。
 
 这里直接看下zerologon的利用代码
 
@@ -2389,16 +2464,16 @@ def perform_attack(dc_handle, dc_ip, target_computer):
 MAX_ATTEMPTS = 2000
 ```
 
-这里直接将challenge和credential全部置零然后重复请求直到成功并通过NetrServerPasswordSet2修改域管密码。2000次是每一次成功的概率都是1/256，而且每一次之间互不干扰。那么运行N次，至少一次成功的概率就是`1-(255/256)**N`，2000次就是99.96%
+代码将 challenge 和 credential 全部置零，重复请求直到认证成功，再通过 NetrServerPasswordSet2 将域控机器账户密码置空。每次尝试成功的概率为 1/256 且相互独立，运行 N 次至少成功一次的概率为 `1-(255/256)**N`，2000 次即 99.96%。
 
 接下来我们来看下模块实现了netlogon的哪些方法
 
 ```python
 OPNUMS = {
- 0 : (NetrLogonUasLogon, NetrLogonUasLogonResponse),登录方法，过时啦
- 1 : (NetrLogonUasLogoff, NetrLogonUasLogoffResponse),登出方法，过时
+ 0 : (NetrLogonUasLogon, NetrLogonUasLogonResponse),登录方法，已过时
+ 1 : (NetrLogonUasLogoff, NetrLogonUasLogoffResponse),登出方法，已过时
  2 : (NetrLogonSamLogon, NetrLogonSamLogonResponse),NetrLogonSamLogonWithFlags 方法的前身
- 3 : (NetrLogonSamLogoff, NetrLogonSamLogoffResponse),更新SAM帐户的用户lastLogoff 属性。
+ 3 : (NetrLogonSamLogoff, NetrLogonSamLogoffResponse),更新SAM账户的用户lastLogoff 属性。
  4 : (NetrServerReqChallenge, NetrServerReqChallengeResponse),接收客户端挑战并返回服务器挑战（SC）。
  5 : (NetrServerAuthenticate, NetrServerAuthenticateResponse),NetrServerAuthenticate3 方法的前身。
 # 6 : (NetrServerPasswordSet, NetrServerPasswordSetResponse),
@@ -2412,24 +2487,24 @@ OPNUMS = {
  14 : (NetrLogonControl2, NetrLogonControl2Response),NetrLogonControl2Ex 方法的前身
  15 : (NetrServerAuthenticate2, NetrServerAuthenticate2Response),是NetrServerAuthenticate3 方法的前身
  16 : (NetrDatabaseSync2, NetrDatabaseSync2Response),返回一组自创建以来应用于指定数据库的所有更改。它为 BDC 提供了一个接口，使其数据库与PDC的数据库完全同步. 由于要返回大量数据，因此在一次调用中返回所有更改可能会非常昂贵，因此此方法支持使用连续上下文在一系列调用中检索部分数据库更改，直到收到所有更改。由于系统重启等外部事件，一系列调用可能会提前终止。因此，该方法还支持在调用者指定的特定点重新启动一系列调用。调用者必须在本节详述的一系列调用期间跟踪同步进度。 
- 17 : (NetrDatabaseRedo, NetrDatabaseRedoResponse),由备份域控制器 (BDC)使用以从PDC请求有关单个帐户的信息。
+ 17 : (NetrDatabaseRedo, NetrDatabaseRedoResponse),由备份域控制器 (BDC)使用以从PDC请求有关单个账户的信息。
  18 : (NetrLogonControl2Ex, NetrLogonControl2ExResponse),用于查询状态和控制 Netlogon 服务器
  19 : (NetrEnumerateTrustedDomains, NetrEnumerateTrustedDomainsResponse),返回一组可信域的NetBIOS名称。
  20 : (DsrGetDcName, DsrGetDcNameResponse),DsrGetDcNameEx2 方法的前身
  21 : (NetrLogonGetCapabilities, NetrLogonGetCapabilitiesResponse),客户端使用NetrLogonGetCapabilities方法在建立安全通道后确认服务器功能
  22 : (NetrLogonSetServiceBits, NetrLogonSetServiceBitsResponse),用于通知 Netlogon域控制器是否正在运行指定的服务
- 23 : (NetrLogonGetTrustRid, NetrLogonGetTrustRidResponse),用于从接收此调用的服务器获取指定域中的域控制器 用于建立安全通道 的密码的帐户的RID 。
+ 23 : (NetrLogonGetTrustRid, NetrLogonGetTrustRidResponse),用于从接收此调用的服务器获取指定域中的域控制器 用于建立安全通道 的密码的账户的RID 。
  24 : (NetrLogonComputeServerDigest, NetrLogonComputeServerDigestResponse),使用 MD5 消息摘要算法计算消息的加密摘要，此方法由服务端调用以计算消息摘要
  25 : (NetrLogonComputeClientDigest, NetrLogonComputeClientDigestResponse),使用 MD5 消息摘要算法计算消息的加密摘要，此方法由客户端调用以计算消息摘要
  26 : (NetrServerAuthenticate3, NetrServerAuthenticate3Response),对客户端和服务器进行相互认证，建立会话密钥，用于客户端和服务器之间的安全通道 消息保护。它在NetrServerReqChallenge 方法之后调用
  27 : (DsrGetDcNameEx, DsrGetDcNameExResponse),DsrGetDcNameEx2方法的前身
  28 : (DsrGetSiteName, DsrGetSiteNameResponse),返回接收此调用的指定计算机的站点 名称
  29 : (NetrLogonGetDomainInfo, NetrLogonGetDomainInfoResponse),返回描述指定客户端所属的当前域的信息
- 30 : (NetrServerPasswordSet2, NetrServerPasswordSet2Response),允许客户端为域控制器使用的帐户设置一个新的明文密码，用于从客户端 建立安全通道。域成员应该使用此功能定期更改其机器帐户密码。PDC使用此功能定期更改所有直接受信任 域的信任密码。
- 31 : (NetrServerPasswordGet, NetrServerPasswordGetResponse),允许 BDC 从域中具有PDC角色的 DC 获取机器帐户密码
- 32 : (NetrLogonSendToSam, NetrLogonSendToSamResponse),允许 BDC 或RODC 将用户帐户密码更改转发给PDC。它应该被客户端用来向服务器端的SAM数据库传送一个不透明的缓冲区。
+ 30 : (NetrServerPasswordSet2, NetrServerPasswordSet2Response),允许客户端为域控制器使用的账户设置一个新的明文密码，用于从客户端 建立安全通道。域成员应该使用此功能定期更改其机器账户密码。PDC使用此功能定期更改所有直接受信任 域的信任密码。
+ 31 : (NetrServerPasswordGet, NetrServerPasswordGetResponse),允许 BDC 从域中具有PDC角色的 DC 获取机器账户密码
+ 32 : (NetrLogonSendToSam, NetrLogonSendToSamResponse),允许 BDC 或RODC 将用户账户密码更改转发给PDC。它应该被客户端用来向服务器端的SAM数据库传送一个不透明的缓冲区。
  33 : (DsrAddressToSiteNamesW, DsrAddressToSiteNamesWResponse),将套接字地址列表翻译成它们相应的站点名称
- 34 : (DsrGetDcNameEx2, DsrGetDcNameEx2Response),返回有关指定域和站点中的域控制器 (DC)的信息。如果AccountName 参数不为 NULL，并且匹配所请求功能（如Flags参数中定义）的 DC 在此方法调用期间响应，则该 DC 将验证 DC 帐户数据库包含指定AccountName的帐户 。接收此调用的服务器不需要是 DC。
+ 34 : (DsrGetDcNameEx2, DsrGetDcNameEx2Response),返回有关指定域和站点中的域控制器 (DC)的信息。如果AccountName 参数不为 NULL，并且匹配所请求功能（如Flags参数中定义）的 DC 在此方法调用期间响应，则该 DC 将验证 DC 账户数据库包含指定AccountName的账户 。接收此调用的服务器不需要是 DC。
  35 : (NetrLogonGetTimeServiceParentDomain, NetrLogonGetTimeServiceParentDomainResponse),返回当前域的父域名称。该方法返回的域名适合传入NetrLogonGetTrustRid 方法和NetrLogonComputeClientDigest 方法。
  36 : (NetrEnumerateTrustedDomainsEx, NetrEnumerateTrustedDomainsExResponse),返回 来自指定服务器的可信 域列表
  37 : (DsrAddressToSiteNamesExW, DsrAddressToSiteNamesExWResponse),将套接字地址列表翻译成它们相应的站点名称和子网名称
@@ -2437,11 +2512,11 @@ OPNUMS = {
  39 : (NetrLogonSamLogonEx, NetrLogonSamLogonExResponse),提供对NetrLogonSamLogon的扩展
  40 : (DsrEnumerateDomainTrusts, DsrEnumerateDomainTrustsResponse),从指定的服务器返回域信任的枚举列表
  41 : (DsrDeregisterDnsHostRecords, DsrDeregisterDnsHostRecordsResponse),应该删除 指定域控制器注册的所有DNS SRV记录
- 42 : (NetrServerTrustPasswordsGet, NetrServerTrustPasswordsGetResponse),返回域中帐户的加密当前和以前的密码。客户端调用此方法以从域控制器检索当前和以前的帐户密码
+ 42 : (NetrServerTrustPasswordsGet, NetrServerTrustPasswordsGetResponse),返回域中账户的加密当前和以前的密码。客户端调用此方法以从域控制器检索当前和以前的账户密码
  43 : (DsrGetForestTrustInformation, DsrGetForestTrustInformationResponse),检索指定域控制器 (DC)的林或受指定 DC 的林信任的林的信任信息 
  44 : (NetrGetForestTrustInformation, NetrGetForestTrustInformationResponse),检索成员域本身是其成员的林的信任 信息
- 45 : (NetrLogonSamLogonWithFlags, NetrLogonSamLogonWithFlagsResponse),处理 SAM 帐户的登录请求
- 46 : (NetrServerGetTrustInfo, NetrServerGetTrustInfoResponse),从指定的服务器返回一个信息块。该信息包括特定帐户的加密当前和以前的密码以及其他信任数据。
+ 45 : (NetrLogonSamLogonWithFlags, NetrLogonSamLogonWithFlagsResponse),处理 SAM 账户的登录请求
+ 46 : (NetrServerGetTrustInfo, NetrServerGetTrustInfoResponse),从指定的服务器返回一个信息块。该信息包括特定账户的加密当前和以前的密码以及其他信任数据。
 # 48 : (DsrUpdateReadOnlyServerDnsRecords, DsrUpdateReadOnlyServerDnsRecordsResponse),
 # 49 : (NetrChainSetClientAttributes, NetrChainSetClientAttributesResponse),
 }
@@ -2455,7 +2530,7 @@ OPNUMS = {
 
 ```python
 OPNUMS = {
-    MS-OXNSPI/ MS-NSPI
+    MS-OXNSPI / MS-NSPI 共有：
     0  : (NspiBind, NspiBindResponse),方法启动客户端和服务器之间的会话
     1  : (NspiUnbind, NspiUnbindResponse),方法破坏上下文句柄。
     2  : (NspiUpdateStat, NspiUpdateStatResponse),方法更新表示表中位置的STAT块 ，以反映客户端请求的定位更改。
@@ -2473,18 +2548,18 @@ OPNUMS = {
     14 : (NspiModLinkAtt, NspiModLinkAttResponse),方法修改地址簿中特定行的特定属性的值。本协议只支持修改显示类型为DT_DISTLIST的通讯录对象的PidTagAddressBookMember 属性和通讯录的PidTagAddressBookPublicDelegates 属性的值显示类型为 DT_MAILUSER 的对象。
 #    15 : (NspiDeleteEntries, NspiDeleteEntriesResponse),
     16 : (NspiQueryColumns, NspiQueryColumnsResponse),方法返回服务器知道的所有属性的列表。它将此列表作为 proptags 数组返回
-    MS-NSPI
+    仅 MS-NSPI：
     17 : (NspiGetNamesFromIDs, NspiGetNamesFromIDsResponse), 方法返回一组proptags的属性名称列表。
     18 : (NspiGetIDsFromNames, NspiGetIDsFromNamesResponse),返回一组属性名称的proptags列表。
     19 : (NspiResolveNames, NspiResolveNamesResponse),方法采用 8 位字符集中的一组字符串值，并对这些字符串执行ANR
-    20 : (NspiResolveNamesW, NspiResolveNamesWResponse),方法采用Unicode 字符集中的一组字符串值，并对这些字符串执行ANR（
+    20 : (NspiResolveNamesW, NspiResolveNamesWResponse),方法采用Unicode 字符集中的一组字符串值，并对这些字符串执行ANR（模糊名称解析）。
 }
 ```
 
-这里主要是结合exchange通过nspi接口的函数获取邮箱及账号信息
+该接口主要结合 Exchange 使用，通过 NSPI 接口函数获取邮箱及账号信息：
 
 ```python
-eg./examples/exchanger.py
+# eg./examples/exchanger.py
 class NSPIAttacks(Exchanger):
 	......
 	
@@ -2523,27 +2598,7 @@ OPNUMS = {
 }
 ```
 
-暂未看到有漏洞利用脚本或相关漏洞涉及该rpc接口协议
-
-### [MS-PAR]par.py
-
-打印系统异步远程协议，它定义了打印客户端和打印服务器之间打印作业处理和打印系统管理信息的通信
-
-模块实现了如下方法
-
-```python
-OPNUMS = {
-    0  : (RpcAsyncOpenPrinter, RpcAsyncOpenPrinterResponse),指定打印机、端口、打印作业或打印服务器的句柄。客户端使用此方法获取远程计算机上现有打印机的打印句柄。
-    #1  : (RpcAsyncAddPrinter, RpcAsyncAddPrinterResponse),
-    20 : (RpcAsyncClosePrinter, RpcAsyncClosePrinterResponse),关闭先前由RpcAsyncOpenPrinter或RpcAsyncAddPrinter打开的打印机、服务器、作业或端口对象的句柄。
-    38 : (RpcAsyncEnumPrinters, RpcAsyncEnumPrintersResponse),枚举可用的本地打印机、指定打印服务器上的打印机、指定域中的打印机或打印提供程序。
-    39 : (RpcAsyncAddPrinterDriver, RpcAsyncAddPrinterDriver),在指定的打印服务器上安装指定的本地或远程打印机驱动程序，并链接配置、数据和驱动程序文件。
-    40 : (RpcAsyncEnumPrinterDrivers, RpcAsyncEnumPrinterDriversResponse),枚举安装在指定打印服务器上的打印机驱动程序
-    41 : (RpcAsyncGetPrinterDriverDirectory, RpcAsyncGetPrinterDriverDirectoryResponse)检索指定打印服务器上打印机驱动程序目录的路径。
-}
-```
-
-暂未看到有漏洞利用脚本或相关漏洞涉及该rpc接口协议
+目前未发现公开利用脚本或已知漏洞涉及该接口。
 
 ### [MS-RPCH]rpch.py
 
@@ -2586,10 +2641,10 @@ def hPing():
 
 并实现了一个rpc客户端代理类用来与rpc服务器通信
 
-要是用RPC over HTTP 需要提供地址和端口，使用格式/rpc/rpcproxy.dll?RemoteName:RemotePort，我们依赖默认 ACL提供的remotename，在 HKLM\SOFTWARE\Microsoft\Rpc\RpcProxy 键中指定。
+要使用 RPC over HTTP，需提供地址和端口，使用格式 `/rpc/rpcproxy.dll?RemoteName:RemotePort`。默认 ACL 依赖 RemoteName，在注册表 `HKLM\SOFTWARE\Microsoft\Rpc\RpcProxy` 键中指定：
 
 ```
-eg.ValidPorts    REG_SZ   COMPANYSERVER04:593;COMPANYSERVER04:49152-65535
+# eg.ValidPorts    REG_SZ   COMPANYSERVER04:593;COMPANYSERVER04:49152-65535
 ```
 
 如果调用者将 remoteName 设置为空字符串，我们假设目标是 RPC 代理服务器本身，并从 NTLMSSP 获取其 NetBIOS 名称。如果管理员在安装 RPC Proxy 后重命名服务器或在安装 RPC Proxy 后将服务器加入域，ACL 将保持原来的状态。
@@ -2611,11 +2666,11 @@ eg.ValidPorts    REG_SZ   COMPANYSERVER04:593;COMPANYSERVER04:49152-65535
    - 请注意，/autodiscover/autodiscover.xml 可能不适用于非 outlook 用户代理。单个外部 IP 上可能有多个具有不同 NetBIOS 名称的 RPC 代理服务器。 我们存储第一个的 NetBIOS 名称并将其用于以下所有通道。
    - 对于 Exchange 来说假设所有 RPC 代理都具有相同的 ACL 
 
-以上对exchange的描述是rpch模块中对Outlook Anywhere功能的注释
+以上关于 Exchange 的描述整理自 rpch 模块中对 Outlook Anywhere 功能的注释。
 
-在 Microsoft Exchange Server 2013 中，Outlook Anywhere 功能（以前称为 RPC over HTTP）允许使用 Microsoft Outlook 2013、Outlook 2010 或 Outlook 2007 的客户端使用 RPC over 从公司网络外部或通过 Internet 连接到其 Exchange 服务器HTTP Windows 网络组件。
+在 Microsoft Exchange Server 2013 中，Outlook Anywhere 功能（前称 RPC over HTTP）允许 Outlook 2013 / 2010 / 2007 客户端借助 RPC over HTTP Windows 网络组件，从公司网络外部或通过 Internet 连接到 Exchange 服务器。
 
-简单来讲就是Exchange内部定义了几个可以直接操作邮箱的RPC服务。这些 RPC 服务有一个公共接口，可以通过 访问`/Rpc/*`，用户可以通过 RPC-over-HTTP 协议访问自己的邮箱
+简单来讲，Exchange 内部定义了若干可直接操作邮箱的 RPC 服务，通过 `/Rpc/*` 路径暴露，用户可经 RPC over HTTP 协议访问自己的邮箱。
 
 根据Arseniy Sharoglazov所写的attacking-ms-exchange-web-interfaces，可以看到ruler工具使用RPC over HTTP v2进行攻击
 
@@ -2625,7 +2680,7 @@ eg.ValidPorts    REG_SZ   COMPANYSERVER04:593;COMPANYSERVER04:49152-65535
 
 端点*/rpc/rpcproxy.dll*实际上不是 Exchange 的一部分。**它是名为RPC Proxy**的服务的一部分。它是 RPC 客户端和 RPC 服务器之间的中间转发服务器。根据规范，每个客户端都必须使用 RPC 代理连接到 ncacn_http 服务，但如果需要，您当然可以模拟 RPC 代理并直接连接到 ncacn_http 端点。RPC IN 和 OUT 通道独立运行，它们可能会通过不同的 RPC 代理，并且 RPC 服务器也可以位于不同的主机上。
 
-/examples/rpcmap.py通过RPC over HTTP v2通过mgmt的ifids解析出uuid，通过uuid探测获取有关哪些端点可通过 RPC over HTTP v2访问
+examples/rpcmap.py 通过 RPC over HTTP v2 调用 mgmt 的 ifids 枚举出 UUID，进而探测哪些端点可以通过 RPC over HTTP v2 访问：
 
 ```python
   def do(self):
@@ -2680,18 +2735,40 @@ def handle_discovered_tup(self, tup):
         print()
 ```
 
-因为`/Rpc/*`它也位于 HTTP/HTTPS，所以可以发动中继攻击。一旦我们绕过身份验证并访问路由`/Rpc/RpcProxy.dll`，我们就可以模拟任何用户并通过 RPC-over-HTTP 协议操作他的邮箱：
+由于 `/Rpc/*` 同样走 HTTP/HTTPS，可以对其进行中继攻击：一旦绕过身份验证访问 `/Rpc/RpcProxy.dll`，就可以模拟任意用户，通过 RPC over HTTP 协议操作其邮箱：
 
-+ 与ex02建立RCP_IN_DATA、RCP_OUT_DATA通道
-+ 在ex01触发PrinterBug并中继到ex02
-+ 附加`X-CommonAccessToken`标头获取两个exchange服务器admin权限
-+ [通过MS-OXCRPC](https://docs.microsoft.com/en-us/openspecs/exchange_server_protocols/ms-oxcrpc/137f0ce2-31fd-4952-8a7d-6c0b242e4b6a)和[MS-OXCROPS](https://docs.microsoft.com/en-us/openspecs/exchange_server_protocols/ms-oxcrops/13af6911-27e5-4aa0-bb75-637b02d4f2ef) over MS-RPCH的通信协议格式与 Outlook Anywhere 交互......
+- 与 ex02 建立 RPC_IN_DATA、RPC_OUT_DATA 通道；
+- 在 ex01 触发 PrinterBug 并中继到 ex02；
+- 附加 `X-CommonAccessToken` 头冒充目标用户，获取两台 Exchange 服务器的管理员权限；
+- [通过MS-OXCRPC](https://docs.microsoft.com/en-us/openspecs/exchange_server_protocols/ms-oxcrpc/137f0ce2-31fd-4952-8a7d-6c0b242e4b6a)和[MS-OXCROPS](https://docs.microsoft.com/en-us/openspecs/exchange_server_protocols/ms-oxcrops/13af6911-27e5-4aa0-bb75-637b02d4f2ef) over MS-RPCH的通信协议格式与 Outlook Anywhere 交互......
+
+### [MS-PAR]par.py
+
+打印系统异步远程协议（Print System Asynchronous Remote Protocol），定义了打印客户端和打印服务器之间打印作业处理与打印系统管理信息的通信，是 [MS-RPRN] 的异步增强版本，在 RPC 调用中提供更高强度的身份验证。
+
+模块实现了如下方法：
+
+```python
+OPNUMS = {
+    0  : (RpcAsyncOpenPrinter, RpcAsyncOpenPrinterResponse),指定打印机、端口、打印作业或打印服务器的句柄。客户端使用此方法获取远程计算机上现有打印机的打印句柄。
+    #1  : (RpcAsyncAddPrinter, RpcAsyncAddPrinterResponse),
+    20 : (RpcAsyncClosePrinter, RpcAsyncClosePrinterResponse),关闭先前由RpcAsyncOpenPrinter或RpcAsyncAddPrinter打开的打印机、服务器、作业或端口对象的句柄。
+    38 : (RpcAsyncEnumPrinters, RpcAsyncEnumPrintersResponse),枚举可用的本地打印机、指定打印服务器上的打印机、指定域中的打印机或打印提供程序。
+    39 : (RpcAsyncAddPrinterDriver, RpcAsyncAddPrinterDriver),在指定的打印服务器上安装指定的本地或远程打印机驱动程序，并链接配置、数据和驱动程序文件。
+    40 : (RpcAsyncEnumPrinterDrivers, RpcAsyncEnumPrinterDriversResponse),枚举安装在指定打印服务器上的打印机驱动程序
+    41 : (RpcAsyncGetPrinterDriverDirectory, RpcAsyncGetPrinterDriverDirectoryResponse)检索指定打印服务器上打印机驱动程序目录的路径。
+}
+```
+
+> 注：上游 impacket 的 par.py 中 opnum 39 的元组第二项确实写作 `RpcAsyncAddPrinterDriver`（未引用已定义的 `RpcAsyncAddPrinterDriverResponse`），此处按源码原样保留。
+
+目前未发现公开利用脚本或已知漏洞涉及该接口。
 
 ### [MS-RPRN]rprn.py
 
 打印系统远程协议支持客户端和服务器之间的同步打印和假脱机操作，包括打印作业 控制和打印系统 管理。[MS-PAR]中指定了此协议的增强替代品。[MS-PAR] 在客户端和服务器之间的 RPC 调用中提供更高级别的身份验证.
 
-这个协议就是微软一直没有修的printerbug所利用的协议，可以说内网的很多relay攻击都是通过他来触发的，而PrintNightmare也是对该协议的恶意利用
+微软一直未修复的 PrinterBug 正是利用该协议触发——内网很多 relay 攻击都由它触发目标认证，PrintNightmare 则是对该协议的另一种恶意利用。
 
 我们先来看下模块实现接口的哪些方法
 
@@ -2705,27 +2782,26 @@ OPNUMS = {
     
     
     
-    65 : (RpcRemoteFindFirstPrinterChangeNotificationEx, RpcRemoteFindFirstPrinterChangeNotificationExResponse), 
-    创建一个远程更改通知对象，该对象监视打印机对象的更改，并使用RpcRouterReplyPrinter或RpcRouterReplyPrinterEx将更改通知发送到打印客户端。
-    1.创建并初始化一个通知对象，用于捕获用户请求的通知设置。
-	2.创建并初始化一个返回客户端的通知通道，服务器必须通过该通道传递更改通知。这必须通过在由 pszLocalMachine 指向的名称指定的客户端上调用 RpcReplyOpenPrinter 来完成。
-	3.将通知对象与hPrinter的上下文相关联。
-	4.执行完上述步骤后，服务器应该将客户端添加到打印机对象或服务器对象的通知客户端列表中，并且当对象发生变化时，它应该使用 RpcRouterReplyPrinter 或 RpcRouterReplyPrinterEx 通知客户端。
-	5.通知方法的选择不取决于是否使用RpcRemoteFindFirstPrinterChangeNotification 或 RpcRemoteFindFirstPrinterChangeNotificationEx 请求了通知。取决于通知是否可以单独在RpcRouterReplyPrinter的fdwFlags参数中表达，或者是否需要使用RpcRouterReplyPrinterEx的附加参数来提供额外的信息。
-	6.返回操作的状态。
+    65 : (RpcRemoteFindFirstPrinterChangeNotificationEx, RpcRemoteFindFirstPrinterChangeNotificationExResponse), 创建一个远程更改通知对象，监视打印机对象的更改，并使用 RpcRouterReplyPrinter 或 RpcRouterReplyPrinterEx 将更改通知发送到打印客户端。服务端处理流程：
+    # 1. 创建并初始化一个通知对象，用于捕获用户请求的通知设置。
+    # 2. 创建并初始化一个返回客户端的通知通道，服务器必须通过该通道传递更改通知。这必须通过在由 pszLocalMachine 指向的名称指定的客户端上调用 RpcReplyOpenPrinter 来完成。
+    # 3. 将通知对象与 hPrinter 的上下文相关联。
+    # 4. 执行完上述步骤后，服务器应该将客户端添加到打印机对象或服务器对象的通知客户端列表中；当对象发生变化时，使用 RpcRouterReplyPrinter 或 RpcRouterReplyPrinterEx 通知客户端。
+    # 5. 通知方法的选择不取决于通知请求使用的是 RpcRemoteFindFirstPrinterChangeNotification 还是其 Ex 版本，而取决于通知能否单独用 RpcRouterReplyPrinter 的 fdwFlags 参数表达，或是否需要 RpcRouterReplyPrinterEx 的附加参数提供额外信息。
+    # 6. 返回操作的状态。
     
     
     
     
     
     69 : (RpcOpenPrinterEx, RpcOpenPrinterExResponse),检索打印机、端口、端口监视器、打印作业或打印服务器的句柄。
-    89 : (RpcAddPrinterDriverEx, RpcAddPrinterDriverExResponse),
-}在打印服务器上安装打印机驱动程序。此方法执行类似于 RpcAddPrinterDriver的功能，还用于指定允许打印机驱动程序升级、 打印机驱动程序降级、仅复制较新文件以及复制所有文件的选项，而不管它们的文件时间戳。
+    89 : (RpcAddPrinterDriverEx, RpcAddPrinterDriverExResponse), 在打印服务器上安装打印机驱动程序。功能类似于 RpcAddPrinterDriver，还可指定驱动升级、降级、仅复制较新文件、无视时间戳复制所有文件等选项。
+}
 ```
 
 #### printerbug和PrintNightmare
 
-在printerbug中我们可以看到lookup方法通过 RpcRemoteFindFirstPrinterChangeNotificationEx触发受害者主机向攻击者连接
+在 printerbug 中，lookup 方法通过 RpcRemoteFindFirstPrinterChangeNotificationEx 触发受害者主机反向连接攻击者（示例代码为 Python 2 语法）：
 
 ```python
     def lookup(self, rpctransport, host):
@@ -2765,7 +2841,7 @@ OPNUMS = {
         return None
 ```
 
-Print Spooler是Windows系统中用于管理打印相关事务的服务，在Windows系统中用于后台执行打印作业并处理与打印机的交互，管理所有本地和网络打印队列及控制所有打印工作。该服务对应的进程 spoolsv.exe 以SYSTEM权限执行，其设计中存在的一个严重缺陷，由于 SeLoadDriverPrivilege 中鉴权存在代码缺陷，参数可以被攻击者控制，普通用户可以通过 RPC 触发 RpcAddPrinterDrive 绕过安全检查并写入恶意驱动程序。如果一个域中存在此漏洞，域中普通用户即可通过连接域控 Spooler 服务，向域控中添加恶意驱动，从而控制整个域环境。
+Print Spooler 是 Windows 中管理打印事务的服务，负责后台执行打印作业、处理与打印机的交互、管理所有本地和网络打印队列。该服务对应进程 spoolsv.exe 以 SYSTEM 权限运行，其设计上存在严重缺陷：RpcAddPrinterDriverEx 的校验逻辑存在漏洞（SeLoadDriverPrivilege 相关检查可被绕过），参数可被攻击者控制，普通用户可通过 RPC 触发 RpcAddPrinterDriverEx 绕过安全检查写入恶意驱动。如果一个域中存在此漏洞，域中普通用户即可通过连接域控 Spooler 服务加载恶意驱动，从而控制整个域环境。
 
 ```python
 def main(dce, pDriverPath, share, handle=NULL):
@@ -2802,7 +2878,7 @@ def main(dce, pDriverPath, share, handle=NULL):
 
 ### [MS-RRP]rrp.py
 
-Windows 远程注册表协议是一种基于[远程过程调用 (RPC)](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rrp/261b039d-95d9-4749-9680-db1851d03945#gt_8a7f6700-8311-45bc-af10-82e10accd331)的客户端/服务器协议，用于远程管理分层**数据存储**，例如[Windows 注册表](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rrp/261b039d-95d9-4749-9680-db1851d03945#gt_5ae1b1fd-a770-4028-b1ca-bcc8fa9bcf0a)。在reg.py中得到利用：msrpc接口远程注册表操作工具。其想法是提供与reg.exe Windows实用程序类似的功能。
+Windows 远程注册表协议是一种基于[远程过程调用 (RPC)](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rrp/261b039d-95d9-4749-9680-db1851d03945#gt_8a7f6700-8311-45bc-af10-82e10accd331)的客户端/服务器协议，用于远程管理分层**数据存储**，例如[Windows 注册表](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rrp/261b039d-95d9-4749-9680-db1851d03945#gt_5ae1b1fd-a770-4028-b1ca-bcc8fa9bcf0a)。该协议在 examples/reg.py 中得到应用——reg.py 是 MSRPC 接口的远程注册表操作工具，目标是提供与 Windows 的 reg.exe 类似的功能。
 
 模块实现了如下方法
 
@@ -2810,11 +2886,11 @@ Windows 远程注册表协议是一种基于[远程过程调用 (RPC)](https://l
 OPNUMS = {
  0 : (OpenClassesRoot, OpenClassesRootResponse),由客户端调用。作为响应，服务器打开HKEY_CLASSES_ROOT 预定义键。
  1 : (OpenCurrentUser, OpenCurrentUserResponse),由客户端调用。作为响应，服务器打开 HKEY_CURRENT_USER 键的句柄。服务器必须确定 HKEY_USERS 的哪个子键是映射到 HKEY_CURRENT_USER 的正确键
- 2 : (OpenLocalMachine, OpenLocalMachineResponse),由客户端调用。作为响应，服务器打开HKEY_LOCAL_MACHINE预定义密钥的句柄
+ 2 : (OpenLocalMachine, OpenLocalMachineResponse),由客户端调用。作为响应，服务器打开HKEY_LOCAL_MACHINE预定义注册表项的句柄
  3 : (OpenPerformanceData, OpenPerformanceDataResponse),由客户端调用。作为响应，服务器打开HKEY_PERFORMANCE_DATA 预定义键的句柄。HKEY_PERFORMANCE_DATA 预定义键用于仅使用BaseRegQueryInfoKey、 BaseRegQueryValue、BaseRegEnumValue和BaseRegCloseKey 方法从注册表服务器检索性能信息
- 4 : (OpenUsers, OpenUsersResponse),由客户端调用。作为响应，服务器打开HKEY_USERS预定义密钥的句柄
+ 4 : (OpenUsers, OpenUsersResponse),由客户端调用。作为响应，服务器打开HKEY_USERS预定义注册表项的句柄
  5 : (BaseRegCloseKey, BaseRegCloseKeyResponse),由客户端调用。作为响应，服务器销毁（关闭）指定注册表项的句柄
- 6 : (BaseRegCreateKey, BaseRegCreateKeyResponse),由客户端调用。作为响应，服务器创建指定的注册表项并返回新创建的注册表项的句柄。如果密钥已存在于注册表中，则打开并返回现有密钥的句柄。
+ 6 : (BaseRegCreateKey, BaseRegCreateKeyResponse),由客户端调用。作为响应，服务器创建指定的注册表项并返回新创建的注册表项的句柄。如果注册表项已存在于注册表中，则打开并返回现有项的句柄。
  7 : (BaseRegDeleteKey, BaseRegDeleteKeyResponse),由客户端调用。作为响应，服务器删除指定的子项
  8 : (BaseRegDeleteValue, BaseRegDeleteValueResponse),由客户端调用。作为响应，服务器从指定的注册表项中删除命名值
  9 : (BaseRegEnumKey, BaseRegEnumKeyResponse),枚举子项。作为响应，服务器返回请求的子项
@@ -2822,17 +2898,17 @@ OPNUMS = {
 11 : (BaseRegFlushKey, BaseRegFlushKeyResponse),由客户端调用。作为响应，服务器将hKey参数指示的所有子键和键值写入注册表数据的后备存储
 12 : (BaseRegGetKeySecurity, BaseRegGetKeySecurityResponse),由客户端调用。作为响应，服务器返回保护指定的打开注册表项的安全描述符的副本
 13 : (BaseRegLoadKey, BaseRegLoadKeyResponse),由客户端调用。作为响应，服务器从文件中加载键、子键和值数据，并将数据插入到注册表层次结构中。
-15 : (BaseRegOpenKey, BaseRegOpenKeyResponse),由客户端调用。作为响应，服务器打开指定的密钥进行访问并返回一个句柄
-16 : (BaseRegQueryInfoKey, BaseRegQueryInfoKeyResponse),由客户端调用。作为响应，服务器返回指定密钥 handle对应的密钥的相关信息
+ 15 : (BaseRegOpenKey, BaseRegOpenKeyResponse),由客户端调用。作为响应，服务器打开指定的注册表项进行访问并返回一个句柄
+ 16 : (BaseRegQueryInfoKey, BaseRegQueryInfoKeyResponse),由客户端调用。作为响应，服务器返回指定注册表项句柄对应的相关信息
 17 : (BaseRegQueryValue, BaseRegQueryValueResponse),由客户端调用。作为响应，服务器返回与指定注册表打开键的命名值关联的数据。如果未指定值名称，则服务器返回与指定注册表 打开键的默认值关联的数据。
-18 : (BaseRegReplaceKey, BaseRegReplaceKeyResponse),由客户端调用。作为响应，服务器必须从指定的文件中读取注册表信息，并用文件的内容替换指定的键。当系统再次启动时，键和子键的值与指定文件中的值相同。
+ 18 : (BaseRegReplaceKey, BaseRegReplaceKeyResponse),由客户端调用。服务器将指定注册表项及其子项的后备文件替换为指定文件；系统下次启动后，该项及其子项将使用指定文件中的值。
 19 : (BaseRegRestoreKey, BaseRegRestoreKeyResponse),服务器读取指定文件中的注册表信息并将其复制到指定的键上。注册表信息采用键和多级子键的形式。
 20 : (BaseRegSaveKey, BaseRegSaveKeyResponse),服务器将指定的键、子键和值保存 到一个新文件中
 21 : (BaseRegSetKeySecurity, BaseRegSetKeySecurityResponse),服务器设置保护指定的开放注册表项的安全描述符
 22 : (BaseRegSetValue, BaseRegSetValueResponse),服务器为注册表项的指定值设置数据
-23 : (BaseRegUnLoadKey, BaseRegUnLoadKeyResponse),服务器删除以注册表层次结构顶部为根的指定的键、子键和值的离散体。
+ 23 : (BaseRegUnLoadKey, BaseRegUnLoadKeyResponse),服务器卸载以注册表层次结构顶部为根、由指定的键、子键和值组成的子树（配置单元）。
 
-BaseRegUnLoadKey 方法设计用于备份和恢复方案，其中客户端首先使用BaseRegLoadKey方法 从磁盘上的文件加载注册表配置单元 。然后，在从加载的配置单元中读取或写入关键数据后，客户端使用 BaseRegUnLoadKey 方法卸载配置单元。例如，备份应用程序可以使用 BaseRegLoadKey 方法从磁盘上的文件加载另一个用户配置单元（另一个用户的 HKEY_CURRENT_USER）。然后，在读取键和值数据后，它将使用 BaseRegUnLoadKey 方法卸载配置单元。
+（BaseRegUnLoadKey 的设计用途见本节代码块后的补充说明）
 26 : (BaseRegGetVersion, BaseRegGetVersionResponse),服务器返回远程注册 服务器的版本。客户端和服务器使用 BaseRegGetVersion 方法来确定远程注册表服务器是否同时支持 32 位和 64 位密钥命名空间。
 27 : (OpenCurrentConfig, OpenCurrentConfigResponse),服务器尝试打开HKEY_CURRENT_CONFIG 预定义键的句柄
 29 : (BaseRegQueryMultipleValues, BaseRegQueryMultipleValuesResponse),服务器返回与指定注册表项关联的客户端指定值名称列表的类型和数据。
@@ -2840,14 +2916,16 @@ BaseRegUnLoadKey 方法设计用于备份和恢复方案，其中客户端首先
 32 : (OpenPerformanceText, OpenPerformanceTextResponse),服务器打开HKEY_PERFORMANCE_TEXT 预定义键的句柄。HKEY_PERFORMANCE_TEXT预定义键用于仅使用BaseRegQueryInfoKey、 BaseRegQueryValue、BaseRegEnumValue和BaseRegCloseKey 方法从注册表服务器检索性能信息。
 33 : (OpenPerformanceNlsText, OpenPerformanceNlsTextResponse),服务器打开HKEY_PERFORMANCE_NLSTEXT 预定义键的句柄。HKEY_PERFORMANCE_NLSTEXT 预定义键用于仅使用BaseRegQueryInfoKey、 BaseRegQueryValue、BaseRegEnumValue和BaseRegCloseKey 方法从注册表服务器检索性能信息。
 34 : (BaseRegQueryMultipleValues2, BaseRegQueryMultipleValues2Response),服务器返回与指定注册表项关联的客户端指定值名称列表的类型和数据。
-35 : (BaseRegDeleteKeyEx, BaseRegDeleteKeyExResponse),服务器删除指定的注册表项
+ 35 : (BaseRegDeleteKeyEx, BaseRegDeleteKeyExResponse),服务器删除指定的注册表项
 }
 ```
 
-在/examples/reg.py中通过调用rrp模块中的方法实现了对注册表的远程增删改查
+补充说明 BaseRegUnLoadKey：该方法设计用于备份和恢复场景——客户端先用 BaseRegLoadKey 从磁盘文件加载注册表配置单元，读写数据后再用 BaseRegUnLoadKey 卸载。例如备份程序可以加载另一个用户的配置单元（其 HKEY_CURRENT_USER），读取键值后卸载。
+
+examples/reg.py 通过调用 rrp 模块中的方法实现了对注册表的远程增删改查：
 
 ```python
-eg./examples/reg.py
+# eg./examples/reg.py
 def query(self, dce, keyName):
         # Let's strip the root key
         try:
@@ -2897,9 +2975,9 @@ def query(self, dce, keyName):
 
 ### [MS-SAMR]samr.py
 
-安全帐户管理器 (SAM) 远程协议（客户端到服务器）为包含用户和组的帐户存储或目录提供管理功能
+安全账户管理器（SAM）远程协议（客户端到服务器）为包含用户和组的账户存储或目录提供管理功能。
 
-简单来说就是提供了用rpc远程管理服务器账号及密码的功能
+简单来说，就是提供了用 RPC 远程管理服务器账户及密码的能力。
 
 首先我们来看下impacket实现了接口的哪些方法
 
@@ -2909,7 +2987,7 @@ OPNUMS = {
  1 : (SamrCloseHandle, SamrCloseHandleResponse),关闭（即释放所使用的服务器端资源）从此 RPC 接口获得的任何上下文句柄
  2 : (SamrSetSecurityObject, SamrSetSecurityObjectResponse),设置对服务器、域、用户、组或别名对象的访问控制
  3 : (SamrQuerySecurityObject, SamrQuerySecurityObjectResponse),查询服务器、域、用户、组或别名对象的访问控制
- 5 : (SamrLookupDomainInSamServer, SamrLookupDomainInSamServerResponse),在给定对象名称的情况 下获取域对象的SID
+ 5 : (SamrLookupDomainInSamServer, SamrLookupDomainInSamServerResponse),在给定对象名称的情况下获取域对象的SID
  6 : (SamrEnumerateDomainsInSamServer, SamrEnumerateDomainsInSamServerResponse),获取由该协议的服务器端托管的所有域的列表
  7 : (SamrOpenDomain, SamrOpenDomainResponse),在给定SID的情况下获取域对象的句柄
  8 : (SamrQueryInformationDomain, SamrQueryInformationDomainResponse),从域对象获取属性
@@ -2921,8 +2999,8 @@ OPNUMS = {
 14 : (SamrCreateAliasInDomain, SamrCreateAliasInDomainResponse),创建别名
 15 : (SamrEnumerateAliasesInDomain, SamrEnumerateAliasesInDomainResponse),枚举所有别名
 16 : (SamrGetAliasMembership, SamrGetAliasMembershipResponse),获取给定SID集所属的所有别名的联合
-17 : (SamrLookupNamesInDomain, SamrLookupNamesInDomainResponse),将一组帐户名转换为一组RID
-18 : (SamrLookupIdsInDomain, SamrLookupIdsInDomainResponse),将一组RID 转换为帐户名
+17 : (SamrLookupNamesInDomain, SamrLookupNamesInDomainResponse),将一组账户名转换为一组RID
+18 : (SamrLookupIdsInDomain, SamrLookupIdsInDomainResponse),将一组RID 转换为账户名
 19 : (SamrOpenGroup, SamrOpenGroupResponse),给定RID的情况下获取组的句柄
 20 : (SamrQueryInformationGroup, SamrQueryInformationGroupResponse),从组对象中获取属性
 21 : (SamrSetInformationGroup, SamrSetInformationGroupResponse),更新组对象的属性
@@ -2944,35 +3022,35 @@ OPNUMS = {
 37 : (SamrSetInformationUser, SamrSetInformationUserResponse),更新用户对象的属性
 38 : (SamrChangePasswordUser, SamrChangePasswordUserResponse),更改用户对象的密码
 39 : (SamrGetGroupsForUser, SamrGetGroupsForUserResponse),获取用户所属组的列表
-40 : (SamrQueryDisplayInformation, SamrQueryDisplayInformationResponse),从指定索引开始，按名称升序获取帐户列表
-41 : (SamrGetDisplayEnumerationIndex, SamrGetDisplayEnumerationIndexResponse),获取按帐户名升序排序的帐户列表的索引
+40 : (SamrQueryDisplayInformation, SamrQueryDisplayInformationResponse),从指定索引开始，按名称升序获取账户列表
+41 : (SamrGetDisplayEnumerationIndex, SamrGetDisplayEnumerationIndexResponse),获取按账户名升序排序的账户列表的索引
 44 : (SamrGetUserDomainPasswordInformation, SamrGetUserDomainPasswordInformationResponse),获取密码策略信息（不需要域句柄）
 45 : (SamrRemoveMemberFromForeignDomain, SamrRemoveMemberFromForeignDomainResponse),从所有别名中删除一个成员
 46 : (SamrQueryInformationDomain2, SamrQueryInformationDomain2Response),从域对象获取属性
 47 : (SamrQueryInformationUser2, SamrQueryInformationUser2Response),从用户对象获取属性
-48 : (SamrQueryDisplayInformation2, SamrQueryDisplayInformation2Response),从指定索引开始，按名称升序获取帐户列表
-49 : (SamrGetDisplayEnumerationIndex2, SamrGetDisplayEnumerationIndex2Response),获取按帐户名升序排序的帐户列表的索引，这样索引就是帐户名与客户端提供的字符串最匹配的帐户列表中的位置。
+48 : (SamrQueryDisplayInformation2, SamrQueryDisplayInformation2Response),从指定索引开始，按名称升序获取账户列表
+49 : (SamrGetDisplayEnumerationIndex2, SamrGetDisplayEnumerationIndex2Response),获取按账户名升序排序的账户列表的索引，这样索引就是账户名与客户端提供的字符串最匹配的账户列表中的位置。
 50 : (SamrCreateUser2InDomain, SamrCreateUser2InDomainResponse),创建一个用户
-51 : (SamrQueryDisplayInformation3, SamrQueryDisplayInformation3Response),从指定索引开始按名称升序获取帐户列表
+51 : (SamrQueryDisplayInformation3, SamrQueryDisplayInformation3Response),从指定索引开始按名称升序获取账户列表
 52 : (SamrAddMultipleMembersToAlias, SamrAddMultipleMembersToAliasResponse),将多个成员添加到别名
 53 : (SamrRemoveMultipleMembersFromAlias, SamrRemoveMultipleMembersFromAliasResponse),从别名中删除多个成员
 54 : (SamrOemChangePasswordUser2, SamrOemChangePasswordUser2Response),更改用户的密码
-55 : (SamrUnicodeChangePasswordUser2, SamrUnicodeChangePasswordUser2Response),更改用户帐户的密码
+55 : (SamrUnicodeChangePasswordUser2, SamrUnicodeChangePasswordUser2Response),更改用户账户的密码
 56 : (SamrGetDomainPasswordInformation, SamrGetDomainPasswordInformationResponse),获取选择的密码策略信息（无需向服务器进行身份验证）
 57 : (SamrConnect2, SamrConnect2Response),返回服务器对象的句柄
 58 : (SamrSetInformationUser2, SamrSetInformationUser2Response),更新用户对象的属性
 62 : (SamrConnect4, SamrConnect4Response),获取服务器对象的句柄
 64 : (SamrConnect5, SamrConnect5Response),获取服务器对象的句柄
-65 : (SamrRidToSid, SamrRidToSidResponse),在给定RID的情况 下获取帐户的SID
+65 : (SamrRidToSid, SamrRidToSidResponse),在给定RID的情况 下获取账户的SID
 66 : (SamrSetDSRMPassword, SamrSetDSRMPasswordResponse),设置本地恢复密码。
 67 : (SamrValidatePassword, SamrValidatePasswordResponse),根据本地存储的策略验证应用程序密码
 }
 ```
 
-这个接口可涉及太多对用户的操作了，简单举个例子，在examples/secretsdump.py中通过hSamrConnect连接samr接口在内置域中搜索Administrators的RID，通过RID获取administrator句柄，之后通过hSamrEnumerateUsersInDomain方法获取domainuser列表
+该接口包含大量针对用户的操作。举个简单例子：examples/secretsdump.py 通过 hSamrConnect 连接 samr 接口，查询域 SID 并打开域句柄，再通过 hSamrEnumerateUsersInDomain 获取域用户列表：
 
 ```python
- eg.examples/secretsdump.py
+ #  eg.examples/secretsdump.py
 
     def connectSamr(self, domain):
         rpc = transport.DCERPCTransportFactory(self.__stringBindingSamr)
@@ -3009,34 +3087,34 @@ OPNUMS = {
         return resp
 ```
 
-在拥有用户hash而没有明文时，可以通过SetNTLM将用户密码重置，登录目标系统后，再将原密码还原或ChangeNTLM修改用户密码，登录目标系统后，再将原密码还原。
+只拥有用户 hash 而没有明文密码时，有两种登录目标系统的方式：SetNTLM——直接把用户密码重置为已知值，登录完成后再还原；ChangeNTLM——修改用户密码，登录完成后再还原。
 
-ChangeNTLM是调用SamrChangePasswordUser这一API来修改用户密码,需要对目标用户有`Change Password`权限，但该权限一般是`Everyone`拥有的，所以基本上拿到目标用户的hash/密码后都可以进行密码更改
+ChangeNTLM是调用SamrChangePasswordUser这一API来修改用户密码，需要对目标用户有`Change Password`权限，但该权限一般是`Everyone`拥有的，所以基本上拿到目标用户的hash/密码后都可以进行密码更改
 
 而SetNTLM是通过SamrSetInformationUser来重置用户密码，当前身份对要修改的用户有`Reset Password`权限
 
-但是由于ChangeNTLM受组策略密码安全设置的影响较大，所以在实战中我们一般利用SetNTLM。
+由于 ChangeNTLM 受组策略密码复杂度等设置的影响较大，实战中一般使用 SetNTLM。
 
 ```
-SetNTLM
-lsadump::setntlm /server:<DC's_IP_or_FQDN> /user:<username> /password:<new_password> 
-修改密码
+# SetNTLM
+# 修改密码
+lsadump::setntlm /server:<DC's_IP_or_FQDN> /user:<username> /password:<new_password>
+# 还原密码
 lsadump::setntlm /server:<DC's_IP_or_FQDN> /user:<username> /ntlm:<Original_Hash>
-还原密码
 ```
 
 ```
-ChangeNTLM
+# ChangeNTLM
+# 修改密码
 lsadump::changentlm /server:<DC's_IP_or_FQDN> /user:<username> /old:<current_hash> /newpassword:<newpassword>
-修改密码
+# 还原密码
 lsadump::changentlm /server:<DC's_IP_or_FQDN> /user:<username> /oldpassword:<current_password_plain_text> /new:<original_hash>
-还原密码
 ```
 
 在sam-the-admin中调用的addcomputer也是通过samr的SamrCreateUser2InDomain方法
 
 ```python
-eg./sam-the-admin/blob/main/utils/addcomputer.py
+# eg./sam-the-admin/blob/main/utils/addcomputer.py
                 try:
                     createUser = samr.hSamrCreateUser2InDomain(dce, domainHandle, self.__computerName, samr.USER_WORKSTATION_TRUST_ACCOUNT, samr.USER_FORCE_PASSWORD_CHANGE,)
                 except samr.DCERPCSessionError as e:
@@ -3053,7 +3131,7 @@ eg./sam-the-admin/blob/main/utils/addcomputer.py
 
 ### [MS-SRVS]srvs.py
 
-服务器服务远程协议,用于通过SMB协议远程启用文件和打印机共享以及对[服务器的](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-srvs/1709f6a7-efb8-4ded-b7ae-5cee9ee36320#gt_434b0234-e970-4e8c-bdfa-e16a30d96703)[命名管道](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-srvs/1709f6a7-efb8-4ded-b7ae-5cee9ee36320#gt_34f1dfa8-b1df-4d77-aa6e-d777422f9dca)访问,还用于远程管理运行 Windows 的服务器。简单来讲就是[[MS-SRVS\]](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-srvs/accf23b0-0f57-441c-9185-43041f1b0ee9) 调用 [MS-SMB2] 进行文件服务器管理
+服务器服务远程协议，用于通过SMB协议远程启用文件和打印机共享以及对[服务器的](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-srvs/1709f6a7-efb8-4ded-b7ae-5cee9ee36320#gt_434b0234-e970-4e8c-bdfa-e16a30d96703)[命名管道](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-srvs/1709f6a7-efb8-4ded-b7ae-5cee9ee36320#gt_34f1dfa8-b1df-4d77-aa6e-d777422f9dca)访问，还用于远程管理运行 Windows 的服务器。简单来讲，MS-SRVS 通过 SMB 命名管道（依赖 MS-SMB2 传输）提供文件服务器的远程管理。
 
 首先我们来看一下模块实现了接口的哪些方法
 
@@ -3074,7 +3152,7 @@ OPNUMS = {
 20 : (NetrShareCheck, NetrShareCheckResponse),检查服务器是否正在共享设备
 21 : (NetrServerGetInfo, NetrServerGetInfoResponse),检索 CIFS 和 SMB 1.0 版服务器的当前配置信息
 22 : (NetrServerSetInfo, NetrServerSetInfoResponse),为 CIFS 和 SMB 1.0 版文件服务器设置服务器操作参数；它可以单独或共同设置它们。信息的存储方式使其在系统重新初始化后仍然有效
-23 : (NetrServerDiskEnum, NetrServerDiskEnumResponse),检索服务器上的磁盘驱动器列表。该方法返回一个由三个字符组成的字符串数组（一个驱动器号、一个冒号和一个终止空字符
+ 23 : (NetrServerDiskEnum, NetrServerDiskEnumResponse),检索服务器上的磁盘驱动器列表。该方法返回一个由三个字符组成的字符串数组（一个驱动器号、一个冒号和一个终止空字符）。
 24 : (NetrServerStatisticsGet, NetrServerStatisticsGetResponse),检索服务的操作统计信息
 25 : (NetrServerTransportAdd, NetrServerTransportAddResponse),将服务器绑定到传输协议
 26 : (NetrServerTransportEnum, NetrServerTransportEnumResponse),枚举有关服务器在TransportList中管理的传输协议的信息
@@ -3109,10 +3187,10 @@ OPNUMS = {
 }
 ```
 
-我们可以看到在sambaclient和smbconnection中通过srvs来连接获取samba文件共享的信息
+在 smbclient 与 smbconnection 中，都通过 srvs 来获取目标的共享信息：
 
 ```python
-eg./impacket/smbconnection.py
+# eg./impacket/smbconnection.py
  def listShares(self):
         """
         get a list of available shares at the connected target
@@ -3129,7 +3207,7 @@ eg./impacket/smbconnection.py
         resp = srvs.hNetrShareEnum(dce, 1)
         return resp['InfoStruct']['ShareInfo']['Level1']['Buffer']
 
-eg./examples/smbclient.py
+# eg./examples/smbclient.py
     def do_info(self, line):
         if self.loggedIn is False:
             LOG.error("Not logged in")
@@ -3168,7 +3246,7 @@ OSF_SCALL::FindOrCreateCacheEntry 执行以下操作：
 
 为了使缓存正常运行， **服务器和客户端都需要注册并设置身份验证信息**。 
 
-SSPI 多路复用
+#### SSPI 多路复用
 
 在注册身份验证信息的过程中，服务器必须指定要使用的身份验证服务。身份验证服务是一个 [安全支持提供程序](https://learn.microsoft.com/en-us/windows/win32/rpc/security-support-providers-ssps-) (SSP)，它是一个软件包，可处理从客户端收到的身份验证信息。在大多数情况下，这将是 NTLM SSP、Kerberos SSP 或 Microsoft Negotiate SSP，该服务会在 Kerberos 和 NTLM 之间选择最佳的可用选项。
 
@@ -3177,7 +3255,7 @@ RPC runtime在全局范围内保存身份验证信息。这意味着，如果两
 srvsvc 的安全回调具有以下逻辑：
 
 - 如果远程客户端尝试访问 64-73（含）范围内的函数，则拒绝访问
-- 如果非集群帐户的远程客户端尝试访问 58-63（含）范围内的函数，则拒绝访问
+- 如果非集群账户的远程客户端尝试访问 58-63（含）范围内的函数，则拒绝访问
 
 因此，从本质上讲，远程客户端会被阻止访问接口的这些特定函数。此范围检查提示受限制的函数存在敏感因素，应仅由预期的（本地）进程调用。
 
@@ -3190,9 +3268,9 @@ Srvsvc 不注册身份验证信息，因此，在正常情况下，客户端无�
 WksSvc 会公开 [MS-WKST](https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-wkst/5bb08058-bc36-4d3c-abeb-b132228281b7) 接口。该服务负责管理域成员资格、计算机名称和到 [SMB 网络重定向器的连接](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wkst/3acf0e02-9bbd-4ce0-a7a0-586bc72d3ef4#gt_15c89cb5-6767-49e7-b461-66acaf6c06c8)，比如 SMB 打印机服务器。通过查看接口的安全回调，我们可以看到，有几个函数的处理方式与其他的不同。opnum 在 8-11 之间的函数也被选为由本地客户端调用，这意味着不允许远程调用它们。但是，由于我们拥有缓存，我们先调用一个允许远程调用的不同函数，然后再调用其中一个受限制的函数，我们可以远程调用本地受限的函数，因为第一个调用的结果已缓存。
 
 ```
-当应用程序驻留在具有其他 RPC 服务器的进程中时，所有应用程序都会侦听所有协议。因此，如果一个组件只为 LRPC 调用，它不一定只能通过 LRPC 访问。它可以通过其他协议访问，因为进程中的其他 RPC 服务器可能正在侦听管道或套接字。
+当多个 RPC 服务器位于同一进程中时，该进程中的所有 RPC 接口都会暴露在该进程已注册的所有协议序列上。因此，如果一个组件只为 LRPC 调用实现，它不一定只能通过 LRPC 访问——它可以通过其他协议访问，因为进程中的其他 RPC 服务器可能正在侦听管道或套接字。
 
-与严格的上下文句柄类似，不在进程中放置另一个端点并不意味着另一个端点不存在。不管你如何注册你的服务器，你的接口和你的端点之间没有特殊的关联；所有接口都可以在该进程的所有端点上调用。这是端点安全模型无效的另一个原因；如果安全描述符被放置在端点上，攻击者可以调用另一个端点上的接口。
+与上下文句柄的情况类似，即使不在进程中注册另一个端点，也不意味着该进程不会暴露另一个端点。不管你如何注册你的服务器，你的接口和你的端点之间没有特殊的关联；所有接口都可以在该进程的所有端点上调用。这是端点安全模型无效的另一个原因；如果安全描述符被放置在端点上，攻击者可以调用另一个端点上的接口。
 
 为确保仅在特定协议序列上调用进程，请注册安全回调函数，并在该函数中检查调用的协议序列。
 ```
@@ -3207,84 +3285,15 @@ WksSvc 会公开 [MS-WKST](https://docs.microsoft.com/en-us/openspecs/windows_pr
 
 2.或者我们可以用有趣或有用的文件来伪装现有的文件服务器（或假装是新的文件服务器）。由于这些文件在我们的控制之下，我们可以按照我们认为合适的方式将其作为攻击武器，希望它们能让我们感染目标用户。
 
-WksSvc 下的 RPC 服务器本身并不执行任何身份验证注册。如果服务是独立运行的，则无法进行客户端身份验证（会导致错误 *RPC_S_UNKNOWN_AUTHN_SERVICE*）。因此，我们需要让该服务与其他服务一起运行，以便同时滥用 [SSPI 多路复用](https://www.akamai.com/zh/blog/security-research/cold-hard-cache-bypassing-rpc-with-cache-abuse#multi)。 **这将受影响的 Windows 版本** 限制为 [Windows 10 版本 1703 之前的版本，](https://docs.microsoft.com/en-us/windows/application-management/svchost-service-refactoring)或运行内存小于 3.5 GB 的较新版本。
+WksSvc 下的 RPC 服务器本身并不执行任何身份验证注册。如果服务是独立运行的，则无法进行客户端身份验证（会导致错误 *RPC_S_UNKNOWN_AUTHN_SERVICE*）。因此，我们需要让该服务与其他服务一起运行，以便同时滥用 [SSPI 多路复用](https://www.akamai.com/zh/blog/security-research/cold-hard-cache-bypassing-rpc-with-cache-abuse#multi)。 这将受影响的 Windows 版本限制为 Windows 10 版本 1703 之前的版本，或运行内存小于 3.5 GB 的较新版本。
 
-poc:https://github.com/akamai/akamai-security-research/tree/main/PoCs/cve-2022-38034
-
-### transport.py
-
-实现了 DCE/RPC的传输协议
-
-通过DCERPCTransportFactory建立TCP、UDP、HTTP、SMB等协议的rcp连接
-
-```python
-def DCERPCTransportFactory(stringbinding):
-    sb = DCERPCStringBinding(stringbinding)
-
-    na = sb.get_network_address()
-    ps = sb.get_protocol_sequence()
-    if 'ncadg_ip_udp' == ps:
-        port = sb.get_endpoint()
-        if port:
-            rpctransport = UDPTransport(na, int(port))
-        else:
-            rpctransport = UDPTransport(na)
-    elif 'ncacn_ip_tcp' == ps:
-        port = sb.get_endpoint()
-        if port:
-            rpctransport = TCPTransport(na, int(port))
-        else:
-            rpctransport = TCPTransport(na)
-    elif 'ncacn_http' == ps:
-        port = sb.get_endpoint()
-        if port:
-            rpctransport = HTTPTransport(na, int(port))
-        else:
-            rpctransport = HTTPTransport(na)
-    elif 'ncacn_np' == ps:
-        named_pipe = sb.get_endpoint()
-        if named_pipe:
-            named_pipe = named_pipe[len(r'\pipe'):]
-            rpctransport = SMBTransport(na, filename = named_pipe)
-        else:
-            rpctransport = SMBTransport(na)
-    elif 'ncalocal' == ps:
-        named_pipe = sb.get_endpoint()
-        rpctransport = LOCALTransport(filename = named_pipe)
-    else:
-        raise DCERPCException("Unknown protocol sequence.")
-
-    rpctransport.set_stringbinding(sb)
-    return rpctransport
-```
-
-以/examples/psexec.py举例,通过DCERPCTransportFactory建立scmr接口（\pipe\svcctl）的rpc连接
-
-```python
-eg./examples/psexec.py
-    executer = PSEXEC(command, options.path, options.file, options.c, int(options.port), username, password, domain, options.hashes,
-                      options.aesKey, options.k, options.dc_ip, options.service_name, options.remote_binary_name)
-    executer.run(remoteName, options.target_ip)
-    
-   def run(self, remoteName, remoteHost):
-        stringbinding = r'ncacn_np:%s[\pipe\svcctl]' % remoteName
-        logging.debug('StringBinding %s'%stringbinding)
-        rpctransport = transport.DCERPCTransportFactory(stringbinding)
-        rpctransport.set_dport(self.__port)
-        rpctransport.setRemoteHost(remoteHost)
-        if hasattr(rpctransport, 'set_credentials'):
-            # This method exists only for selected protocol sequences.
-            rpctransport.set_credentials(self.__username, self.__password, self.__domain, self.__lmhash,
-                                         self.__nthash, self.__aesKey)
-        rpctransport.set_kerberos(self.__doKerberos, self.__kdcHost)
-        self.doStuff(rpctransport)
-```
+PoC：https://github.com/akamai/akamai-security-research/tree/main/PoCs/cve-2022-38034
 
 ### [MS-TSTS]tsts.py
 
 终端服务终端服务器runtime接口协议（Terminal Services Terminal Server Runtime）。终端服务终端服务器runtime接口协议是一种基于 RPC 的协议，用于远程查询和配置[终端服务器](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-tsts/c41d3367-04c9-4c93-babf-9b5de834eb29#gt_b416f72e-cf04-4d80-bf93-f5753f3b0998)的各个方面。
 
-模块没有提供方法操作数的枚举变量，翻了下windows提供的手册结合源码可以看到实现了本地会话管理服务器\TermSrv 客户端\TermSrv 服务器的方法
+模块没有提供方法操作数的枚举变量，结合 Windows 手册与源码可以看到，它实现了本地会话管理服务器（\TermSrv）客户端 / 服务器两侧的方法：
 
 ```
 3.3.4.1.1 RpcOpenSession (Opnum 0)返回终端服务器 上指定会话的句柄。调用此方法不需要特殊权限
@@ -3316,15 +3325,13 @@ eg./examples/psexec.py
 # tscon：将用户会话附加到远程桌面会话
 # tsdiscon：断开远程桌面服务会话
 # tslogoff：注销远程桌面服务会话
-# shutdown: 远程关机
+# shutdown：关闭、重启或注销本地/远程计算机
 # msg：向远程桌面服务会话 (MSGBOX) 发送消息
 ```
 
 ### [MS-WKST]wkst.py
 
-工作站服务远程协议，该协议远程查询和配置远程计算机上smb重定向器的某些方面。官方描述比较笼统。
-
-我们直接看下模块实现了哪些接口方法
+工作站服务远程协议，用于远程查询和配置远程计算机上 SMB 重定向器的某些方面。官方描述比较笼统，直接看模块实现了哪些接口方法：
 
 ```python
 OPNUMS = {
@@ -3342,17 +3349,17 @@ OPNUMS = {
 20 : (NetrGetJoinInformation, NetrGetJoinInformationResponse),检索有关指定计算机加入的工作组或域的详细信息
 22 : (NetrJoinDomain2, NetrJoinDomain2Response),使用加密凭据将计算机加入域或工作组
 23 : (NetrUnjoinDomain2, NetrUnjoinDomain2Response),使用加密凭据使计算机脱离工作组或域
-24 : (NetrRenameMachineInDomain2, NetrRenameMachineInDomain2Response),使用加密凭据来更改本地持久变量ComputerNameNetBIOS并可选择重命名当前在域中的服务器的计算机帐户，而无需先从域中删除计算机然后再将其添加回来
+24 : (NetrRenameMachineInDomain2, NetrRenameMachineInDomain2Response),使用加密凭据来更改本地持久变量ComputerNameNetBIOS并可选择重命名当前在域中的服务器的计算机账户，而无需先从域中删除计算机然后再将其添加回来
 25 : (NetrValidateName2, NetrValidateName2Response),验证计算机、工作组或域名的有效性
 26 : (NetrGetJoinableOUs2, NetrGetJoinableOUs2Response),返回一个组织单元 (OU)列表，用户可以在其中创建对象
 27 : (NetrAddAlternateComputerName, NetrAddAlternateComputerNameResponse),为指定服务器添加备用名称
 28 : (NetrRemoveAlternateComputerName, NetrRemoveAlternateComputerNameResponse),删除指定服务器的备用名称
 29 : (NetrSetPrimaryComputerName, NetrSetPrimaryComputerNameResponse),设置指定服务器的主计算机名称
-30 : (NetrEnumerateComputerNames, NetrEnumerateComputerNamesResponse),
-}返回指定服务器的计算机名称列表。查询的结果由名称的类型决定
+ 30 : (NetrEnumerateComputerNames, NetrEnumerateComputerNamesResponse), 返回指定服务器的计算机名称列表，查询结果由名称类型决定
+}
 ```
 
-可以看到在/examples/netview.py中就是利用该接口hNetrWkstaUserEnum方法获取当前登录用户
+examples/netview.py 利用该接口的 hNetrWkstaUserEnum 方法获取当前登录用户：
 
 ```python
 def getLoggedIn(self, target):
@@ -3393,7 +3400,7 @@ def getLoggedIn(self, target):
                 raise
 ```
 
-在/examples/secretsdump.py中则是是用来查看计算机信息
+examples/secretsdump.py 中则用它查看计算机信息：
 
 ```python
 
@@ -3402,7 +3409,7 @@ def getLoggedIn(self, target):
             # No serverName.. this is either because we're doing Kerberos
             # or not receiving that data during the login process.
             # Let's try getting it through RPC
-            rpc = transport.DCERPCTransportFactory(r'ncacn_np:445[\pipe\wkssvc]')
+            rpc = transport.DCERPCTransportFactory(r'ncacn_np:%s[\pipe\wkssvc]' % self.__smbConnection.getRemoteHost())
             rpc.set_smb_connection(self.__smbConnection)
             dce = rpc.get_dce_rpc()
             dce.connect()
@@ -3415,23 +3422,17 @@ def getLoggedIn(self, target):
             return self.__smbConnection.getServerName(), self.__smbConnection.getServerDomain()
 ```
 
-### MS-TSCH
+### MS-TSCH 计划任务（atsvc / sasec / tsch）
 
-MS-TSCH 计划任务rpc接口，用于注册和配置任务或查询远程服务器上正在运行的任务的状态，主要由三个独立的远程过程调用 (RPC) 接口组成
-
-- Net Schedule ([ATSvc](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-tsch/4d44c426-fad2-4cc7-9677-bfcd235dca33)) 对任务进行增删改查
-- Task Scheduler Agent ([SASec](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-tsch/7849c5ca-a8df-4c1d-8565-41a9b979a63d))
-- Windows Vista operating system Task Remote Protocol ([ITaskSchedulerService](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-tsch/eb12c947-7e20-4a30-a528-85bc433cec44))
-
-MS-TSCH 计划任务rpc接口，用于注册和配置任务或查询远程服务器上正在运行的任务的状态，主要由三个独立的远程过程调用 (RPC) 接口组成
+MS-TSCH 计划任务 RPC 接口，用于注册和配置任务或查询远程服务器上正在运行的任务的状态，主要由三个独立的远程过程调用 (RPC) 接口组成：
 
 - Net Schedule ([ATSvc](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-tsch/4d44c426-fad2-4cc7-9677-bfcd235dca33)) 对任务进行增删改查
-- Task Scheduler Agent ([SASec](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-tsch/7849c5ca-a8df-4c1d-8565-41a9b979a63d)) 对帐户信息进行操作
-- Windows Vista operating system Task Remote Protocol ([ITaskSchedulerService](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-tsch/eb12c947-7e20-4a30-a528-85bc433cec44)) 对任务进行增删改查，但不通过远程注册表和文件系统协议，而是用xml格式来配置任务
+- Task Scheduler Agent ([SASec](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-tsch/7849c5ca-a8df-4c1d-8565-41a9b979a63d)) 对账户信息进行操作
+- Windows Vista operating system Task Remote Protocol ([ITaskSchedulerService](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-tsch/eb12c947-7e20-4a30-a528-85bc433cec44)) 对任务进行增删改查，但不通过远程注册表和文件系统协议，而是用 xml 格式来配置任务
 
 #### atsvc.py
 
-是Net Schedule ([ATSvc](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-tsch/4d44c426-fad2-4cc7-9677-bfcd235dca33)) 的py模块，在一开始就规定了接口的uuid
+是 Net Schedule（ATSvc）的 py 模块，文件开头定义了接口的 UUID：
 
 ```python
 MSRPC_UUID_ATSVC  = uuidtup_to_bin(('1FF70682-0A51-30E8-076D-740BE8CEE98B','1.0'))
@@ -3471,7 +3472,7 @@ Task Scheduler Agent ([SASec](https://learn.microsoft.com/en-us/openspecs/window
 - **UUID**：378E52B0-C0A9-11CF-822D-00AA0051E40F
 - 文件路径：C:\Windows\System32\ **taskcomp.dll**
 
-主要是涉及到账户信息修改的计划任务,要求客户端还使用 Windows 远程注册表协议规范MSRRP
+主要是涉及到账户信息修改的计划任务，要求客户端还使用 Windows 远程注册表协议规范MSRRP
 
 ```python
 class SASetAccountInformation(NDRCALL):
@@ -3526,12 +3527,12 @@ xml格式如下
 
 https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-tsch/0d6383e4-de92-43e7-b0bb-a60cfa36379f
 
-模块中主要是各项静态参数配置,各项请求结构体及各项请求包构建函数
+模块中主要是各项静态参数配置，各项请求结构体及各项请求包构建函数
 
-这是红队工具中最常用的也是功能最完善的计划任务接口,在impacket的example的ntlm中继进攻中,也是使用该模块的hSchRpcRegisterTask函数创建计划任务
+这是红队工具中最常用、功能最完善的计划任务接口。impacket 的 ntlmrelayx 中继攻击中，就是使用该模块的 hSchRpcRegisterTask 函数创建计划任务：
 
 ```python
-eg./examples/ntlmrelayx/attacks/rpcattack.py
+# eg./examples/ntlmrelayx/attacks/rpcattack.py
 import string
 import random
 
@@ -3552,9 +3553,9 @@ RPC 客户端
 
 ### [MS-BKRP]bkrp.py
 
-密钥备份rpc接口,客户端使用 BackupKey 远程协议在服务器的帮助下加密和解密敏感数据（例如加密密钥）。使用此协议加密的数据只能由服务器解密，客户端可以安全地将此类加密数据写入没有特别保护的存储中。在 Windows 中，此协议用于通过[Active Directory 域中的](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-bkrp/32d60aa4-e40c-414a-986c-db731aca7e71#gt_fcaec097-23d5-4b8f-b3e7-5739cc9c1d78)[数据保护应用程序接口 (DPAPI)](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-bkrp/32d60aa4-e40c-414a-986c-db731aca7e71#gt_3af2be04-f627-4a02-a3b0-b465ccede53f)提供 用户密钥加密
+密钥备份远程协议（Backup Key）：客户端在服务器的帮助下加密和解密敏感数据（例如加密密钥）。使用此协议加密的数据只能由服务器解密，因此客户端可以安全地将此类加密数据写入没有特别保护的存储中。在 Windows 中，此协议用于通过[Active Directory 域中的](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-bkrp/32d60aa4-e40c-414a-986c-db731aca7e71#gt_fcaec097-23d5-4b8f-b3e7-5739cc9c1d78)[数据保护应用程序接口 (DPAPI)](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-bkrp/32d60aa4-e40c-414a-986c-db731aca7e71#gt_3af2be04-f627-4a02-a3b0-b465ccede53f)提供 用户密钥加密
 
-模块对backupkey进行封装,实现了请求服务端对数据进行封装或解包等接口功能,BackuprKey方法接口参数如下
+模块对 backupkey 进行了封装，实现了请求服务端对数据进行打包或解包等接口功能。BackuprKey 方法接口参数如下（注：BackuprKey 为协议文档中的原始拼写）：
 
 ```idl
  NET_API_STATUS BackuprKey(
@@ -3570,14 +3571,14 @@ RPC 客户端
 
 **pguidActionAgent**对应各功能uuid如下
 
-| 价值                                                         | 意义                                                         |
+| 值         | 含义 |
 | :----------------------------------------------------------- | :----------------------------------------------------------- |
-| BACKUPKEY_BACKUP_GUID7F752B10-178E-11D1-AB8F-00805F14DB40    | 请求服务器端包装。输入时，*pDataIn* 必须指向包含要包装的秘密的[BLOB 。](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-bkrp/32d60aa4-e40c-414a-986c-db731aca7e71#gt_ad861812-8cb0-497a-80bb-13c95aa4e425)服务器必须将 pDataIn 视为不透明的二进制数据。在输出时，*ppDataOut*必须包含以第[2.2.4](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-bkrp/217bff2b-9136-43f2-b6a8-20ef992babc2)节中指定的格式包装的秘密。详见[3.1.4.1.1](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-bkrp/df4f7698-298f-4cb2-8bb9-bff20112c3b2)节。 |
-| BACKUPKEY_RESTORE_GUID_WIN2K7FE94D50-178E-11D1-AB8F-00805F14DB40 | 请求[解](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-bkrp/32d60aa4-e40c-414a-986c-db731aca7e71#gt_c6590684-c769-4edf-82be-62f3450b09e7)包服务器端包装的秘密。输入时，*pDataIn*必须指向包含包装密钥的 BLOB，格式在 2.2.4 节中指定。在输出时，*ppDataOut*必须包含一个指向解包秘密的指针，由客户端提供给*BACKUPKEY_BACKUP_GUID*调用。详见[3.1.4.1.2](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-bkrp/c8cc3008-13c4-4424-82f4-b4661c590d43)节。 |
-| BACKUPKEY_RETRIEVE_BACKUP_KEY_GUID018FF48A-EABA-40C6-8F6D-72370240E967 | 请求服务器的 ClientWrap[密钥对的](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-bkrp/32d60aa4-e40c-414a-986c-db731aca7e71#gt_3f211a0b-87e1-4884-856b-89c69c4a5d34)[公钥](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-bkrp/32d60aa4-e40c-414a-986c-db731aca7e71#gt_4cf96ca0-e3a9-4165-8d1a-a21b1397007a)部分。服务器必须忽略*pDataIn*和*cbDataIn*参数。在输出时，*ppDataOut*必须包含一个指向服务器公钥的指针，格式在[2.2.1](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-bkrp/db5c89f0-b036-489e-aa68-baa14cc683d3)节中指定。详见[3.1.4.1.3](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-bkrp/e8118398-d3da-45fc-827f-186f1c417b69)节。 |
-| BACKUPKEY_RESTORE_GUID47270C64-2FC7-499B-AC5B-0E37CDCE899A   | 请求解包在客户端用服务器的公钥包装的秘密。输入时，*pDataIn* 必须指向一个客户端包装密钥，格式如[2.2.2](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-bkrp/76e40962-cdfd-4772-acd6-28b06b2f7ad5)节中指定。在输出时，*ppDataOut*必须包含一个指向解包秘密的指针，格式如第[2.2.3](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-bkrp/277d23a6-e774-4fa7-83f8-b5edde849e59)节中指定。详见[3.1.4.1.4](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-bkrp/2f7a0590-e19d-4641-adbc-5460dde086e4)节。 |
+| BACKUPKEY_BACKUP_GUID 7F752B10-178E-11D1-AB8F-00805F14DB40    | 请求服务器端包装。输入时，*pDataIn* 必须指向包含要包装的秘密的[BLOB 。](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-bkrp/32d60aa4-e40c-414a-986c-db731aca7e71#gt_ad861812-8cb0-497a-80bb-13c95aa4e425)服务器必须将 pDataIn 视为不透明的二进制数据。在输出时，*ppDataOut*必须包含以第[2.2.4](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-bkrp/217bff2b-9136-43f2-b6a8-20ef992babc2)节中指定的格式包装的秘密。详见[3.1.4.1.1](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-bkrp/df4f7698-298f-4cb2-8bb9-bff20112c3b2)节。 |
+| BACKUPKEY_RESTORE_GUID_WIN2K 7FE94D50-178E-11D1-AB8F-00805F14DB40 | 请求解包服务器端包装的秘密。输入时，*pDataIn*必须指向包含包装密钥的 BLOB，格式在 2.2.4 节中指定。在输出时，*ppDataOut*必须包含一个指向解包秘密的指针，由客户端提供给*BACKUPKEY_BACKUP_GUID*调用。详见[3.1.4.1.2](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-bkrp/c8cc3008-13c4-4424-82f4-b4661c590d43)节。 |
+| BACKUPKEY_RETRIEVE_BACKUP_KEY_GUID 018FF48A-EABA-40C6-8F6D-72370240E967 | 请求服务器的 ClientWrap[密钥对的](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-bkrp/32d60aa4-e40c-414a-986c-db731aca7e71#gt_3f211a0b-87e1-4884-856b-89c69c4a5d34)[公钥](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-bkrp/32d60aa4-e40c-414a-986c-db731aca7e71#gt_4cf96ca0-e3a9-4165-8d1a-a21b1397007a)部分。服务器必须忽略*pDataIn*和*cbDataIn*参数。在输出时，*ppDataOut*必须包含一个指向服务器公钥的指针，格式在[2.2.1](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-bkrp/db5c89f0-b036-489e-aa68-baa14cc683d3)节中指定。详见[3.1.4.1.3](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-bkrp/e8118398-d3da-45fc-827f-186f1c417b69)节。 |
+| BACKUPKEY_RESTORE_GUID 47270C64-2FC7-499B-AC5B-0E37CDCE899A   | 请求解包在客户端用服务器的公钥包装的秘密。输入时，*pDataIn* 必须指向一个客户端包装密钥，格式如[2.2.2](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-bkrp/76e40962-cdfd-4772-acd6-28b06b2f7ad5)节中指定。在输出时，*ppDataOut*必须包含一个指向解包秘密的指针，格式如第[2.2.3](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-bkrp/277d23a6-e774-4fa7-83f8-b5edde849e59)节中指定。详见[3.1.4.1.4](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-bkrp/2f7a0590-e19d-4641-adbc-5460dde086e4)节。 |
 
-在test文件夹下可以看到模块调用示例,接口调用示例如下
+在 impacket 的 tests 目录下可以看到模块调用示例，接口封装如下：
 
 ```python
 def hBackuprKey(dce, pguidActionAgent, pDataIn, dwParam=0):
@@ -3592,7 +3593,7 @@ def hBackuprKey(dce, pguidActionAgent, pDataIn, dwParam=0):
     return dce.request(request)
 
 
-eg./tests/dcerpc/test_bkrp.py
+# eg./tests/dcerpc/test_bkrp.py
 class BKRPTests(DCERPCTests):
 
     iface_uuid = bkrp.MSRPC_UUID_BKRP
@@ -3634,7 +3635,7 @@ class BKRPTests(DCERPCTests):
 
 ### [MS-DHCPM]dhcpm.py
 
-在OPNUMS中我们可以看到dhcpm在模块中完成了dhcp信息检索相关函数如DhcpGetClientInfoV4等
+在 OPNUMS 中可以看到，dhcpm 模块封装了 DHCP 信息检索相关函数，如 DhcpGetClientInfoV4 等：
 
 ```python
 OPNUMS = {
@@ -3654,7 +3655,7 @@ OPNUMS = {
 }
 ```
 
-在/tests/dcerpc/test_dhcpm.py中对访问服务器获取dhcp信息进行测试，但目前在impacket中无更多应用，后续开发过程中有相应需求的小伙伴可以自己拿来做更多利用。
+tests/dcerpc/test_dhcpm.py 中对访问服务器获取 DHCP 信息进行了测试。目前 impacket 中该模块没有更多应用，后续有相应需求时可以基于它进行扩展。
 
 ```python
 class DHCPMTests(DCERPCTests):
@@ -3691,9 +3692,9 @@ class DHCPMTests(DCERPCTests):
  16: (DRSDomainControllerInfo,DRSDomainControllerInfoResponse ),检索有关给定域中DC的信息
 ```
 
-AD是一个数据库，默认地，每个域控制器(DC)在它的“\winnt\ntds”文件夹中以ntds.dit文件形式存储这个数据库的一个副本。**AD数据库**从逻辑上划分为三个目录分区，又称为命名上下文(Naming Context，NC)，它们分别是架构NC(Schema NC)、配置NC(Configuration NC)以及域NC(Domain NC)。森林中所有的DC都拥有同样的架构NC和配置NC，因为这些信息是在森林范围被定义的，而在一个AD域中的每个DC上拥有本域的域NC的同样的副本。如果DC被指派为全局编录(GC)服务器，那么这台DC同时包含森林中其他域的域NC的一部分副本，这部分副本包括所有来自个域中的对象，但仅仅是属性的一个子集。
+AD 是一个数据库。默认情况下，每台域控制器（DC）在 %SystemRoot%\NTDS 文件夹中以 ntds.dit 文件形式存储该数据库的一个副本。**AD 数据库**在逻辑上划分为三个目录分区，又称命名上下文（Naming Context，NC）：架构 NC（Schema NC）、配置 NC（Configuration NC）和域 NC（Domain NC）。林中所有 DC 拥有相同的架构 NC 和配置 NC（这些信息在林范围内定义），而同一 AD 域中的每台 DC 都拥有本域域 NC 的相同副本。如果 DC 被指派为全局编录（GC）服务器，它还会包含林中其他域的域 NC 的部分副本——包含来自各域的所有对象，但仅是属性的一个子集。
 
-NC指的是**application naming context (application NC)**:特定类型的命名上下文（NC），或该类型的实例，仅支持完整副本（不支持部分副本）。应用程序 NC 不能包含 Active Directory 域服务 (AD DS) 中的安全主体对象，但可以包含 Active Lightweight Directory Services (AD LDS) 中的安全主体对象。一个林在 AD DS 或 AD LDS 中可以有零个或多个应用程序 NC 。应用程序 NC 可以包含动态对象。应用程序 NC不会出现在全局目录 (GC)中。应用程序 NC的根是类domainDNS的对象.
+NC指的是**application naming context (application NC)**:特定类型的命名上下文（NC），或该类型的实例，仅支持完整副本（不支持部分副本）。应用程序 NC 不能包含 Active Directory 域服务 (AD DS) 中的安全主体对象，但可以包含 Active Lightweight Directory Services (AD LDS) 中的安全主体对象。一个林在 AD DS 或 AD LDS 中可以有零个或多个应用程序 NC 。应用程序 NC 可以包含动态对象。应用程序 NC 不会出现在全局目录（GC）中。应用程序 NC 的根是 domainDNS 类的对象。
 
 应用程序目录分区的第一个副本是在创建时绑定到它的域控制器上创建的。 可以在林中的任何域控制器上创建其他副本，不一定与初始域控制器位于同一域中。 应用程序目录分区副本只能存在于运行 Windows Server 2003 或更高版本的域控制器上。
 
@@ -3703,13 +3704,13 @@ NC 副本：包含对象树的变量，其 根对象由某个命名上下文 (NC
 
 指定目录服务设置远程协议，它公开一个 RPC 接口，客户端可以调用该接口来获取与域相关的计算机状态和配置信息。
 
-在模块中仅实现了hDsRolerGetPrimaryDomainInformation方法去查询drsuapi接口的DSROLER_PRIMARY_DOMAIN_INFO_BASIC 结构体，结构体内容如下
+模块中仅实现了 hDsRolerGetPrimaryDomainInformation 方法，用于查询 MS-DSSP 接口的 DSROLER_PRIMARY_DOMAIN_INFO_BASIC 结构，内容如下：
 
 ```c++
  typedef struct _DSROLER_PRIMARY_DOMAIN_INFO_BASIC {
    DSROLE_MACHINE_ROLE MachineRole;计算机的当前角色，表示为DSROLE_MACHINE_ROLE 数据类型。
    unsigned __int32 Flags;该值指示目录服务的状态和DomainGuid成员 中包含的信息的有效性。此参数的值必须为零或下表中一个或多个单独标志的组合。该组合是应用到为其检索信息的计算机的标志的按位或的结果。所有未定义的位必须为 0。
-   [unique, string] wchar_t* DomainNameFlat;计算机所属的域或非域工作组 的NetBIOS 名称。 计算机的域名。如果MachineRole成员是DsRole_RoleStandaloneWorkstation 或DsRole_RoleStandaloneServer，则此成员必须为 NULL，否则不得为 NULL
+   [unique, string] wchar_t* DomainNameFlat;计算机所属域或非域工作组的 NetBIOS 名称。如果 MachineRole 成员是 DsRole_RoleStandaloneWorkstation 或 DsRole_RoleStandaloneServer，则此成员必须为 NULL，否则不得为 NULL
    [unique, string] wchar_t* DomainNameDns; 计算机的域名。如果MachineRole成员是DsRole_RoleStandaloneWorkstation 或DsRole_RoleStandaloneServer，则此成员必须为 NULL，否则不得为 NULL
    [unique, string] wchar_t* DomainForestName;计算机所属的林 的名称。如果计算机是独立的工作站或服务器，则此成员必须为 NULL。
    GUID DomainGuid;计算机所属域 的UUID 。仅当设置了 DSROLE_PRIMARY_DOMAIN_GUID_PRESENT 标志时，此成员的值才有效。
@@ -3717,20 +3718,22 @@ NC 副本：包含对象树的变量，其 根对象由某个命名上下文 (NC
   *PDSROLER_PRIMARY_DOMAIN_INFO_BASIC;
 ```
 
-| 价值                                         | 意义                                                         |
+| 值 | 含义 |
 | :------------------------------------------- | :----------------------------------------------------------- |
-| DSROLE_PRIMARY_DS_RUNNING0x00000001          | 目录服务正在这台计算机上运行。如果未设置此标志，则目录服务不会在此计算机上运行。 |
-| DSROLE_PRIMARY_DS_MIXED_MODE0x00000002       | 目录服务以[混合模式](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dssp/4339df3c-494b-49b4-9c60-d25526a35a0d#gt_06c1c70e-f2c6-4efd-bff8-474409e69660)运行。仅当设置了 DSROLE_PRIMARY_DS_RUNNING 标志且未设置 DSROLE_PRIMARY_DS_READONLY 标志时，此标志才有效。 |
-| DSROLE_PRIMARY_DS_READONLY0x00000008         | [计算机保存目录](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dssp/4339df3c-494b-49b4-9c60-d25526a35a0d#gt_49ce3946-04d2-4cc9-9350-ebcd952b9ab9)的只读副本。仅当设置了 DSROLE_PRIMARY_DS_RUNNING 标志且未设置 DSROLE_PRIMARY_DS_MIXED_MODE 标志时，此标志才有效。 |
-| DSROLE_PRIMARY_DOMAIN_GUID_PRESENT0x01000000 | DomainGuid成员包含一个有效的域 GUID **。**如果未设置此位，则 DomainGuid 成员中的值未定义。 |
+| DSROLE_PRIMARY_DS_RUNNING 0x00000001          | 目录服务正在这台计算机上运行。如果未设置此标志，则目录服务不会在此计算机上运行。 |
+| DSROLE_PRIMARY_DS_MIXED_MODE 0x00000002       | 目录服务以[混合模式](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dssp/4339df3c-494b-49b4-9c60-d25526a35a0d#gt_06c1c70e-f2c6-4efd-bff8-474409e69660)运行。仅当设置了 DSROLE_PRIMARY_DS_RUNNING 标志且未设置 DSROLE_PRIMARY_DS_READONLY 标志时，此标志才有效。 |
+| DSROLE_PRIMARY_DS_READONLY 0x00000008         | [计算机保存目录](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dssp/4339df3c-494b-49b4-9c60-d25526a35a0d#gt_49ce3946-04d2-4cc9-9350-ebcd952b9ab9)的只读副本。仅当设置了 DSROLE_PRIMARY_DS_RUNNING 标志且未设置 DSROLE_PRIMARY_DS_MIXED_MODE 标志时，此标志才有效。 |
+| DSROLE_PRIMARY_DOMAIN_GUID_PRESENT 0x01000000 | DomainGuid成员包含一个有效的域 GUID。如果未设置此位，则 DomainGuid 成员中的值未定义。 |
 
 
 
-### MS-DCOM
+# 第四部分 DCOM 与 WMI
 
-#### DCOM编程
+## 第 6 章 DCOM 与 WMI
 
-RPC由是一个计算机通信协议]。该协议允许运行于一台计算机的程序调用另一个地址空间（通常为一个开放网络的一台计算机）的子程序，而程序员就像调用本地程序一样,dcom是基于此之上的远程com对象调用
+### 6.1 DCOM 编程基础
+
+RPC 是一种计算机通信协议：它允许运行于一台计算机的程序调用另一个地址空间（通常是开放网络中一台计算机）的子程序，对程序员而言就像调用本地程序一样。DCOM 则是基于 RPC 的远程 COM 对象调用。
 
 ![DCOM协议栈](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dcom/ms-dcom_files/image001.png)
 
@@ -3743,20 +3746,20 @@ RPC由是一个计算机通信协议]。该协议允许运行于一台计算机�
 首先我们来介绍下dcom编程涉及的一些关键词
 
 + activation:在DCOM协议中，客户端提供对象类的CLSID并 从该 对象类或能够创建此类对象的类工厂获取对象的机制
-+ CID:,每个ORPC调用都在ORPCTHIS结构中携带一个,如果从已经执行 ORPC 调用的客户端发出新的 ORPC 调用，则需要为新调用分配与现有调用相同的 CID,如果从尚未执行 ORPC 调用的客户端发出新的 ORPC 调用，则需要为其分配新的 CID。使用 CID 来防止 ORPC 调用中的死锁
-+ class factory:一个对象,其目的是从特定对象类创建对象
++ CID：每个 ORPC 调用都在 ORPCTHIS 结构中携带一个。延续已有因果链（causality）的新调用复用该链的 CID；开启新因果链的调用分配新的 CID。CID（因果标识符）用于防止 ORPC 调用中的死锁。
++ class factory:一个对象，其目的是从特定对象类创建对象
 + CLSID:标识DCOM对象类或COM类的id,常用CLSID如下即为dcomrt.py开头的静态变量
 
-| 姓名                          | GUID                                   | 目的                                                         | 部分                                                         |
+| 名称 | GUID | 用途 | 章节 |
 | :---------------------------- | :------------------------------------- | :----------------------------------------------------------- | :----------------------------------------------------------- |
 | CLSID_ActivationContextInfo   | {000001a5-0000-0000-c000-000000000046} | ActivationContextInfoData 的激活属性[CLSID](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dcom/ba4c4d80-ef81-49b4-848f-9714d72b5c01#gt_e433c806-6cb6-46a2-bb95-523df8818c99) | [2.2.22.2.5](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dcom/5892b550-cd9e-4277-9644-4886d3b6d754) |
-| CLSID_ActivationPropertiesIn  | {00000338-0000-0000-c000-000000000046} | ActivationPropertiesIn 的 OBJREF_CUSTOM 解组器 CLSID         | [3.1.2.5.2.3.2](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dcom/c5917c4f-aaf5-46de-8667-bad7e495abf9)[3.1.2.5.2.3.3](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dcom/64af4c57-5466-4fdf-9761-753ea926a494) |
-| CLSID_ActivationPropertiesOut | {00000339-0000-0000-c000-000000000046} | ActivationPropertiesOut 的 OBJREF_CUSTOM 解组器 CLSID        | 3.1.2.5.2.3.23.1.2.5.2.3.3                                   |
+| CLSID_ActivationPropertiesIn  | {00000338-0000-0000-c000-000000000046} | ActivationPropertiesIn 的 OBJREF_CUSTOM 解封器 CLSID         | [3.1.2.5.2.3.2](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dcom/c5917c4f-aaf5-46de-8667-bad7e495abf9)[3.1.2.5.2.3.3](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dcom/64af4c57-5466-4fdf-9761-753ea926a494) |
+| CLSID_ActivationPropertiesOut | {00000339-0000-0000-c000-000000000046} | ActivationPropertiesOut 的 OBJREF_CUSTOM 解封器 CLSID        | 3.1.2.5.2.3.23.1.2.5.2.3.3                                   |
 | CLSID_CONTEXT_EXTENSION       | {00000334-0000-0000-c000-000000000046} | [上下文 (2) ](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dcom/ba4c4d80-ef81-49b4-848f-9714d72b5c01#gt_3e11a72c-ed27-447b-b2c6-ff04fd452477)[ORPC](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dcom/ba4c4d80-ef81-49b4-848f-9714d72b5c01#gt_d4ad46fe-cbab-43f2-a125-b2f125824f33) 扩展的 ORPC_EXTENT 标识符 | [2.2.21.4](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dcom/df24170b-8b79-48aa-85d9-962fb967e3f9) |
-| CLSID_ContextMarshaler        | {0000033b-0000-0000-c000-000000000046} | 上下文的 OBJREF_CUSTOM 解组器 CLSID (2)                      | [2.2.20](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dcom/94a587a3-826a-4bac-969b-ae0bbfc9a663) |
+| CLSID_ContextMarshaler        | {0000033b-0000-0000-c000-000000000046} | 上下文的 OBJREF_CUSTOM 解封器 CLSID (2)                      | [2.2.20](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dcom/94a587a3-826a-4bac-969b-ae0bbfc9a663) |
 | CLSID_ERROR_EXTENSION         | {0000031c-0000-0000-c000-000000000046} | 错误信息 ORPC 扩展的 ORPC_EXTENT 标识符                      | [2.2.21.1](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dcom/75b34e44-c564-44f8-a6aa-2fd7df615d52) |
-| CLSID_ErrorObject             | {0000031b-0000-0000-c000-000000000046} | 用于错误信息的 OBJREF_CUSTOM 解组器 CLSID                    | [2.2.21.2](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dcom/08452c9c-c892-433f-8c2a-8c5283e7bd56) |
-| CLSID_实例信息                | {000001ad-0000-0000-c000-000000000046} | InstanceInfoData 的激活属性 CLSID                            | [2.2.22.2.3](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dcom/b88422bb-778f-487c-aec9-2486feab7026) |
+| CLSID_ErrorObject             | {0000031b-0000-0000-c000-000000000046} | 用于错误信息的 OBJREF_CUSTOM 解封器 CLSID                    | [2.2.21.2](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dcom/08452c9c-c892-433f-8c2a-8c5283e7bd56) |
+| CLSID_InstanceInfo            | {000001ad-0000-0000-c000-000000000046} | InstanceInfoData 的激活属性 CLSID                            | [2.2.22.2.3](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dcom/b88422bb-778f-487c-aec9-2486feab7026) |
 | CLSID_InstantiationInfo       | {000001ab-0000-0000-c000-000000000046} | InstantiationInfoData 的激活属性 CLSID                       | [2.2.22.2.1](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dcom/00ad4108-3772-4cda-87df-b2514d4f983b) |
 | CLSID_PropsOutInfo            | {00000339-0000-0000-c000-000000000046} | PropsOutInfo 的激活属性 CLSID                                | [2.2.22.2.9](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dcom/7f35873f-0f4b-47e7-a90c-f2ced71fecd6) |
 | CLSID_ScmReplyInfo            | {000001b6-0000-0000-c000-000000000046} | ScmReplyInfoData 的激活属性 CLSID                            | [2.2.22.2.8](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dcom/3fe48eb0-e9b8-4e46-a3fb-5d34b23f0b19) |
@@ -3767,22 +3770,22 @@ RPC由是一个计算机通信协议]。该协议允许运行于一台计算机�
 | IID_IActivation               | {4d9f4ab8-7d1c-11cf-861e-0020af6e7c57} | IActivation 的[RPC](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dcom/ba4c4d80-ef81-49b4-848f-9714d72b5c01#gt_8a7f6700-8311-45bc-af10-82e10accd331)[接口](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dcom/ba4c4d80-ef81-49b4-848f-9714d72b5c01#gt_95913fbd-3262-47ae-b5eb-18e6806824b9) [UUID](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dcom/ba4c4d80-ef81-49b4-848f-9714d72b5c01#gt_c4813fc3-b2e5-4aa3-bde7-421d950d68d3) | [3.1.2.5.2.1](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dcom/bf94e28f-f48c-462c-98a6-8e20a6cfc012) |
 | IID_IActivationPropertiesIn   | {000001A2-0000-0000-C000-000000000046} | *pActProperties* [OBJREF](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dcom/fe6c5e46-adf8-4e34-a8de-3f756c875f31) 结构的**iid**字段的值 | 3.1.2.5.2.3.23.1.2.5.2.3.3                                   |
 | IID_IActivationPropertiesOut  | {000001A3-0000-0000-C000-000000000046} | *ppActProperties* OBJREF 结构的**iid**字段的值               | 3.1.2.5.2.3.23.1.2.5.2.3.3                                   |
-| IID_I上下文                   | {000001c0-0000-0000-C000-000000000046} | 上下文结构的**iid**字段的值。                                | 2.2.20                                                       |
+| IID_IContext                  | {000001c0-0000-0000-C000-000000000046} | 上下文结构的**iid**字段的值。                                | 2.2.20                                                       |
 | IID_IObjectExporter           | {99fcfec4-5260-101b-bbcb-00aa0021347a} | IObjectExporter 的 RPC 接口 UUID                             | [3.1.2.5.1](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dcom/8ed0ae33-56a1-44b7-979f-5972f0e9416c) |
 | IID_IRemoteSCMActivator       | {000001A0-0000-0000-C000-000000000046} | IRemoteSCMActivator 的 RPC 接口 UUID                         | [3.1.2.5.2.2](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dcom/fd0682f8-8f5a-4082-830f-861c34db6251) |
 | IID_IRemUnknown               | {00000131-0000-0000-C000-000000000046} | IRemUnknown 的 RPC 接口 UUID                                 | [3.1.1.5.6](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dcom/7f621d16-8448-4f9a-9567-793845db2bc7) |
 | IID_IRemUnknown2              | {00000143-0000-0000-C000-000000000046} | IRemUnknown2 的 RPC 接口 UUID                                | [3.1.1.5.7.1](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dcom/63f18408-87b6-4631-b600-5bca44bda851) |
-| IID_I未知                     | {00000000-0000-0000-C000-000000000046} | IUnknown 的 RPC 接口 UUID                                    | [3.1.1.5.8](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dcom/2b4db106-fb79-4a67-b45f-63654f19c54c) |
+| IID_IUnknown                  | {00000000-0000-0000-C000-000000000046} | IUnknown 的 RPC 接口 UUID                                    | [3.1.1.5.8](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dcom/2b4db106-fb79-4a67-b45f-63654f19c54c) |
 
 + COM:一种面向对象的编程模型，它定义了对象如何在单个进程内或进程之间进行交互.在COM中，客户端可以通过在对象上实现的接口访问对象
 
-关于com编程的概念理解,可以看知乎上灵剑的回答和一篇com编程入门
+关于com编程的概念理解，可以看知乎上灵剑的回答和一篇com编程入门
 
 https://www.zhihu.com/question/49433640/answer/115952604
 
 https://blog.51cto.com/u_15075510/3505281
 
-简单讲一下,COM是一种规范，而不是实现。当使用C++来实现时，COM组件就是一个C++类，而COM接口就是继承至IUnknown的纯虚类，COM组件就是实现相应COM接口的C++类。COM规范规定，任何组件或接口都必须从IUnknown接口中继承而来。IUnknown定义了3个重要函数，分别是QueryInterface、AddRef和Release。其中，QueryInterface负责组件对象上的接口查询，AddRef用于增加引用计数，Release用于减少引用计数。引用计数是COM中的一个非常重要的概念，它很好地解决了组件对象地生命周期问题，即COM组件何时被销毁，以及谁来销毁地问题.COM规范规定，每个组件都必须实现一个与之对应的类工厂（Class Factory）。类工厂也是一个COM组件，它实现了IClassFactory接口。在IClassFactory的接口函数CreateInstance中，才能使用new操作生成一个COM组件类对象实例。
+简单讲一下：COM 是一种规范，而不是实现。当使用 C++ 实现时，COM 组件就是一个 C++ 类，COM 接口就是继承自 IUnknown 的纯虚类，COM 组件就是实现相应 COM 接口的 C++ 类。COM 规范规定，任何组件或接口都必须从 IUnknown 接口继承而来。IUnknown 定义了 3 个重要函数：QueryInterface、AddRef 和 Release。其中 QueryInterface 负责组件对象上的接口查询，AddRef 用于增加引用计数，Release 用于减少引用计数。引用计数是 COM 中非常重要的概念，它很好地解决了组件对象的生命周期问题，即 COM 组件何时被销毁、由谁来销毁。COM 规范规定，每个组件都必须实现一个与之对应的类工厂（Class Factory）。类工厂也是一个 COM 组件，它实现了 IClassFactory 接口。在 IClassFactory 的接口函数 CreateInstance 中，才能使用 new 操作生成一个 COM 组件类对象实例。
 
 ```
 实现一个COM组件，需要完成以下工作：
@@ -3791,7 +3794,7 @@ https://blog.51cto.com/u_15075510/3505281
 COM组件接口是一个继承IUnknown的抽象类
 
 + COM组件实现类
-就是具体的的功能实现类,一个com组件实现类可以同时实现多个com接口
+就是具体的功能实现类，一个 COM 组件实现类可以同时实现多个 COM 接口
 
 + COM组件创建工厂
 通过类工厂来创建com组件实现类的实例
@@ -3805,32 +3808,31 @@ DllUnregisterServer：删除注册表中的COM组件的注册信息
 DLL还有一个可选的入口函数DllMain，可用于初始化和释放全局变量 
 DllMain：DLL的入口函数，在LoadLibrary和FreeLibrary时都会调用
 regsvr32 ComTest_Server.dll
-COM组件的使用包括：
-初始化com库,CoCreateInstance通过CLSID获取com组件对像实例,调用QueryInterface通过接口IID获取接口指针,最后调用接口方法.QueryInterFace,这个函数是查找我们的接口,根据查找的接口通过第二个OUT参数接受查询接口的实现类的对象
+COM 组件的使用流程：初始化 COM 库；CoCreateInstance 通过 CLSID 获取 COM 组件对象实例（返回默认的 IID_IUnknown 接口）；调用 QueryInterface 通过接口 IID 获取接口指针；最后调用接口方法。QueryInterface 负责查找接口，并通过第二个 OUT 参数返回实现该接口的对象指针。
 ```
 
 ```c++
-1 CoInitialize(NULL);    // COM库初始化
- 2 // ...
- 3 IUnknow *pUnk = NULL;
- 4 IObject *pObj = NULL;
- 5 // 创建组件对象，CLSID_XXX为COM组件类的GUID（class id）,返回默认IID_IUnknown接口
- 6 HRESULT hr = CoCreateInstance(CLSID_XXX,NULL,CLSCTX_INPROC_SERVER,NULL,IID_IUnknown,(void **)&pUnk);
- 7 if(S_OK == hr)
- 8 {
- 9     // 获取接口，IID_XXX为组件接口的GUID（interface id）
-10     hr = pUnk->QueryInterface(IID_XXX,(void **)&pObj);
-11     if(S_OK == hr)
-12     {
-13         // 调用接口方法
-14         pObj->DoXXX();
-15     }
-16     // 释放组件对象
-17     pUnk->Release();
-18 }
-19 //...
-20 // 释放COM库
-21 CoUninitialize()
+CoInitialize(NULL);    // COM 库初始化
+// ...
+IUnknown *pUnk = NULL;
+IObject *pObj = NULL;
+// 创建组件对象，CLSID_XXX 为 COM 组件类的 GUID（class id），返回默认 IID_IUnknown 接口
+HRESULT hr = CoCreateInstance(CLSID_XXX, NULL, CLSCTX_INPROC_SERVER, NULL, IID_IUnknown, (void **)&pUnk);
+if (S_OK == hr)
+{
+    // 获取接口，IID_XXX 为组件接口的 GUID（interface id）
+    hr = pUnk->QueryInterface(IID_XXX, (void **)&pObj);
+    if (S_OK == hr)
+    {
+        // 调用接口方法
+        pObj->DoXXX();
+    }
+    // 释放组件对象
+    pUnk->Release();
+}
+// ...
+// 释放 COM 库
+CoUninitialize();
 ```
 
 ```
@@ -3855,14 +3857,14 @@ DCOM实现
 + 动态端点：在运行时请求和分配的特定于网络的服务器地址
 + endpoint：用于远程过程调用的远程过程调用 (RPC) 服务器进程的网络特定地址。终结点的实际名称和类型取决于 正在使用的RPC协议序列例如，对于 TCP 上的 RPC（RPC 协议序列 ncacn_ip_tcp），端点可能是 TCP 端口 1025。对于服务器消息块上的 RPC（RPC 协议序列 ncacn_np），端点可能是命名管道的名称
 + SPN:客户端用来标识服务以进行相互身份验证的名称,SPN由两部分或三部分组成，每个部分由正斜杠 ('/') 分隔。第一部分是服务类，第二部分是主机名，第三部分（如果存在）是服务名称。例如，“ldap/dc-01.fabrikam.com/fabrikam.com”是一个由三部分组成的SPN，其中“ldap”是服务类名称，“dc-01.fabrikam.com”是主机名，“ fabrikam.com”是服务名称。
-+ envoy context:作为获取对象引用的结果被编组并返回给客户端的上下文
-+ interface：接口,组件对象模型 (COM)服务器中的规范，描述如何访问类的方法
-+ IDL:接口定义语言,描述接口的语法
++ envoy context:作为获取对象引用的结果被封送并返回给客户端的上下文
++ interface：接口，组件对象模型 (COM)服务器中的规范，描述如何访问类的方法
++ IDL:接口定义语言，描述接口的语法
 + IID:标识接口的guid
-+ object:对象,在[DCOM协议中，实现一个或多个对象远程协议 (ORPC) 接口并在object exporter范围内由对象标识符 (OID)唯一标识
++ object:对象，在[DCOM协议中，实现一个或多个对象远程协议 (ORPC) 接口并在object exporter范围内由对象标识符 (OID)唯一标识
 + IRemUnknown接口：一个 ORPC 接口，包含用于调用远程对象上的 QueryInterface、AddRef 和 Release 的方法。
 + IRemUnknown2 接口：扩展 IRemUnknown 功能的 ORPC 接口。
-+ object exporter : object容器,每个object exporter实例必须为其IRemUnknown接口创建一个IPID条目。如果对象导出器实例处于COMVERSION5.6 或更高版本，它还必须为IRemUnknown2接口创建一个 IPID 条目。对象导出器实例必须创建其 IPID 条目，如下所示：
++ object exporter : object容器，每个object exporter实例必须为其IRemUnknown接口创建一个IPID条目。如果对象导出器实例处于COMVERSION5.6 或更高版本，它还必须为IRemUnknown2接口创建一个 IPID 条目。对象导出器实例必须创建其 IPID 条目，如下所示：
   - 它必须分配一个 IPID 并将其设置在 IPID 条目中。
   - 它必须将IPID 条目中的IID设置为 IRemUnknown 接口或 IRemUnknown2 接口的 IID。
   - 它必须指示 RPC 侦听 IRemUnknown 接口或 IRemUnknown2 接口，如 [C706] 部分 3.1.20 (rpc_server_register_if) 中所指定。
@@ -3875,18 +3877,18 @@ DCOM实现
 在COM编程中，一个接口包含若干相关方法，一个对象实现若干接口，类工厂是创建或实例化其他COM对象的特殊COM对象。
 ```
 
-+ object exporter ID(OXID):64位数字,用于唯一标识对象服务器中的object exporter
++ object exporter ID(OXID):64位数字，用于唯一标识对象服务器中的object exporter
 + OXID 解析：获取与对象导出器通信所需的远程过程调用 (RPC) 绑定信息的过程。对象解析器服务实现以下RPC接口：
   +  IObjectExporter 方法。
   +  IActivation：包含用于创建对象和类工厂的方法。
   +  IRemoteSCMActivator：包含更多用于创建对象和类工厂的方法。
 + 对象标识符 (OID)：标识对象的唯一64位数字
 
-在Internet或Intranet网络环境下，ORPC仍使用标准的RPC数据包，附加上专用于DCOM的一些信息――接口指针标识符 （IPID，interface point identifier）、版本信息和扩展信息――作为调用和返回的附加参数进行传送，其中IPID表示调用被处理的远程机器上特定对象的特定接口。 DCOM客户程序必须周期性地“pinging”远程机器上的对象，以便保证客户与对象一直处于连接状态。
+在 Internet 或 Intranet 网络环境下，ORPC 仍使用标准 RPC 数据包，附加 DCOM 专用信息——接口指针标识符（IPID，interface pointer identifier）、版本信息和扩展信息——作为调用与返回的附加参数传送，其中 IPID 标识调用被处理的远程机器上特定对象的特定接口。DCOM 客户程序必须周期性地 ping 远程机器上的对象，以保证客户与对象一直处于连接状态。
 
 + IPID(接口指针标识符)表：
 
-  IPID标识了一个进程中一个对象的一个特定的实例
+   IPID 标识特定进程内特定对象实例上的一个特定接口（接口指针）。
 
   由 IPID 键控的对象接口条目表。每个条目必须包含：
 
@@ -3903,7 +3905,6 @@ DCOM实现
   - 对象导出器的RPC绑定信息。
   - 对象导出器的 IRemUnknown 接口的 IPID。
   - 对象导出器的身份验证级别提示。
-  - 出口商的转化率。
 
 + OID 表：客户端已知对象的条目表，由 OID 键控。每个条目必须包含：
 
@@ -3917,7 +3918,7 @@ DCOM实现
 
   - 一个 STRINGBINDING 散列。
   - 对象解析器的 DUALSTRINGARRAY。
-  - 包含对象解析器的 ping 集标识符的SETID [。](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dcom/ba4c4d80-ef81-49b4-848f-9714d72b5c01#gt_ccd51872-1e2e-4333-933a-27ea696ac19c)
+  - 包含对象解析器的 ping 集标识符的 SETID。
   - 对象解析器的 RPC 绑定信息。
 
 + SETID 表：客户端引用的ping 集条目表，由 SETID 键控。每个条目必须包含：
@@ -3926,23 +3927,23 @@ DCOM实现
   - ping 集中的OID列表。
   - 序列号
 
-+ object reference:在DCOM协议中，对对象的引用，在线路上表示为OBJREF。对象引用使object能够被obkect的object exporter之外的实体访问
++ 对象引用（object reference）：在 DCOM 协议中对对象的引用，在线路上表示为 OBJREF。对象引用使对象能被该对象的对象导出器（object exporter）之外的实体访问。
 
-+ OBJREF：对象引用的编组形式。
++ OBJREF：对象引用的封送形式。
 
 ```
-以上关于对象引用和对象编组都是微软的官方翻译,现在开始说人话,一个接口指针代表的是在本机内存中的一个地址,如果想把它传递到客户段交由客户端调用,需要加上flag(标识对象引用类型),IID(唯一标识接口),以及一个对象引用也就是接口指针等信息,将这些信息封包成一个objref块进行数据传输,由服务端发送到客户端进行解包获取接口之人进行远程对象调用,在标准编组中，包含OBJREF所有必要的信息（例如OXID，，，，OXID 解析器地址等）以在网络空间中唯一定位接口指针。当客户端接收到 时，COM 将其解组为指向客户端本地代理的接口指针。客户端组件中接口指针上的任何方法调用都将通过本地代理，从本地代理到关联的远程存根，再从存根到服务器端的目标对象。
+以上关于对象引用和对象编组的描述来自微软官方文档的直译。通俗地讲：一个接口指针本质上是本机内存中的一个地址，想把它传给客户端调用，就需要附上 flag（标识对象引用类型）、IID（唯一标识接口）、对象引用（接口指针）等信息，打包成 OBJREF 块进行传输。服务端把它发给客户端，客户端解包后获得可用的接口指针，即可进行远程对象调用。标准编组的 OBJREF 中包含在网络中唯一定位接口指针所需的全部信息（例如 OXID、OXID 解析器地址等）。客户端接收到 OBJREF 后，COM 会将其解组为指向本地代理的接口指针；客户端在接口指针上的任何方法调用，都会经本地代理转发到关联的远程存根（stub），再由存根交给服务器端的目标对象。
 ```
 
 ![OBJREF 的结构](https://learning.oreilly.com/api/v2/epubs/urn:orm:book:9781449307011/files/httpatomoreillycomsourceoreillyimages811233.png)
 
 + OXID Resolve:
   + 它存储与远程对象连接所需的RPC字符串绑定，并将其提供给本地客户端。
-  + 它将ping消息发送到本地计算机具有客户端的远程对象，并接收在本地计算机上运行的对象的ping消息。OXID解析器的此方面支持COM +垃圾回收机制。
+  + 它向本地计算机仍持有客户端引用的远程对象发送 ping 消息，并接收在本地计算机上运行的对象的 ping 消息。OXID 解析器的这一职责支撑了 COM 的垃圾回收机制。
 
-#### dcomrt.py
+### 6.2 dcomrt.py
 
-有了上面的基础,接着就让我们看下dcomrt模块,一开始定义了常用的DCOM类的CLSID静态常量和错误处理函数,紧接着定义了在dcom通信orpc协议中使用的数据类型结构体和数据包中flag值
+有了上面的基础，接着看 dcomrt 模块：文件开头定义了常用 DCOM 类的 CLSID 静态常量和错误处理函数，随后定义了 DCOM 通信（ORPC 协议）中使用的数据类型结构体与各类 flag 值。
 
 紧接着定义了上下文的句柄类和DCOM协议版本类
 
@@ -3955,7 +3956,7 @@ class PCOMVERSION(NDRPOINTER):
 	.....
 ```
 
-下面是orpc通信过程中二进制大数据文件,数据编码,激活,oxid解析,创建远程对象等结构体的定义类
+下面是 ORPC 通信中二进制大对象（BLOB）、数据编码、激活、OXID 解析、创建远程对象等结构体的定义：
 
 ```python
 class ORPC_EXTENT(NDRSTRUCT):
@@ -3966,7 +3967,7 @@ class OBJREF(NDRSTRUCT):
     ....
 ```
 
-之后是DCOM的连接类,可以通过该类创建DCOM通信连接,创建远程对象,对服务器进行ping
+之后是 DCOM 连接类，可通过它建立 DCOM 通信连接、创建远程对象、对服务器进行 ping：
 
 ```python
 class DCOMConnection:
@@ -4008,7 +4009,7 @@ def CoCreateInstanceEx(self, clsid, iid):
 
 ORPCTHIS 实例类
 
-ORPCTHIS 结构是在ORPC请求 PDU 中发送的第一个（隐式）参数，用于将ORPC 扩展数据发送到服务器。ORPCTHIS 结构也作为激活 RPC 请求中的显式参数发送。
+ORPCTHIS 结构是在 ORPC 请求 PDU 中发送的第一个（隐式）参数，用于将 ORPC 扩展数据发送到服务器。ORPCTHIS 结构也作为激活 RPC 请求中的显式参数发送。
 
 ```c++
  typedef struct tagORPCTHIS {
@@ -4020,7 +4021,7 @@ ORPCTHIS 结构是在ORPC请求 PDU 中发送的第一个（隐式）参数，�
  } ORPCTHIS;
 ```
 
-这个类主要用于请求rpc激活请求
+ORPCTHIS 主要用于构造 RPC 激活请求：
 
 ```python
 classInstance = CLASS_INSTANCE(ORPCthis, stringBindings)
@@ -4042,13 +4043,12 @@ INTERFACE 接口类
             self.__ipidRemUnknown = interfaceInstance.get_ipidRemUnknown()
 ```
 
-process_interface函数处理对象引用数据包编组格式.
+process_interface 函数处理对象引用数据包的封送格式。
 
-如果已存储连接信息,connect函数根据target和oxid建立一个线程连接并根据iid绑定远程rpc接口建立上下文,
+connect 函数的逻辑：
 
-如果不存在oxid连接信息则解析链接地址并通过dcerpc工厂类绑定接口建立tcp连接,并设置credentials凭证
-
-和kerberos信息,最终保存连接信息
+- 如果已存储连接信息，则根据 target 和 oxid 复用当前线程的连接，并按 iid 通过 alter_ctx 绑定远程 RPC 接口、建立上下文；
+- 如果不存在 oxid 连接信息，则解析绑定地址，通过 DCERPC 工厂类绑定接口建立 TCP 连接，并设置 credentials 凭证与 Kerberos 信息，最终保存连接信息。
 
 ```python
  def connect(self, iid = None):
@@ -4078,7 +4078,7 @@ process_interface函数处理对象引用数据包编组格式.
 
 IRemUnknown 远程Unknown接口类
 
-实现了RemQueryInterface(根据IPID查询接口),RemAddRef,RemRelease三个函数
+实现了 RemQueryInterface（根据 IPID 查询接口）、RemAddRef、RemRelease 三个方法。
 
 IObjectExporter类
 
@@ -4095,7 +4095,7 @@ def ServerAlive(self):
 
 IActivation 激活类
 
-IRemoteActivation是一个由Service Control Manager (SCM)暴露出来的RPC接口（不是COM接口），它管理WindonwsNT服务，运行在每台计算机上，进程名称为RPCSS.EXE。IRemoteActivation只有一个方法RemoteActivation
+IActivation 是由服务控制管理器（SCM）暴露的 RPC 接口（不是 COM 接口；旧文献中也称 IRemoteActivation）。SCM 运行在每台计算机上，进程名为 RPCSS.EXE。IActivation 只有一个方法 RemoteActivation：
 
 ```idl
  error_status_t RemoteActivation(
@@ -4128,7 +4128,7 @@ IRemoteActivation是一个由Service Control Manager (SCM)暴露出来的RPC接�
  );
 ```
 
-它被设计用来激活远程计算机上的COM对象。这是一个非常强大的功能，但在纯RPC中没有提供.通过IRemoteActivation接口，一台机器上的SCM与另一台机器上的SCM联络，要求它激活一个对象，即客户机上的SCM调用服务器上SCM的IRemoteActivation::RemoteActivation,要求它激活以CLSID（方法第四个参数）为标识的对象。RemoteActivation返回一个激活对象的封送接口指针和两个特殊的值：接口指针标识（IPID）和对象对外联络标识（OXID）。每种支持的网络协议，都有一个周知的SCM端口，每个端口都标识了一个基于网络协议的虚拟通讯通道。例如，当使用TCP或UDP时，这个端口是1066，当使用命名管道时，管道名称为\\pipe\mypipe，SCM常用协议如图所示。
+它被设计用来激活远程计算机上的COM对象。这是一个非常强大的功能，但在纯RPC中没有提供.通过IRemoteActivation接口，一台机器上的SCM与另一台机器上的SCM联络，要求它激活一个对象，即客户机上的SCM调用服务器上SCM的IRemoteActivation::RemoteActivation,要求它激活以CLSID（方法第四个参数）为标识的对象。RemoteActivation返回一个激活对象的封送接口指针和两个特殊的值：接口指针标识（IPID）和对象对外联络标识（OXID）。每种支持的网络协议，都有一个熟知的 SCM 端口，每个端口都标识了一个基于网络协议的虚拟通讯通道。例如，经典 DCOM 教材记载使用 TCP 或 UDP 时端口为 1066、命名管道为 \\pipe\mypipe；现代 Windows 上 RPC 端点实际由端点映射器（TCP 135）动态解析。SCM 常用协议如下表。
 
 | Constant/value                                               | Description                                                  |
 | :----------------------------------------------------------- | :----------------------------------------------------------- |
@@ -4153,33 +4153,33 @@ IRemoteActivation是一个由Service Control Manager (SCM)暴露出来的RPC接�
     def RemoteActivation(self, clsId, iid):
         # Only supports one interface at a time
         self.__portmap.bind(IID_IActivation)
-        ORPCthis = ORPCTHIS() 指定ORPCthis,扩展必须为null
+        ORPCthis = ORPCTHIS()  # ORPCthis，扩展必须为 null
         ORPCthis['cid'] = generate()
         ORPCthis['extensions'] = NULL
         ORPCthis['flags'] = 1
 
         request = RemoteActivation()
-        request['Clsid'] = clsId 指定要创建对象的CLSID
-        request['pwszObjectName'] = NULL 用于初始化对象的字符串
-        request['pObjectStorage'] = NULL 用于初始化对象的objref
-        request['ClientImpLevel'] = 2 包含一个值,在接收时被忽略
-        request['Mode'] = 0 激活类工厂时为0XFFFFFFFF.否则为0
-        request['Interfaces'] = 1 pIID元素数量
+        request['Clsid'] = clsId  # 指定要创建对象的 CLSID
+        request['pwszObjectName'] = NULL  # 用于初始化对象的字符串
+        request['pObjectStorage'] = NULL  # 用于初始化对象的 objref
+        request['ClientImpLevel'] = 2  # 该值在接收时被忽略
+        request['Mode'] = 0  # 激活类工厂时为 0xFFFFFFFF，否则为 0
+        request['Interfaces'] = 1  # pIID 元素数量
 
         _iid = IID()
         _iid['Data'] = iid
 
-        request['pIIDs'].append(_iid)  要创建的对象上请求的接口id数组
-        request['cRequestedProtseqs'] = 1 这必须包含 aRequestedProtseqs 中元素的数量。这个值必须在 1 和 MAX_REQUESTED_PROTSEQS 之间
-        request['aRequestedProtseqs'].append(7) 客户端支持的RPC协议的序列标识符
+        request['pIIDs'].append(_iid)  # 要创建对象上请求的接口 id 数组
+        request['cRequestedProtseqs'] = 1  # aRequestedProtseqs 中元素的数量，必须在 1 和 MAX_REQUESTED_PROTSEQS 之间
+        request['aRequestedProtseqs'].append(7)  # 客户端支持的 RPC 协议序列标识符
 
         resp = self.__portmap.request(request)
 
         # Now let's parse the answer and build an Interface instance
 
-        ipidRemUnknown = resp['pipidRemUnknown'] 这必须包含对象导出器远程未知对象的 IPID。
+        ipidRemUnknown = resp['pipidRemUnknown']  # 对象导出器 IRemUnknown 的 IPID
 
-        Oxids = b''.join(pack('<H', x) for x in resp['ppdsaOxidBindings']['aStringArray']) object export的oxid
+        Oxids = b''.join(pack('<H', x) for x in resp['ppdsaOxidBindings']['aStringArray'])  # object exporter 的 OXID 绑定数据
         strBindings = Oxids[:resp['ppdsaOxidBindings']['wSecurityOffset']*2]
         securityBindings = Oxids[resp['ppdsaOxidBindings']['wSecurityOffset']*2:]
 
@@ -4189,7 +4189,7 @@ IRemoteActivation是一个由Service Control Manager (SCM)暴露出来的RPC接�
             if strBindings[0:1] == b'\x00' and strBindings[1:2] == b'\x00':
                 done = True
             else:
-                binding = STRINGBINDING(strBindings) 这必须包含对象导出器支持的字符串和安全绑定，并且不能为 NULL。返回的字符串绑定应该包含端点。
+                binding = STRINGBINDING(strBindings)  # 对象导出器支持的字符串与安全绑定（不能为 NULL，应包含端点）
                 stringBindings.append(binding)
                 strBindings = strBindings[len(binding):]
 
@@ -4248,12 +4248,12 @@ MInterfacePointer 是一个 NDR 封包结构
 
 **ulCntData：** 这必须指定*abData*参数的大小（以字节为单位）。
 
-在impacket中因为wmi功能基于dcom协议,所以主要是在wmiquery功能实现和wmiexec和dcomexec中建立dcom连接使用
+在impacket中因为wmi功能基于dcom协议，所以主要是在wmiquery功能实现和wmiexec和dcomexec中建立dcom连接使用
 
 之后调用ShellWindows\ShellBrowserWindow等com组件实现命令执行和shell
 
 ```python
-eg.examples/dcomexec.py
+# eg.examples/dcomexec.py
 from impacket.dcerpc.v5.dcomrt import DCOMConnection, COMVERSION
 	.......
        dcom = DCOMConnection(addr, self.__username, self.__password, self.__domain, self.__lmhash, self.__nthash,
@@ -4293,13 +4293,13 @@ from impacket.dcerpc.v5.dcomrt import DCOMConnection, COMVERSION
                 return
 ```
 
-#### dcom
+### 6.3 dcom 子模块
 
-##### [MS-OAUT]oaut.py
+#### 6.3.1 [MS-OAUT] oaut.py
 
 对象链接与嵌入（OLE）自动化是 Microsoft 公司的 OLE 2.0 体系结构的组成部分。借助 OLE 自动化，无论使用哪种语言来编写应用程序，应用程序都可以在 OLE 自动化对象中公布它们的属性和方法。于是，其他应用程序（例如 MSSQL或 Microsoft Exchange）可以通过 OLE 自动化来利用这些属性和方法，从而集成这些对象。公布属性和方法的应用程序被称为 OLE 自动化服务器或对象，而访问那些属性和方法的应用程序被称为 OLE 自动化控制器。比如MSSQL可以通过sp_configure 开启OLE Automation Procedures通过Transact-SQL 批处理中实例化 OLE 自动化对象,OLE 自动化服务器是实现了 OLE IDispatch 接口的 COM 组件（对象）。OLE 自动化控制器是 COM 客户机，它通过 IDispatch 接口与自动化服务器进行通信。COM 是 OLE 的基础.
 
-OLE的核心时IDispatch,具体调用如下
+OLE Automation 的核心是 IDispatch，调用流程如下：
 
 ![通用自动化调用](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-oaut/ms-oaut_files/image001.png)
 
@@ -4311,22 +4311,22 @@ IDispatch::GetIDsOfNames的response返回的是想要调用的方法的DISPID,�
 
 | 常量/值                                                | 描述                                                         |
 | :----------------------------------------------------- | :----------------------------------------------------------- |
-| CLSID_RecordInfo{0000002F-0000-0000-C000-000000000046} | RecordInfoData的 OBJREF_CUSTOM 解组器 CLSID [（](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-oaut/5583e1b8-454c-4147-9f56-f72416a15bee#gt_e433c806-6cb6-46a2-bb95-523df8818c99)[第 2.2.31 节）](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-oaut/deb939df-ef4d-49c3-8467-7265669e89ed)。 |
+| CLSID_RecordInfo{0000002F-0000-0000-C000-000000000046} | RecordInfoData的 OBJREF_CUSTOM 解封器 CLSID [（](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-oaut/5583e1b8-454c-4147-9f56-f72416a15bee#gt_e433c806-6cb6-46a2-bb95-523df8818c99)[第 2.2.31 节）](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-oaut/deb939df-ef4d-49c3-8467-7265669e89ed)。 |
 | IID_IRecordInfo{0000002F-0000-0000-C000-000000000046}  | **pRecInfo OBJREF 结构的IID**字段的值（参见[2.2.28.2.1](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-oaut/d9237563-093e-4bc9-b824-4c306bfc19e3)节）。 |
 | IID_IDispatch{00020400-0000-0000-C000-000000000046}    | [与 IDispatch接口](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-oaut/5583e1b8-454c-4147-9f56-f72416a15bee#gt_95913fbd-3262-47ae-b5eb-18e6806824b9)关联的 GUID （请参阅第[3.1](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-oaut/c2c7dbe2-bafa-49da-93a7-7b75499ef90a)节）。 |
 | IID_ITypeComp{00020403-0000-0000-C000-000000000046}    | 与 ITypeComp 接口关联的 GUID（请参阅第[3.5](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-oaut/7894019f-de1e-455e-b2aa-3b899c2e50f6)节）。 |
-| IID_I类型信息{00020401-0000-0000-C000-000000000046}    | 与 ITypeInfo 接口关联的 GUID（请参阅第[3.7](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-oaut/99504cf9-16d8-401e-a873-83b85d1ee4aa)节）。 |
+| IID_ITypeInfo{00020401-0000-0000-C000-000000000046}    | 与 ITypeInfo 接口关联的 GUID（请参阅第[3.7](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-oaut/99504cf9-16d8-401e-a873-83b85d1ee4aa)节）。 |
 | IID_ITypeInfo2{00020412-0000-0000-C000-000000000046}   | 与 ITypeInfo2 接口关联的 GUID（请参阅第[3.9](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-oaut/2d6024da-d229-4d78-bbb0-b9d5bf6459b7)节）。 |
-| IID_I类型库{00020402-0000-0000-C000-000000000046}      | 与 ITypeLib 接口关联的 GUID（请参阅第[3.11](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-oaut/5daecf67-bc6e-4e17-bcf8-797bdba1748b)节）。 |
+| IID_ITypeLib{00020402-0000-0000-C000-000000000046}      | 与 ITypeLib 接口关联的 GUID（请参阅第[3.11](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-oaut/5daecf67-bc6e-4e17-bcf8-797bdba1748b)节）。 |
 | IID_ITypeLib2{00020411-0000-0000-C000-000000000046}    | 与 ITypeLib2 接口关联的 GUID（请参阅第[3.13](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-oaut/4bb9bc73-3cf5-40a1-85c7-aafaff4874cc)节）。 |
-| IID_I未知{00000000-0000-0000-C000-000000000046}        | 与 IUnknown 接口关联的 GUID。                                |
+| IID_IUnknown{00000000-0000-0000-C000-000000000046}        | 与 IUnknown 接口关联的 GUID。                                |
 | IID_IEnumVARIANT{00020404-0000-0000-C000-000000000046} | 与 IEnumVARIANT 接口关联的 GUID（请参阅第[3.3](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-oaut/716d04d1-cd16-4065-9b19-1b8808b3df31)节）。 |
 | IID_NULL{00000000-0000-0000-0000-000000000000}         | 标识 NULL 值的 GUID（如 [[C706\]](https://go.microsoft.com/fwlink/?LinkId=89824) 部分 A1 nil [UUID](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-oaut/5583e1b8-454c-4147-9f56-f72416a15bee#gt_c4813fc3-b2e5-4aa3-bde7-421d950d68d3)中指定）。 |
 
 在模块中IDispatch类实现的方法如下
 
 ```c++
-GetTypeInfoCount 定自动化服务器是否提供类型描述信息
+GetTypeInfoCount  确定自动化服务器是否提供类型描述信息
 GetTypeInfo      提供对自动化服务器公开的类型描述信息的访问
 GetIDsOfNames    将单个成员名称（方法或属性名称）和一组可选的参数名称映射到一组相应的整数DISPIDs，可用于对IDispatch::Invoke的后续调用。
 Invoke           提供对自动化服务器公开的属性和方法的访问
@@ -4351,22 +4351,22 @@ Invoke           提供对自动化服务器公开的属性和方法的访问
   HRESULT Invoke(
    [in] DISPID dispIdMember,必须等于要调用的方法或属性的DISPID 
    [in] REFIID riid,必须等于 IID_NULL
-   [in] LCID lcid,须等于自动化服务器支持的区域设置 ID
+   [in] LCID lcid,必须等于自动化服务器支持的区域设置 ID
    [in] DWORD dwFlags,必须是下表中指定的位标志的组合
    [in] DISPPARAMS* pDispParams,
  指针必须指向 定义传递给方法的参数的DISPPARAMS结构。参数必须以pDispParams->rgvarg相反的顺序存储，以便第一个参数是数组中索引最高的那个。Byref 参数必须在此数组中标记为 VT_EMPTY 条目，并改为存储在rgVarRef中 。
    [out] VARIANT* pVarResult,指向将填充方法或属性调用结果的 VARIANT指针
    [out] EXCEPINFO* pExcepInfo,如果该值不为空且返回值为 DISP_E_EXCEPTION，则该结构必须由自动化服务器填充。否则，它必须为scode 和wCode字段指定一个 0 值，并且必须在接收时忽略它。
-   [out] UINT* pArgErr,如果此值不为空且返回值为 DISP_E_TYPEMISMATCH 或 DISP_E_PARAMNOTFOUND，则此参数必须等于pDispParams->rgvarg第一个有错误的参数的索引（在 内）。否则，在收到时必须忽略它。
+    [out] UINT* pArgErr,如果此值不为空且返回值为 DISP_E_TYPEMISMATCH 或 DISP_E_PARAMNOTFOUND，则此参数必须等于 pDispParams->rgvarg 中第一个有错误的参数的索引。否则，接收方必须忽略该参数。
    [in] UINT cVarRef,必须等于pDispParams中传递的 byref 参数的数量。
-   [in, size_is(cVarRef)] UINT* rgVarRefIdx,必须包含一个cVarRef 无符号整数数组，其中包含标记为 VT_EMPTY 条目的 byref 参数的索引pDispParams->rgvarg。
-   [in, out, size_is(cVarRef)] VARIANT* rgVarRef必须包含客户端在调用时设置的 byref 参数，以及从调用成功返回时由服务器设置的参数。此数组中的参数也必须以相反的顺序存储，以便第一个 byref 参数在数组中具有最高索引。
+    [in, size_is(cVarRef)] UINT* rgVarRefIdx,必须包含 cVarRef 个无符号整数，每个整数是 pDispParams->rgvarg 中标记为 VT_EMPTY 的 byref 参数的索引。
+       [in, out, size_is(cVarRef)] VARIANT* rgVarRef 必须包含客户端在调用时设置的 byref 参数，以及从调用成功返回时由服务器设置的参数。此数组中的参数也必须以相反的顺序存储，以便第一个 byref 参数在数组中具有最高索引。
  );
 ```
 
-| 价值                              | 意义                                                         |
+| 值 | 含义 |
 | :-------------------------------- | :----------------------------------------------------------- |
-| 调度方法0x00000001                | 该成员作为方法调用。                                         |
+| DISPATCH_METHOD 0x00000001                | 该成员作为方法调用。                                         |
 | DISPATCH_PROPERTYGET0x00000002    | 该成员作为属性或数据成员检索。                               |
 | DISPATCH_PROPERTYPUT0x00000004    | 该成员被更改为属性或数据成员。                               |
 | DISPATCH_PROPERTYPUTREF0x00000008 | 成员通过引用赋值而不是值赋值进行更改。仅当属性接受对[对象](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-oaut/5583e1b8-454c-4147-9f56-f72416a15bee#gt_8bb43a65-7a8c-4585-a7ed-23044772f8ca)的引用时，此标志才有效。 |
@@ -4407,7 +4407,7 @@ Invoke           提供对自动化服务器公开的属性和方法的访问
         return resp
 ```
 
-在domexec的shellwindows组件调用中就使用了invoke函数
+在 dcomexec 的 ShellWindows 组件调用中就使用了 Invoke 函数：
 
 ```python
 class DCOMEXEC:
@@ -4790,11 +4790,11 @@ class RemoteShell(cmd.Cmd):
         self.__outputBuffer = ''
 ```
 
-0x409是美式英文的区域id
+0x409 是美式英文的区域 ID（LCID）。
 
-domexec调用ShellBrowserWindow COM对象使用`Document.Application`属性，并且可以在`Document.Application.Parent`返回的对象上调用`ShellExecute`方法属性调用powershell执行命令。
+dcomexec 调用 ShellBrowserWindow COM 对象时使用 `Document.Application` 属性，并在 `Document.Application.Parent` 返回的对象上调用 `ShellExecute` 方法，以执行命令。
 
-##### [MS-COMEV]comev.py
+#### 6.3.2 [MS-COMEV] comev.py
 
 com+协议的实现模块,com+协议用于存储和管理远程计算机上事件发布者及其各自订阅者的配置数据。该协议还指定了如何获取有关发布者及其订阅者的特定信息。发布者-订阅者框架 允许应用程序发布其他应用程序可能感兴趣的历史信息。发布信息的应用程序称为发布者，而订阅信息的应用程序称为订阅者。发布者在称为事件的离散集中指定此信息。同样，订阅者可以通过为事件创建订阅来订阅事件 。COM+ 事件系统协议提供了一种在远程计算机上管理事件 及其各自订阅的方法。该协议作为一组 DCOM [MS-DCOM] 接口公开。 使用该协议，发布者可以发布、更新或删除远程机器上的事件。同样，订阅者 可以使用该协议为远程机器上的事件创建订阅。它还可以修改、查询或删除远程计算机上事件的订阅。 订阅者可以指定它希望接收特定类型的事件或事件集合。这是通过指定 过滤标准来定义的。简单来说就是远程事件管理。COM+ 事件系统协议使用 DCOM [MS-DCOM] 通过网络进行通信并验证针对基础结构发出的所有请求。与 DCOM 一起，此协议还通过使用IDispatch 接口 中的数据类型 BSTR 和 VARIANT使用 OLE 自动化协议[MS-OAUT] 。 [MS-COMA]中描述的协议 可用于为COM+ 事件系统协议使用的事件类和订户 DCOM 组件执行类型库的注册。它还可用于发现在服务器上注册的订阅者 DCOM 组件以创建订阅。
 
@@ -4837,7 +4837,7 @@ class IEventClass3(IEventClass2):
         ............
 ```
 
-##### [MS-SCMP]scmp.py
+#### 6.3.3 [MS-SCMP] scmp.py
 
 SCMP卷影副本管理协议，它以编程方式枚举卷影副本并在远程计算机上配置卷影副本存储
 
@@ -4857,7 +4857,7 @@ shadow copy storage association ：原始卷与卷影副本存储所在卷的关
 
 snapshot ：制作卷影副本的时间点。
 
-就是像给虚拟机打快照一样给系统打个快照,可用于提取 ntds.dit,执行命令等恶意操作
+就像给虚拟机打快照一样给系统卷打个快照，攻击者可借此提取 ntds.dit、执行命令等。
 
 ```
 卷影副本创建过程
@@ -4865,7 +4865,7 @@ snapshot ：制作卷影副本的时间点。
 请求程序要求卷影复制服务枚举编写程序，收集编写程序元数据，并准备创建卷影副本。
 每个编写程序都会为需要备份的组件和数据存储创建 XML 描述，并将其提供给卷影复制服务。 编写器还定义了用于所有组件的还原方法。 卷影复制服务向请求程序提供编写程序的描述，而请求程序则选择要备份的组件。
 卷影复制服务通知所有编写程序准备数据以进行卷影复制。
-每个编写程序都会根据需要准备数据，例如完成所有未结束事务、滚动事务日志和刷新缓存。 当数据准备好进行卷影复制时，编写程序将通知卷影复制服务。
+每个编写程序都会根据需要准备数据，例如完成所有未结束事务、滚动（rolling，截断/归档）事务日志和刷新缓存。 当数据准备好进行卷影复制时，编写程序将通知卷影复制服务。
 卷影复制服务通知编写程序将应用程序写入 I/O 请求暂时冻结几秒钟（仍然可以执行读取 I/O 请求），创建卷的卷影副本需要这几秒的时间。 应用程序冻结的时间不允许超过 60 秒。 卷影复制服务刷新文件系统缓冲区，然后冻结文件系统，从而确保正确记录文件系统元数据，并以一致的顺序写入要进行卷影复制的数据。
 卷影复制服务通知提供程序创建卷影副本。 卷影副本创建周期不超过 10 秒，在此期间，对文件系统的所有写入 I/O 请求都将保持冻结状态。
 卷影复制服务释放文件系统写入 I/O 请求。
@@ -4875,16 +4875,16 @@ VSS 通知编写程序解除冻结应用程序写入 I/O 请求。 此时，应�
 ![卷影复制服务的工作原理示意图](https://learn.microsoft.com/zh-cn/windows-server/storage/file-server/media/volume-shadow-copy-service/ee923636.1c481a14-d6bc-4796-a3ff-8c6e2174749b(ws.10).jpg)
 
 ```
-卷影副本和支持卷影副本的卷：客户端获取的第一个接口是IVssSnapshotMgmt 接口。客户端调用 IVssSnapshotMgmt::QueryVolumesSupportedForSnasphots 方法来获取可以进行卷影复制的卷的集合。服务器必须响应一个IVssEnumMgmtObject 接口，客户端可以在该接口上调用方法来遍历集合。客户端调用 IVssSnapshotMgmt::QuerySnapshotsByVolume 获取卷影副本集合已存在于指定的卷上。服务器必须响应一个 IVssEnumObject 接口，客户端可以在该接口上调用方法来遍历集合。客户端调用 IVssSnapshotMgmt::GetProviderMgmtInterface 方法获取IVssDifferentialSoftwareSnapshotMgmt 接口。服务器必须响应一个 IVssDifferentialSoftwareSnapshotMgmt 接口，客户端可以在该接口上调用方法来管理卷影副本存储关联。
+卷影副本和支持卷影副本的卷：客户端获取的第一个接口是IVssSnapshotMgmt 接口。客户端调用 IVssSnapshotMgmt::QueryVolumesSupportedForSnasphots（原文如此，微软文档中即为此拼写）方法来获取可以进行卷影复制的卷的集合。服务器必须响应一个IVssEnumMgmtObject 接口，客户端可以在该接口上调用方法来遍历集合。客户端调用 IVssSnapshotMgmt::QuerySnapshotsByVolume 获取已存在于指定卷上的卷影副本集合。服务器必须响应一个 IVssEnumObject 接口，客户端可以在该接口上调用方法来遍历集合。客户端调用 IVssSnapshotMgmt::GetProviderMgmtInterface 方法获取IVssDifferentialSoftwareSnapshotMgmt 接口。服务器必须响应一个 IVssDifferentialSoftwareSnapshotMgmt 接口，客户端可以在该接口上调用方法来管理卷影副本存储关联。
 
 卷影副本存储关联：用于管理卷影副本存储关联的接口是通过 IVssSnapshotMgmt::GetProviderMgmtInterface 获取的。客户端调用 IVssDifferentialSoftwareSnapshotMgmt::QueryVolumesSupportedForDiffArea 方法来获取可用于存储卷影副本差异数据的卷集合。服务器必须响应一个 IVssEnumMgmtObject 接口，客户端可以在该接口上调用方法来遍历集合。客户端调用 IVssDifferentialSoftwareSnapshotMgmt::QueryDiffAreasForVolume 以获取已存在的卷影副本存储关联的集合，以存储特定原始卷的卷影副本差异数据. 服务器必须响应一个 IVssEnumMgmtObject 接口，客户端可以在该接口上调用方法来遍历集合。客户端调用 IVssDifferentialSoftwareSnapshotMgmt::QueryDiffAreasOnVolume 以获取用于在特定卷上存储差异数据的卷影副本存储关联的集合。服务器必须响应一个 IVssEnumMgmtObject 接口，客户端可以在该接口上调用方法来遍历集合。
 ```
 
 模块开始定义了IVssSnapshotMgmt等接口的CLSID和卷影协议需要的数据结构如VSS_ID等等
 
-随后实现了如枚举卷影副本等查询功能,虽然叫卷影副本管理协议但该协议只能查询并没有创建卷影副本的功能...............
+随后实现了枚举卷影副本等查询功能。虽然名为“卷影副本管理协议”，但该协议只能查询，并没有创建卷影副本的功能。
 
-````python
+```python
 class IVssSnapshotMgmt(IRemUnknown2):
     def __init__(self, interface):
         IRemUnknown2.__init__(self, interface)
@@ -4900,9 +4900,9 @@ class IVssSnapshotMgmt(IRemUnknown2):
         resp = self.request(req, self._iid, uuid = self.get_iPid())
         return IVssDifferentialSoftwareSnapshotMgmt(INTERFACE(classInstance, ''.join(resp['ppItf']['abData']), self.get_ipidRemUnknown(), target = self.get_target()))
 
-````
+```
 
-在/impacket/examples/secretsdump.py中也确实没有调用scmp模块,通过命令执行的方式调用vss admin进行备份,笑死,作者实现了协议但是整个模块都没用它hhhhh
+有趣的是，examples/secretsdump.py 也确实没有调用 scmp 模块，而是通过远程执行 vssadmin 命令来枚举卷影副本——协议虽然实现了，但整个 impacket 都没有用到它：
 
 ```python
   def __getLastVSS(self, forDrive=None):
@@ -4930,13 +4930,13 @@ class IVssSnapshotMgmt(IRemUnknown2):
                     raise
 ```
 
-##### [MS-VDS]vds.py
+#### 6.3.4 [MS-VDS] vds.py
 
 虚拟磁盘服务 (VDS) 远程协议是一组分布式组件对象模型 (DCOM)接口，用于管理计算机上的磁盘存储配置。虚拟磁盘服务远程协议处理详细的低级操作系统和存储概念。
 
-模块主要定义了协议实现所需的变量和添加删除虚拟磁盘等接口功能,目前impacket还没有调用该模块的脚本
+模块主要定义了协议实现所需的变量和添加 / 删除虚拟磁盘等接口功能，目前 impacket 还没有调用该模块的脚本：
 
-````python
+```python
 class IVdsService(IRemUnknown2):
     def __init__(self, interface):
         IRemUnknown2.__init__(self, interface)
@@ -4973,11 +4973,11 @@ class IVdsService(IRemUnknown2):
         resp = self.request(request, uuid = self.get_iPid())
         return IEnumVdsObject(INTERFACE(self.get_cinstance(), ''.join(resp['ppEnum']['abData']), self.get_ipidRemUnknown(), target = self.get_target()))
 
-````
+```
 
-##### [MS-WMI]wmi.py
+#### 6.3.5 [MS-WMI] wmi.py
 
-###### WMI协议
+##### WMI 协议
 
 Windows Management Instrumentation 远程协议使用 DCOM 远程协议通过网络进行通信并验证针对基础结构发出的所有请求。DCOM 远程协议实际上是 Windows Management Instrumentation 远程协议的基础，用于完成以下任务：
 
@@ -4986,19 +4986,19 @@ Windows Management Instrumentation 远程协议使用 DCOM 远程协议通过网
 - 验证客户端。
 - 在客户端和服务器之间实现可靠的通信。
 
-这意味着 DCOM 远程协议实现提供并使用所有底层协议,除了 DCOM 远程协议支持之外，Windows Management Instrumentation 远程协议还使用[MS-WMIO]中指定的特殊编码，通过网络传输[DMTF-DSP0004]中指定 的信息。WMI)远程协议用于传达符合[公共信息模型 (CIM)](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmi/6837a7cb-ba2d-46b1-802c-fce2fd5a6ad6#gt_a99173af-90bf-473d-9a81-ff0ce9a85838)的管理数据.用户可以使用*WMI* 管理本地和远程计算机.另一种方法是使用Windows远程管理（WinRM），它使用基于SOAP的SOAP协议获取远程WMI管理数据。
+这意味着 DCOM 远程协议实现提供并使用所有底层协议。除 DCOM 之外，WMI 远程协议还使用 [MS-WMIO] 中定义的特殊编码，通过网络传输 [DMTF-DSP0004] 中定义的信息。WMI 远程协议用于传达符合[公共信息模型（CIM）](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmi/6837a7cb-ba2d-46b1-802c-fce2fd5a6ad6#gt_a99173af-90bf-473d-9a81-ff0ce9a85838)的管理数据，用户可以使用 WMI 管理本地和远程计算机。另一种方式是使用 Windows 远程管理（WinRM），它基于 SOAP 获取远程 WMI 管理数据。
 
 ![img](https://img2020.cnblogs.com/blog/826348/202105/826348-20210514171508550-835388000.png)
 
-这张图描述了wmi基础结构与wim提供者（provider）和托管对象、wmi使用者（可以使用wmic、wbemtest工具、WMI Scripting API或直接使用com接口。.net使用System.Management域相关功能）的关系
+这张图描述了 WMI 基础结构与 WMI 提供者（provider）、托管对象、WMI 使用者（可使用 wmic、wbemtest 工具、WMI Scripting API 或直接使用 COM 接口；.NET 使用 System.Management 相关功能）的关系。
 
- WMI提供者是一个监控一个或者多个托管对象的COM接口。一个托管对象是一个逻辑或者物理组件，比如硬盘驱动器、网络适配器、数据库系统、操作系统、进程或者服务。和驱动相似，WMI提供者通过托管对象提供的数据向WMI服务提供数据，同时将WMI服务的请求传递给托管对象。
+WMI提供者是一个监控一个或者多个托管对象的COM组件（对象）。一个托管对象是一个逻辑或者物理组件，比如硬盘驱动器、网络适配器、数据库系统、操作系统、进程或者服务。和驱动相似，WMI提供者通过托管对象提供的数据向WMI服务提供数据，同时将WMI服务的请求传递给托管对象。
 
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/img_convert/2eeedb0ace5d2206352ca10f2e7fd7de.png)
 
 下表列出了操作系统 WMI 提供程序，wmi的功能都是基于操作系统各功能的provider提供的
 
-| 供应商                                                       | 描述                                                         |
+| 提供程序 | 描述 |
 | :----------------------------------------------------------- | :----------------------------------------------------------- |
 | [活动目录供应商](https://learn.microsoft.com/en-us/previous-versions/windows/desktop/dsprov/active-directory-provider) | 将 Active Directory 对象映射到 WMI。通过访问 WMI 中的轻型目录访问协议 (LDAP) 命名空间，您可以在 Active Directory 中引用对象或使对象成为别名。 |
 | [BitLocker 驱动器加密 (BDE) 提供程序](https://learn.microsoft.com/en-us/windows/desktop/SecProv/bitlocker-drive-encryption-provider) | 为硬盘驱动器上的存储区域提供配置和管理，由[**Win32_EncryptableVolume**](https://learn.microsoft.com/en-us/windows/desktop/SecProv/win32-encryptablevolume)的实例表示，可以使用加密进行保护。 |
@@ -5043,10 +5043,10 @@ Windows Management Instrumentation 远程协议使用 DCOM 远程协议通过网
 | [WMIPerfClass 提供者](https://learn.microsoft.com/en-us/windows/win32/wmisdk/wmiperfclass-provider) | 创建 WMI[性能计数器类](https://learn.microsoft.com/en-us/windows/desktop/CIMWin32Prov/performance-counter-classes)。数据由 WMIPerfInst 提供程序动态提供给这些 WMI 性能类。WMIPerfClass 和 WMIPerfInst 提供程序替换了[ADAP](https://learn.microsoft.com/en-us/windows/win32/wmisdk/performance-libraries-and-wmi)函数。 |
 | [WmiPerfInst 供应商](https://learn.microsoft.com/en-us/windows/win32/wmisdk/wmiperfinst-provider) | 从 WMI[性能计数器类](https://learn.microsoft.com/en-us/windows/desktop/CIMWin32Prov/performance-counter-classes)定义动态提供原始和格式化的性能计数器数据。 |
 
-这里为了便于理解可以提前看下/examples/wmiexec.py脚本中就是调用了CIMWin32 provider的win32_Process类中的create方法开启进程调用cmd或powershell执行命令或反弹shell
+为便于理解，可以提前看下 examples/wmiexec.py——它调用 CIMWin32 提供程序 Win32_Process 类的 Create 方法启动进程，执行 cmd 或 powershell 命令（或反弹 shell）：
 
 ```python
-eg./examples/wmiexec.py
+# eg./examples/wmiexec.py
 
 	...................
 dcom = DCOMConnection(addr, self.__username, self.__password, self.__domain, self.__lmhash, self.__nthash,
@@ -5062,7 +5062,7 @@ dcom = DCOMConnection(addr, self.__username, self.__password, self.__domain, sel
             self.shell = RemoteShell(self.__share, win32Process, smbConnection, self.__shell_type, silentCommand)
 	...............
 
-    class RemoteShell(cmd.Cmd):
+class RemoteShell(cmd.Cmd):
     def __init__(self, share, win32Process, smbConnection, shell_type, silentCommand=False):
         cmd.Cmd.__init__(self)
         self.__share = share
@@ -5094,94 +5094,39 @@ dcom = DCOMConnection(addr, self.__username, self.__password, self.__domain, sel
 
 Win32_Process的属性如下
 
-```
-.......
-命令行
+| 属性 | 数据类型 | 说明 |
+| :--- | :--- | :--- |
+| CommandLine | 字符串 | 用于启动特定进程的命令行（如适用） |
+| CreationClassName | 字符串 | 创建实例时使用的类或子类名称，与其他关键属性一起可唯一标识该类及其子类的所有实例。继承自 CIM_Process |
+| CreationDate | 日期时间 | 进程开始执行的日期。继承自 CIM_Process |
+| CSCreationClassName | 字符串 | 作用域计算机系统的创建类名称。继承自 CIM_Process |
+| CSName | 字符串 | 作用域计算机系统的名称。继承自 CIM_Process |
+| ...... | | 更多属性见官方文档 |
 
-数据类型：字符串
+更多属性见 https://learn.microsoft.com/en-us/windows/win32/cimwin32prov/win32-process 。
 
-访问类型：只读
-
-限定符：DisplayName（“启动进程的命令行”）
-
-用于启动特定进程的命令行（如果适用）。
-
-创建类名
-
-数据类型：字符串
-
-访问类型：只读
-
-限定符：CIM_Key、MaxLen (256)、DisplayName（“类名”）
-
-创建实例时使用的类或子类的名称。当与类的其他关键属性一起使用时，此属性允许唯一标识该类及其子类的所有实例。
-
-此属性继承自CIM_Process。
-
-创建日期
-
-数据类型：日期时间
-
-访问类型：只读
-
-限定词：Fixed , DisplayName ("CreationDate")
-
-流程开始执行的日期。
-
-此属性继承自CIM_Process。
-
-CSCreationClassName
-
-数据类型：字符串
-
-访问类型：只读
-
-限定词：Propagated（“CIM_OperatingSystem.CSCreationClassName”）、CIM_Key 、 MaxLen ( 256 ) 、 DisplayName （ “计算机系统类名”）
-
-范围计算机系统的创建类名称。
-
-此属性继承自CIM_Process。
-
-CS名称
-
-数据类型：字符串
-
-访问类型：只读
-
-限定符：Propagated（“ CIM_OperatingSystem.CSName ” ）、CIM_Key、 MaxLen ( 256)、DisplayName（“计算机系统名称”）
-
-范围界定计算机系统的名称。
-
-此属性继承自CIM_Process。
-.........
-```
-
-更多属性见https://learn.microsoft.com/en-us/windows/win32/cimwin32prov/win32-process#methods,
-
-感觉在这里全列出来用处不大,还是在实际渗透过程中看需要wmi远程实现什么功能,然后去查看相应的provider\class\方法|属性来进行相应的调用就好。
+全部列出意义不大——实际渗透中先明确要远程实现什么功能，再查询相应的 provider / class / 方法 / 属性进行调用即可。
 
 这里再看一个例子
 
-Windows Defender WMIv2 API中的 MSFT_MpPreference类的Add方法，此 cmdlet 默认寻求用户确认。如果指定了 -Force，则不会向用户寻求默认确认。
+再看一个例子：Windows Defender WMIv2 API 中 MSFT_MpPreference 类的 Add 方法（调用时默认会寻求用户确认，指定 -Force 则不确认）：
 
 ```c++
 uint32 Add(
-  [in] string  ExclusionPath[],排除路径,允许管理员明确 禁止扫描 检查列出的任何路径。
-  [in] string  ExclusionExtension[],允许管理员明确 禁止扫描 检查列出的任何扩展。
-  [in] string  ExclusionProcess[],允许管理员明确 禁止扫描 检查列出的任何进程。
-  [in] sint64  ThreatIDDefaultAction_Ids[],检测到时 不应 对其采取默认操作的威胁 ID。ThreatIDDefaultAction_Actions 中的操作需要按照与 ThreatIDDefaultAction_Ids 中的 ID 相同的顺序指定
-  [in] uint8   ThreatIDDefaultAction_Actions[],检测到时 不应 采取默认操作的威胁的默认操作。这些操作的顺序必须与其在 ThreatIDDefaultAction_Ids 属性中指定的各自 ID 的顺序相同。
+  [in] string  ExclusionPath[],          // 排除路径，允许管理员明确禁止扫描检查列出的任何路径
+  [in] string  ExclusionExtension[],     // 允许管理员明确禁止扫描检查列出的任何扩展
+  [in] string  ExclusionProcess[],       // 允许管理员明确禁止扫描检查列出的任何进程
+  [in] sint64  ThreatIDDefaultAction_Ids[],      // 检测到时不应对其采取默认操作的威胁 ID
+  [in] uint8   ThreatIDDefaultAction_Actions[],  // 对上述威胁采取的操作，顺序须与 Ids 中指定的顺序一致
   [in] boolean Force
 );
 ```
 
-而同一provider下的MSFT_MpComputerStatus 类可以查看当前使用的安全软件及版本，方便大家做免杀前的信息收集
+同一提供程序下的 MSFT_MpComputerStatus 类可查看当前安全软件及版本信息，便于免杀前的信息收集（原文本地截图已失效）。
 
-![image-20221201223910216](C:\Users\test\AppData\Roaming\Typora\typora-user-images\image-20221201223910216.png)
+##### WMI 委派
 
-###### WMI委派
-
-另一个比较有趣的地方是根据官方文档（https://learn.microsoft.com/en-us/windows/win32/wmisdk/connecting-to-a-3rd-computer-delegation）的描述，在本地系统上运行从远程系统获取数据的脚本时，WMI 会将您的凭据提供给远程系统上的数据提供者。这只需要**Impersonate**的模拟级别，但是，如果脚本连接到远程系统上的 WMI 并尝试在其他远程系统上打开日志文件，那么脚本将失败，除非模拟级别为**Delegate**，这样一来我们可以对我们创建的账户进行wmi委派，这样我们就可以通过wmi对DC进行控制，找了一圈没找到这方面的文章，感觉可以用这个委派当个后门？
+另一个有意思的点：根据官方文档（https://learn.microsoft.com/en-us/windows/win32/wmisdk/connecting-to-a-3rd-computer-delegation）的描述，在本地系统上运行从远程系统获取数据的脚本时，WMI 只需要 **Impersonate** 模拟级别就会把凭据提供给远程系统上的数据提供者；但如果脚本连接到远程系统的 WMI 后，还要继续访问第三台机器（例如打开其他远程系统上的日志文件），就会失败——除非模拟级别为 **Delegate**。因此可以对我们创建的账户配置 WMI 委派，从而通过 WMI 对第三台机器（如 DC）进行控制。这方面的公开资料不多，该委派机制或许可用作后门思路。
 
 这里放一个实现wmi委派的ps脚本及使用方法
 
@@ -5189,7 +5134,7 @@ https://github.com/grbray/PowerShell/blob/main/Windows/Set-WMINameSpaceSecurity.
 
 https://techcommunity.microsoft.com/t5/core-infrastructure-and-security/delegate-wmi-access-to-domain-controllers/ba-p/259535
 
-###### 模块代码分析
+##### 模块代码分析
 
 从前面wmiexec的脚本中我们可以看到调用wmi的方式是通过IWbemLevel1Login接口
 
@@ -5197,24 +5142,24 @@ IWbemLevel1Login 接口允许用户连接到特定名称空间中的管理服务
 
 IWbemLevel1Login包含四个方法
 
-| Method                                                       | Description |
-| :----------------------------------------------------------- | :---------- |
-| [EstablishPosition](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmi/31514eac-0206-4dad-a8df-a247cc1dadd2)不执行任何操作，主要进行ntlmlogin之前的区域协商 | Opnum: 3    |
-| [RequestChallenge](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmi/e4aa33c0-630c-4c7c-ba15-d3f7f6b1c34f)不执行任何操作 | Opnum: 4    |
-| [WBEMLogin](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmi/18292f42-2623-4bdf-bf2d-f1127bb279cc)不执行任何操作 | Opnum: 5    |
-| [NTLMLogin](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmi/40d194a2-c28a-485b-97f6-11a7c08f147e)将用户连接到指定命名空间中的管理服务接口 | Opnum: 6    |
+| 方法 | 说明 | Opnum |
+| :--- | :--- | :--- |
+| [EstablishPosition](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmi/31514eac-0206-4dad-a8df-a247cc1dadd2) | 不执行任何操作，主要进行 NTLMLogin 之前的区域协商 | 3 |
+| [RequestChallenge](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmi/e4aa33c0-630c-4c7c-ba15-d3f7f6b1c34f) | 不执行任何操作 | 4 |
+| [WBEMLogin](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmi/18292f42-2623-4bdf-bf2d-f1127bb279cc) | 不执行任何操作 | 5 |
+| [NTLMLogin](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmi/40d194a2-c28a-485b-97f6-11a7c08f147e) | 将用户连接到指定命名空间中的管理服务接口 | 6 |
 
-主要看下ntlmlogin的参数
+主要看下 NTLMLogin 的参数：
 
 ```mof
  HRESULT NTLMLogin(
-   [in, unique, string] LPWSTR wszNetworkResource,代表返回的IWbemServices 对象关联的服务器上的命名空间。此参数不得为 NULL
+   [in, unique, string] LPWSTR wszNetworkResource：代表返回的 IWbemServices 对象所关联的服务器上的命名空间。此参数不得为 NULL
    [in, unique, string] LPWSTR wszPreferredLocale,一个指向字符串的指针，该字符串必须以首选顺序指定语言环境值，以逗号分隔。如果客户端不提供它，服务器会创建一个特定于实现的默认列表
    [in] long lFlags,必须为 0
    [in] IWbemContext* pCtx,必须是指向IWbemContext 接口的指针，它必须包含客户端发送的附加信息。如果pCtx 为 NULL，则必须忽略该参数。
    [out] IWbemServices** ppNamespace如果调用成功，ppNamespace 必须返回一个指向 IWbemServices接口指针的指针。当发生错误时，此参数必须设置为 NULL。
  );
-为响应 IWbemLevel1Login::NTLMLogin 方法，服务器必须返回对应于wszNetworkResource 参数的 IWbemServices 接口。当调用成功时，服务器必须创建一个IWbemServices 对象。服务器必须将wszPreferredLocale存储在对象中。服务器必须找到 传递给NamespaceConnectionTable的wszNetworkResource的NamespaceConnection对象，并将其引用存储在 IWbemServices对象中。服务器必须将GrantedAccess 设置为命名空间安全描述符授予客户端的一组访问权限。请求本地化信息的所有后续 IWbemServices 方法调用必须以wszPreferredLocale中指定的语言返回信息。当首选语言环境为 NULL 时，服务器应该使用特定于实现的逻辑来决定语言环境。成功的方法执行必须使用 IWbemServices 接口指针填充ppNamespace 参数并且必须返回 WBEM_S_NO_ERROR。
+为响应 IWbemLevel1Login::NTLMLogin 方法，服务器必须返回对应于 wszNetworkResource 参数的 IWbemServices 接口。当调用成功时，服务器必须创建一个 IWbemServices 对象，并将 wszPreferredLocale 存储在对象中。服务器必须在 NamespaceConnectionTable 中查找与 wszNetworkResource 对应的 NamespaceConnection 对象，并将其引用存储在 IWbemServices 对象中。服务器必须将 GrantedAccess 设置为命名空间安全描述符授予客户端的一组访问权限。请求本地化信息的所有后续 IWbemServices 方法调用必须以 wszPreferredLocale 中指定的语言返回信息。当首选语言环境为 NULL 时，服务器应该使用特定于实现的逻辑来决定语言环境。成功的方法执行必须使用 IWbemServices 接口指针填充 ppNamespace 参数，并且必须返回 WBEM_S_NO_ERROR。
 ```
 
 可以看到IWbemLevel1Login类对ntlmlogin方法的实现
@@ -5264,7 +5209,7 @@ IWbemServices接口的方法如下
 | [ExecMethod](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmi/cbce28cd-fd45-4df1-9ec8-416e6bb33691) | 执行 由 CIM 类或从 IWbemServices 接口检索的[CIM实例实现的](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmi/6837a7cb-ba2d-46b1-802c-fce2fd5a6ad6#gt_a99173af-90bf-473d-9a81-ff0ce9a85838)[CIM 方法。](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmi/6837a7cb-ba2d-46b1-802c-fce2fd5a6ad6#gt_a307bc35-17a3-48aa-bc58-b8779f5be641) |
 | [ExecMethodAsync](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmi/ca69cd86-2520-47e9-9e37-54feb9347ff2) | IWbemServices::ExecMethod 方法的异步版本                     |
 
-wmi远程管理的主要功能方法都在这里,在模块中实现了每一个方法
+WMI 远程管理的主要功能方法都在这里，模块中实现了每一个方法：
 
 ```python
 class IWbemServices(IRemUnknown):
@@ -5313,7 +5258,7 @@ class IWbemServices(IRemUnknown):
 	..........
 ```
 
-这里的方法调用我们可以看/examples/wmipersist.py，在wmipersist中首先DeleteInstance删除现有实例，然后通过GetObject获取ActiveScriptEventConsumer、、\__EventFilter、__IntervalTimerInstruction三个类并通过SpawnInstance派生新的实例并通过PutInstance更新。
+方法调用的例子可以看 examples/wmipersist.py：先通过 DeleteInstance 删除现有实例（REMOVE 模式），再通过 GetObject 获取 ActiveScriptEventConsumer、__EventFilter、__IntervalTimerInstruction 等类，通过 SpawnInstance 派生新实例，最后通过 PutInstance 写入：
 
 ```python
  if self.__options.action.upper() == 'REMOVE':
@@ -5391,7 +5336,7 @@ HRESULT SpawnInstance(
 );
 ```
 
-当前对象必须是使用 IWbemServices::GetObject、IWbemServices::CreateClassEnum 或 IWbemServices::CreateClassEnumAsync 从 Windows 管理获取的类定义，然后使用此类定义创建新实例。 需要调用 IWbemServices：:PutInstance 才能将实例实际写入 Windows 管理。 如果要在调用 IWbemServices::PutInstance 之前放弃对象，只需调用 IWbemClassObject::Release 即可。 请注意，支持从实例生成实例，但返回的实例将为空。
+当前对象必须是使用 IWbemServices::GetObject、IWbemServices::CreateClassEnum 或 IWbemServices::CreateClassEnumAsync 从 WMI 获取的类定义，然后使用此类定义创建新实例。需要调用 IWbemServices::PutInstance 才能将实例实际写入 WMI。如果要在调用 IWbemServices::PutInstance 之前放弃对象，只需调用 IWbemClassObject::Release 即可。请注意，支持从实例生成实例，但返回的实例将为空。
 
 脚本中调用的3个类作用如下
 
@@ -5401,7 +5346,7 @@ HRESULT SpawnInstance(
 
 + 永久事件使用者的注册需要 __EventFilter 系统类的实例。
 
-wmipersist.py脚本的作用是构造wql语句监听事件当事件发生时就执行攻击者构造好的脚本
+wmipersist.py 的作用是构造 WQL 事件查询监听事件，当事件发生时执行攻击者预置的脚本。
 
 除了以上介绍的两个类，wmi模块中还实现了以下接口：
 
@@ -5410,16 +5355,18 @@ wmipersist.py脚本的作用是构造wql语句监听事件当事件发生时就�
 + IWbemCallResult 接口:用于从 返回单个CIM 对象的半同步调用中返回调用结果
 + IWbemFetchSmartEnum 接口:一个帮助程序接口，用于检索网络优化的枚举器接口
 + IWbemWCOSmartEnum接口:旨在为 IEnumWbemClassObject 提供 CIM 对象的备用同步枚举
-+ IWbemLoginClientID 接口： func SetClientInfo：将客户端 NETBIOS 名称和客户端生成的唯一编号传递给服务器。
-+ IWbemLoginHelper 接口:func SetEvent:在服务器上为名称为方法参数的事件发出信号
++ IWbemLoginClientID 接口：SetClientInfo 方法将客户端 NetBIOS 名称和客户端生成的唯一编号传递给服务器。
++ IWbemLoginHelper 接口：SetEvent 方法在服务器上触发指定名称的事件。
 
 以上就是wmi模块的全部内容
 
-## common
+# 第五部分 基础库
 
-这里的模块是impacket基础模块，简单快速过一下就可以
+## 第 7 章 common 基础库速览
 
-### icmp6.py
+这里的模块是 impacket 的基础模块，快速过一遍即可。
+
+### ICMP6.py
 
 实现了impacket对ipv6服务器的ping的支持
 
@@ -5427,7 +5374,7 @@ wmipersist.py脚本的作用是构造wql语句监听事件当事件发生时就�
 
 实现了对ipv6地址的解析
 
-### ip6.py
+### IP6.py
 
 实现了ipv6协议支持
 
@@ -5455,7 +5402,7 @@ rc4加解密算法实现
 
 网络数据包编解码器基本构建块。各种 Internet 协议的低级数据包编解码器。以编程方式构建网络数据包
 
-### ndp.py
+### NDP.py
 
 ipv6中的邻居发现协议ndp支持，即Neighbor Discovery Protocol
 
@@ -5465,7 +5412,7 @@ cdp协议支持，CDP是Cisco Discovery Protocol的缩写，它是由思科公�
 
 ### crypto.py
 
-aes、ntlm等加解密支持
+AES-CMAC 等通用加密校验算法实现（供 SMB3 签名等场景调用，与 krb5/crypto.py 分工不同）
 
 ### dhcp.py
 
@@ -5485,8 +5432,8 @@ dpapi支持，**数据保护应用程序编程接口**(DPAPI)。**DPAPI**目前�
 
 https://www.passcape.com/index.php?section=docsys&cmd=details&id=28#13
 
-+ 在受害者主机上，以用户的安全上下文中解密Chrome凭据
-+ 当将Chrome加密数据库拖到本地进行解密时，使用 mimikatz 离线解密 Chrome 凭据
+- 在受害者主机上，以用户的安全上下文解密 Chrome 凭据；
+- 将 Chrome 加密数据库拖回本地时，使用 mimikatz 离线解密 Chrome 凭据。
 
 用户master key文件位于%APPDATA%\Microsoft\Protect\%SID%
 
@@ -5554,7 +5501,7 @@ sql server 协议支持
 
 uuid和二进制表示的相互转换
 
-### winregistry
+### winregistry.py
 
 Windows 注册表库解析器
 
@@ -5568,7 +5515,7 @@ WPS全称为Wi-Fi Protected Setup，是WSC规范早期的名字，WSC全称为Wi
 
 引用：
 
-**写文章的时候看过了太多大佬们写的文章，属于是站在大佬的肩膀上学习了，因为写文章时候节奏比较紧凑，引用部分可能会有遗漏，欢迎大佬指错，及时补充（绝没有故意不引用的情况QAQ）**
+**写作过程中参考了大量前辈的文章，属于站在大佬们的肩膀上学习。由于写作节奏紧凑，引用可能有遗漏，欢迎指出，会及时补充（绝无故意不引用之意）。**
 
 https://paper.seebug.org/1755/
 
