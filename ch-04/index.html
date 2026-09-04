@@ -1,0 +1,2006 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Write your own AD PoC with impacket — source-level guides to Kerberos, DCE/RPC, DCOM and WMI programming, bilingual (English + Chinese).">
+      
+      
+      
+        <link rel="canonical" href="https://lupingqaq.github.io/impacket-programming-manual/ch-04/">
+      
+      
+        <link rel="prev" href="../ch-03/">
+      
+      
+        <link rel="next" href="../ch-05/">
+      
+      
+        
+          <link rel="alternate" href="/impacket-programming-manual/" hreflang="en">
+        
+          <link rel="alternate" href="/impacket-programming-manual/zh-CN/" hreflang="zh">
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Chapter 4 — Kerberos Authentication (krb5) - Impacket Programming Manual</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#chapter-4-kerberos-authentication-krb5" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Impacket Programming Manual" class="md-header__button md-logo" aria-label="Impacket Programming Manual" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Impacket Programming Manual
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Chapter 4 — Kerberos Authentication (krb5)
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="Select language">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="/impacket-programming-manual/" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="/impacket-programming-manual/zh-CN/" hreflang="zh" class="md-select__link">
+              简体中文
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/lupingQAQ/impacket-programming-manual" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    lupingQAQ/impacket-programming-manual
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Impacket Programming Manual" class="md-nav__button md-logo" aria-label="Impacket Programming Manual" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Impacket Programming Manual
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/lupingQAQ/impacket-programming-manual" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    lupingQAQ/impacket-programming-manual
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sec-01/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reading Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ch-01/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chapter 1 — impacket Overview & Directory Layout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ch-02/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chapter 2 — structure.py, the Universal Serialization Base Class
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ch-03/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chapter 3 — LDAP Directory Services (ldap)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chapter 4 — Kerberos Authentication (krb5)
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chapter 4 — Kerberos Authentication (krb5)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#asn1py-kerberos-packet-formats-astgsap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        asn1.py — Kerberos Packet Formats (AS/TGS/AP)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#constantspy-kerberos-enum-constants-flags-error_code" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        constants.py — Kerberos Enum Constants (flags / error_code)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#keytabpy-key-table-file-parsing-saving" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        keytab.py — Key Table File Parsing &amp; Saving
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ccachepy-credential-cache-parsing-totgt-totgs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ccache.py — Credential Cache Parsing (toTGT / toTGS)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#typespy-principal-other-auth-data-handlers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        types.py — Principal &amp; Other Auth Data Handlers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cryptopy-kerberos-enctype-implementations-rc4-aes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        crypto.py — Kerberos Enctype Implementations (RC4 / AES)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gssapipy-gss-api-wrapper-mic-wrap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        gssapi.py — GSS-API Wrapper (MIC / WRAP)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="gssapi.py — GSS-API Wrapper (MIC / WRAP)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#spnegopy-in-the-impacket-root-directory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        spnego.py (in the impacket root directory)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kerberosv5py-getkerberostgt-getkerberostgs-auth-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        kerberosv5.py — getKerberosTGT / getKerberosTGS Auth Flow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pacpy-privilege-attribute-certificate-pac-structures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        pac.py — Privilege Attribute Certificate (PAC) Structures
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ch-05/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chapter 5 — DCE/RPC Interfaces (dcerpc)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ch-06/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chapter 6 — DCOM and WMI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ch-07/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chapter 7 — A Quick Tour of the Common Libraries
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    简体中文
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    简体中文
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../zh-CN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../zh-CN/sec-01/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    阅读指南
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../zh-CN/ch-01/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 1 章 impacket 总览与目录结构
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../zh-CN/ch-02/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 2 章 通用序列化基类 structure.py
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../zh-CN/ch-03/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 3 章 LDAP 目录服务（ldap）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../zh-CN/ch-04/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 4 章 Kerberos 认证（krb5）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../zh-CN/ch-05/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 5 章 DCE/RPC 接口（dcerpc）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../zh-CN/ch-06/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 6 章 DCOM 与 WMI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../zh-CN/ch-07/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 7 章 common 基础库速览
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#asn1py-kerberos-packet-formats-astgsap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        asn1.py — Kerberos Packet Formats (AS/TGS/AP)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#constantspy-kerberos-enum-constants-flags-error_code" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        constants.py — Kerberos Enum Constants (flags / error_code)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#keytabpy-key-table-file-parsing-saving" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        keytab.py — Key Table File Parsing &amp; Saving
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ccachepy-credential-cache-parsing-totgt-totgs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ccache.py — Credential Cache Parsing (toTGT / toTGS)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#typespy-principal-other-auth-data-handlers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        types.py — Principal &amp; Other Auth Data Handlers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cryptopy-kerberos-enctype-implementations-rc4-aes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        crypto.py — Kerberos Enctype Implementations (RC4 / AES)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gssapipy-gss-api-wrapper-mic-wrap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        gssapi.py — GSS-API Wrapper (MIC / WRAP)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="gssapi.py — GSS-API Wrapper (MIC / WRAP)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#spnegopy-in-the-impacket-root-directory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        spnego.py (in the impacket root directory)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kerberosv5py-getkerberostgt-getkerberostgs-auth-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        kerberosv5.py — getKerberosTGT / getKerberosTGS Auth Flow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pacpy-privilege-attribute-certificate-pac-structures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        pac.py — Privilege Attribute Certificate (PAC) Structures
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="chapter-4-kerberos-authentication-krb5">Chapter 4 Kerberos Authentication (krb5)</h1>
+<h2 id="asn1py-kerberos-packet-formats-astgsap">asn1.py — Kerberos Packet Formats (AS/TGS/AP)</h2>
+<p>asn1.py defines the packet formats of the Kerberos request / response types, such as AS_REQ, AS_REP, TGS_REQ and TGS_REP.</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">AS_REP</span><span class="p">(</span><span class="n">KDC_REP</span><span class="p">):</span>
+    <span class="n">tagSet</span> <span class="o">=</span> <span class="n">_application_tag</span><span class="p">(</span><span class="n">constants</span><span class="o">.</span><span class="n">ApplicationTagNumbers</span><span class="o">.</span><span class="n">AS_REP</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">TGS_REP</span><span class="p">(</span><span class="n">KDC_REP</span><span class="p">):</span>
+    <span class="n">tagSet</span> <span class="o">=</span> <span class="n">_application_tag</span><span class="p">(</span><span class="n">constants</span><span class="o">.</span><span class="n">ApplicationTagNumbers</span><span class="o">.</span><span class="n">TGS_REP</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+</code></pre></div>
+<p>The structures you encounter most often in Kerberos authentication:</p>
+<p><strong>AS_REP, TGS_REQ, AP_REQ, TGS_REP, Authenticator (authentication), EncASRepPart (encrypted part of the AS exchange), AuthorizationData, etc.</strong></p>
+<p>For concrete usage, look at the Kerberos-related scripts under examples (getST, ticketer, ...): they show how each stage of the ticket flow constructs and populates the asn1.py structures.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># eg.impacket/examples/goldenPac.py </span>
+   <span class="k">def</span><span class="w"> </span><span class="nf">getKerberosTGS</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">serverName</span><span class="p">,</span> <span class="n">domain</span><span class="p">,</span> <span class="n">kdcHost</span><span class="p">,</span> <span class="n">tgt</span><span class="p">,</span> <span class="n">cipher</span><span class="p">,</span> <span class="n">sessionKey</span><span class="p">,</span> <span class="n">authTime</span><span class="p">):</span>
+        <span class="o">......</span>
+        <span class="c1"># Key Usage 4</span>
+        <span class="c1"># TGS-REQ KDC-REQ-BODY AuthorizationData, encrypted with</span>
+        <span class="c1"># the TGS session key (Section 5.4.1)</span>
+        <span class="n">encryptedEncodedIfRelevant</span> <span class="o">=</span> <span class="n">cipher</span><span class="o">.</span><span class="n">encrypt</span><span class="p">(</span><span class="n">sessionKey</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">encodedIfRelevant</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="n">tgsReq</span> <span class="o">=</span> <span class="n">TGS_REQ</span><span class="p">()</span>
+        <span class="n">reqBody</span> <span class="o">=</span> <span class="n">seq_set</span><span class="p">(</span><span class="n">tgsReq</span><span class="p">,</span> <span class="s1">'req-body'</span><span class="p">)</span>
+
+        <span class="n">opts</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="n">opts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">constants</span><span class="o">.</span><span class="n">KDCOptions</span><span class="o">.</span><span class="n">forwardable</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>
+        <span class="n">opts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">constants</span><span class="o">.</span><span class="n">KDCOptions</span><span class="o">.</span><span class="n">renewable</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>
+        <span class="n">opts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">constants</span><span class="o">.</span><span class="n">KDCOptions</span><span class="o">.</span><span class="n">proxiable</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>
+
+        <span class="n">reqBody</span><span class="p">[</span><span class="s1">'kdc-options'</span><span class="p">]</span> <span class="o">=</span> <span class="n">constants</span><span class="o">.</span><span class="n">encodeFlags</span><span class="p">(</span><span class="n">opts</span><span class="p">)</span>
+        <span class="n">seq_set</span><span class="p">(</span><span class="n">reqBody</span><span class="p">,</span> <span class="s1">'sname'</span><span class="p">,</span> <span class="n">serverName</span><span class="o">.</span><span class="n">components_to_asn1</span><span class="p">)</span>
+        <span class="n">reqBody</span><span class="p">[</span><span class="s1">'realm'</span><span class="p">]</span> <span class="o">=</span> <span class="n">decodedTGT</span><span class="p">[</span><span class="s1">'crealm'</span><span class="p">]</span><span class="o">.</span><span class="n">prettyPrint</span><span class="p">()</span>
+
+        <span class="n">now</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()</span> <span class="o">+</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">reqBody</span><span class="p">[</span><span class="s1">'till'</span><span class="p">]</span> <span class="o">=</span> <span class="n">KerberosTime</span><span class="o">.</span><span class="n">to_asn1</span><span class="p">(</span><span class="n">now</span><span class="p">)</span>
+        <span class="n">reqBody</span><span class="p">[</span><span class="s1">'nonce'</span><span class="p">]</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">SystemRandom</span><span class="p">()</span><span class="o">.</span><span class="n">getrandbits</span><span class="p">(</span><span class="mi">31</span><span class="p">)</span>
+        <span class="n">seq_set_iter</span><span class="p">(</span><span class="n">reqBody</span><span class="p">,</span> <span class="s1">'etype'</span><span class="p">,</span> <span class="p">(</span><span class="n">cipher</span><span class="o">.</span><span class="n">enctype</span><span class="p">,))</span>
+        <span class="n">reqBody</span><span class="p">[</span><span class="s1">'enc-authorization-data'</span><span class="p">]</span> <span class="o">=</span> <span class="n">noValue</span>
+        <span class="n">reqBody</span><span class="p">[</span><span class="s1">'enc-authorization-data'</span><span class="p">][</span><span class="s1">'etype'</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">cipher</span><span class="o">.</span><span class="n">enctype</span><span class="p">)</span>
+        <span class="n">reqBody</span><span class="p">[</span><span class="s1">'enc-authorization-data'</span><span class="p">][</span><span class="s1">'cipher'</span><span class="p">]</span> <span class="o">=</span> <span class="n">encryptedEncodedIfRelevant</span>
+
+        <span class="n">apReq</span> <span class="o">=</span> <span class="n">AP_REQ</span><span class="p">()</span>
+        <span class="n">apReq</span><span class="p">[</span><span class="s1">'pvno'</span><span class="p">]</span> <span class="o">=</span> <span class="mi">5</span>
+        <span class="n">apReq</span><span class="p">[</span><span class="s1">'msg-type'</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">constants</span><span class="o">.</span><span class="n">ApplicationTagNumbers</span><span class="o">.</span><span class="n">AP_REQ</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+        <span class="n">opts</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="n">apReq</span><span class="p">[</span><span class="s1">'ap-options'</span><span class="p">]</span> <span class="o">=</span>  <span class="n">constants</span><span class="o">.</span><span class="n">encodeFlags</span><span class="p">(</span><span class="n">opts</span><span class="p">)</span>
+        <span class="n">seq_set</span><span class="p">(</span><span class="n">apReq</span><span class="p">,</span><span class="s1">'ticket'</span><span class="p">,</span> <span class="n">ticket</span><span class="o">.</span><span class="n">to_asn1</span><span class="p">)</span>
+
+        <span class="n">authenticator</span> <span class="o">=</span> <span class="n">Authenticator</span><span class="p">()</span>
+        <span class="n">authenticator</span><span class="p">[</span><span class="s1">'authenticator-vno'</span><span class="p">]</span> <span class="o">=</span> <span class="mi">5</span>
+        <span class="n">authenticator</span><span class="p">[</span><span class="s1">'crealm'</span><span class="p">]</span> <span class="o">=</span> <span class="n">decodedTGT</span><span class="p">[</span><span class="s1">'crealm'</span><span class="p">]</span><span class="o">.</span><span class="n">prettyPrint</span><span class="p">()</span>
+
+        <span class="n">clientName</span> <span class="o">=</span> <span class="n">Principal</span><span class="p">()</span>
+        <span class="n">clientName</span><span class="o">.</span><span class="n">from_asn1</span><span class="p">(</span> <span class="n">decodedTGT</span><span class="p">,</span> <span class="s1">'crealm'</span><span class="p">,</span> <span class="s1">'cname'</span><span class="p">)</span>
+
+        <span class="n">seq_set</span><span class="p">(</span><span class="n">authenticator</span><span class="p">,</span> <span class="s1">'cname'</span><span class="p">,</span> <span class="n">clientName</span><span class="o">.</span><span class="n">components_to_asn1</span><span class="p">)</span>
+
+        <span class="n">now</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()</span> 
+        <span class="n">authenticator</span><span class="p">[</span><span class="s1">'cusec'</span><span class="p">]</span> <span class="o">=</span>  <span class="n">now</span><span class="o">.</span><span class="n">microsecond</span>
+        <span class="n">authenticator</span><span class="p">[</span><span class="s1">'ctime'</span><span class="p">]</span> <span class="o">=</span> <span class="n">KerberosTime</span><span class="o">.</span><span class="n">to_asn1</span><span class="p">(</span><span class="n">now</span><span class="p">)</span>
+
+        <span class="n">encodedAuthenticator</span> <span class="o">=</span> <span class="n">encoder</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">authenticator</span><span class="p">)</span>
+        <span class="o">......</span>
+</code></pre></div>
+<h2 id="constantspy-kerberos-enum-constants-flags-error_code">constants.py — Kerberos Enum Constants (flags / error_code)</h2>
+<p>Holds the static enumerations used during Kerberos authentication — flags, error codes, principal types and so on — convenient to reference while authenticating.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># eg.examples/GetUserSPNs.py</span>
+<span class="o">......</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">impacket.examples</span><span class="w"> </span><span class="kn">import</span> <span class="n">logger</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">impacket.examples.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_credentials</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">impacket.krb5</span><span class="w"> </span><span class="kn">import</span> <span class="n">constants</span>
+        <span class="c1"># No TGT in cache, request it</span>
+        <span class="n">userName</span> <span class="o">=</span> <span class="n">Principal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__username</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">constants</span><span class="o">.</span><span class="n">PrincipalNameType</span><span class="o">.</span><span class="n">NT_PRINCIPAL</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="c1"># eg.krb5/constants.py</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">PrincipalNameType</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="n">NT_UNKNOWN</span>              <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">NT_PRINCIPAL</span>            <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">NT_SRV_INST</span>             <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">NT_SRV_HST</span>              <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">NT_SRV_XHST</span>             <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">NT_UID</span>                  <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">NT_X500_PRINCIPAL</span>       <span class="o">=</span> <span class="mi">6</span>
+    <span class="n">NT_SMTP_NAME</span>            <span class="o">=</span> <span class="mi">7</span>
+    <span class="n">NT_ENTERPRISE</span>           <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">NT_WELLKNOWN</span>            <span class="o">=</span> <span class="mi">11</span>
+    <span class="n">NT_SRV_HST_DOMAIN</span>       <span class="o">=</span> <span class="mi">12</span>
+    <span class="n">NT_MS_PRINCIPAL</span>         <span class="o">=</span> <span class="o">-</span><span class="mi">128</span>
+    <span class="n">NT_MS_PRINCIPAL_AND_ID</span>  <span class="o">=</span> <span class="o">-</span><span class="mi">129</span>
+    <span class="n">NT_ENT_PRINCIPAL_AND_ID</span> <span class="o">=</span> <span class="o">-</span><span class="mi">130</span>
+</code></pre></div>
+<h2 id="keytabpy-key-table-file-parsing-saving">keytab.py — Key Table File Parsing &amp; Saving</h2>
+<p>As the name suggests, this file contains the classes and functions for parsing and saving keytab files. A keytab is a key table holding the keys of Principals; it plays roughly the same role as the id_rsa private key in SSH authentication, allowing passwordless Kerberos verification. It usually lives under /etc/security/keytabs/ (e.g. nn.service.keytab). Take generating and using a keytab on CDH as an example:</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="m">1</span>.<span class="w"> </span>Enter<span class="w"> </span>kerberos<span class="w"> </span>admin
+
+<span class="w">  </span>kadmin.local
+
+<span class="m">2</span>.<span class="w"> </span>List<span class="w"> </span>kerberos<span class="w"> </span>principals
+
+listprincs
+
+<span class="m">3</span>.<span class="w"> </span>Add<span class="w"> </span>kerberos<span class="w"> </span>principal
+
+kadmin<span class="w"> </span>-p<span class="w"> </span><span class="s1">'kdcadmin/admin'</span><span class="w"> </span>-w<span class="w"> </span><span class="s2">"-s"</span><span class="w"> </span>-q<span class="w"> </span><span class="s1">'addprinc -randkey hive'</span>
+
+<span class="m">4</span>.<span class="w"> </span>Generate<span class="w"> </span>keytab<span class="w"> </span>file
+
+ktadd<span class="w"> </span>-k<span class="w">   </span>/home/kerberos/hive.keytab<span class="w"> </span>-norandkey<span class="w"> </span>hive@TEST.COM
+
+<span class="m">5</span>.<span class="w"> </span>Authenticate<span class="w"> </span>with<span class="w"> </span>the<span class="w"> </span>generated<span class="w"> </span>keytab
+
+kinit<span class="w"> </span>-kt<span class="w">  </span>/home/kerberos/hive.keytab<span class="w"> </span>hive/bdp4@TEST.COM
+
+<span class="m">6</span>.<span class="w"> </span>Show<span class="w"> </span>current<span class="w"> </span>authenticated<span class="w"> </span>user
+
+klist
+
+<span class="m">7</span>.<span class="w"> </span>Remote<span class="w"> </span>access<span class="w"> </span>via<span class="w"> </span>beeline
+
+beeline<span class="w"> </span>-u<span class="w"> </span><span class="s2">"jdbc:hive2://1*92.168.86.130:10000/default;principal=hive/bdp4@TEST.COM"</span>
+</code></pre></div>
+<p>The keytab file format is as follows:</p>
+<div class="highlight"><pre><span></span><code> keytab {
+      uint16_t file_format_version;                    /* 0x502 */
+      keytab_entry entries[*];
+  };
+
+  keytab_entry {
+      int32_t size;
+      uint16_t num_components;    /* sub 1 if version 0x501 */
+      counted_octet_string realm; realm
+      counted_octet_string components[num_components]; principal name
+      uint32_t name_type;   /* not present if version 0x501 */ principal type
+      uint32_t timestamp; timestamp
+      uint8_t vno8; key version
+      keyblock key;
+      uint32_t vno; /* only present if &gt;= 4 bytes left in entry */
+  };
+
+  counted_octet_string {
+      uint16_t length;
+      uint8_t data[length];
+  };
+
+  keyblock {
+      uint16_t type; encryption type
+      counted_octet_string;encryption key
+  };
+</code></pre></div>
+<p>The getData() and getKey() functions of the keytab class show how the keytab file structure is parsed and its values extracted.</p>
+<h2 id="ccachepy-credential-cache-parsing-totgt-totgs">ccache.py — Credential Cache Parsing (toTGT / toTGS)</h2>
+<p>As seen in Chapter 2's structure.py, ccache.py parses the Kerberos credential-cache binary file (ccache); the Credential class provides toTGT, toTGS and friends. First look at the ccache file structure:</p>
+<div class="highlight"><pre><span></span><code>ccache {
+          uint16_t file_format_version; /* 0x0504 */ file format version
+          uint16_t headerlen;           /* only if version is 0x0504 */
+          header headers[];             /* present only in 0x0504 and above */
+          principal primary_principal;
+          credential credentials[*];
+};
+
+# the header structure is "tag + taglen + tagdata"; the most common tag is DeltaTime (0x0001),
+# whose tagdata holds time_offset / usec_offset — the skew between local clock and KDC
+
+credential {
+            principal client; client block
+            principal server; server block
+            keyblock key; key block
+            times    time; time block (authtime / starttime / endtime / renew_till)
+            uint8_t  is_skey;   whether skey    /* 1 if skey, 0 otherwise */
+            uint32_t tktflags;           /* stored in reversed byte order */
+            uint32_t num_address;
+            address  addrs[num_address]; address block
+            uint32_t num_authdata; 
+            authdata authdata[num_authdata]; authorization data
+            counted_octet_string ticket; the ticket
+            counted_octet_string second_ticket; second ticket, related via DUPLICATE-SKEY or ENC-TKT-IN-SKEY
+};
+
+keyblock {
+          uint16_t keytype; encryption type
+          uint16_t etype;                /* only present if version 0x0503 */
+          uint16_t keylen;
+          uint8_t keyvalue[keylen]; the key
+};
+
+principal {
+           uint32_t name_type;           /* not present if version 0x0501 */
+           uint32_t num_components;      /* sub 1 if version 0x501 */
+           counted_octet_string realm; realm
+           counted_octet_string components[num_components]; user/service name
+};
+
+# times / address / authdata / counted_octet_string sub-structures omitted:
+# all follow the two-part "type field + counted_octet_string (length + data)" layout
+</code></pre></div>
+<p>The existence of the second ticket is puzzling at first sight; after digging through many docs, its use case turned up in IBM's system-programming documentation:
+https://www.ibm.com/docs/en/zos/2.3.0?topic=kpi-krb5-get-cred-from-kdc-obtain-kdc-server-service-ticket</p>
+<div class="highlight"><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;skrb/krb5.h&gt;</span>
+<span class="n">krb5_error_code</span><span class="w"> </span><span class="nf">krb5_get_cred_from_kdc</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">krb5_context</span><span class="w">                         </span><span class="n">context</span><span class="p">,</span>
+<span class="w">    </span><span class="n">krb5_ccache</span><span class="w">                          </span><span class="n">ccache</span><span class="p">,</span>
+<span class="w">    </span><span class="n">krb5_creds</span><span class="w"> </span><span class="o">*</span><span class="w">                         </span><span class="n">in_cred</span><span class="p">,</span>
+<span class="w">    </span><span class="n">krb5_creds</span><span class="w"> </span><span class="o">**</span><span class="w">                        </span><span class="n">out_cred</span><span class="p">,</span>
+<span class="w">    </span><span class="n">krb5_creds</span><span class="w"> </span><span class="o">***</span><span class="w">                       </span><span class="n">tgts</span>
+<span class="p">);</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code>Input
+context
+Specifies the Kerberos context.
+ccache
+Specifies the credentials cache. The initial TGT for the local realm must already be in the cache. The Kerberos runtime obtains additional ticket-granting tickets as needed if the target server is not in the local realm.
+in_cred
+Specifies the request credentials. The client and server fields must be set to the desired values for the service ticket. The second_ticket field must be set if the service ticket is to be encrypted in a session key. The ticket expiration time can be set to override the default expiration time.
+ifinsessionthenmustsetssecond_ticket
+Output
+out_cred
+Returns the service ticket. The krb5_free_creds() routine should be called to release the credentials when they are no longer needed.
+tgts
+Returns any new ticket-granting tickets that were obtained while getting the service target from the KDC in the target realm. There may be ticket-granting tickets returned for this parameter even if the Kerberos runtime was ultimately unable to obtain a service ticket from the target KDC. The krb5_free_tgt_creds() routine should be called to release the TGT array when it is no longer needed.
+</code></pre></div>
+<p>Do not conflate two concepts: IBM's <code>second_ticket</code> is an input field of <code>krb5_get_cred_from_kdc()</code>, required only in special scenarios such as binding a service ticket to a session key; impacket's <code>CCache.secondTicket</code> is a local structure field used while parsing / saving a ccache. <code>fromKRBCRED()</code> initializes it to empty merely because the current implementation never reads that content — it does not mean the IBM API semantics default it to empty:</p>
+<div class="highlight"><pre><span></span><code>    <span class="k">def</span><span class="w"> </span><span class="nf">fromKRBCRED</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">encodedKrbCred</span><span class="p">):</span>
+        <span class="o">.........</span>
+        <span class="n">credential</span><span class="o">.</span><span class="n">ticket</span><span class="p">[</span><span class="s1">'length'</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">credential</span><span class="o">.</span><span class="n">ticket</span><span class="p">[</span><span class="s1">'data'</span><span class="p">])</span>
+        <span class="n">credential</span><span class="o">.</span><span class="n">secondTicket</span> <span class="o">=</span> <span class="n">CountedOctetString</span><span class="p">()</span>
+        <span class="n">credential</span><span class="o">.</span><span class="n">secondTicket</span><span class="p">[</span><span class="s1">'data'</span><span class="p">]</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">''</span>
+        <span class="n">credential</span><span class="o">.</span><span class="n">secondTicket</span><span class="p">[</span><span class="s1">'length'</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+</code></pre></div>
+<p>Within impacket, this class is mainly used to read or save ccache files; the important functions are:</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">toKRBCRED</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">fromKRBCRED</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">encodedKrbCred</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">loadKirbiFile</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">fileName</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">saveKirbiFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fileName</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">fromTGS</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tgs</span><span class="p">,</span> <span class="n">oldSessionKey</span><span class="p">,</span> <span class="n">sessionKey</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">fromTGT</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tgt</span><span class="p">,</span> <span class="n">oldSessionKey</span><span class="p">,</span> <span class="n">sessionKey</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">getCredential</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">server</span><span class="p">,</span> <span class="n">anySPN</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+</code></pre></div>
+<p>as in the following example:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># eg./examples/getTGT.py</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">saveTicket</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ticket</span><span class="p">,</span> <span class="n">sessionKey</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">'Saving ticket in </span><span class="si">%s</span><span class="s1">'</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__user</span> <span class="o">+</span> <span class="s1">'.ccache'</span><span class="p">))</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">impacket.krb5.ccache</span><span class="w"> </span><span class="kn">import</span> <span class="n">CCache</span>
+        <span class="n">ccache</span> <span class="o">=</span> <span class="n">CCache</span><span class="p">()</span>
+
+        <span class="n">ccache</span><span class="o">.</span><span class="n">fromTGT</span><span class="p">(</span><span class="n">ticket</span><span class="p">,</span> <span class="n">sessionKey</span><span class="p">,</span> <span class="n">sessionKey</span><span class="p">)</span>
+        <span class="n">ccache</span><span class="o">.</span><span class="n">saveFile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__user</span> <span class="o">+</span> <span class="s1">'.ccache'</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="typespy-principal-other-auth-data-handlers">types.py — Principal &amp; Other Auth Data Handlers</h2>
+<p>Mostly the handler classes for data used throughout Kerberos authentication: KerberosException, Principal, Address, EncryptedData, Ticket, KerberosTime. The most important one is Principal (the authentication principal). It consists of three parts — primary (user / service name), instance (service instance name) and realm (domain name). primary and instance are separated by /, instance and realm by @, as in joe/admin@EXAMPLE.COM or joe/node2.example.com.</p>
+<p>Principal is parsed as follows:</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Principal</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The principal's value can be supplied as:</span>
+<span class="sd">* a single string</span>
+<span class="sd">* a sequence containing a sequence of component strings and a realm string</span>
+<span class="sd">* a sequence whose first n-1 elemeents are component strings and whose last</span>
+<span class="sd">  component is the realm</span>
+
+<span class="sd">If the value contains no realm, then default_realm will be used."""</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">default_realm</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="o">......</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="c1"># string form: the regex splits out the realm (after @) and the components (slash-separated, \ escaping supported)</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s1">'((?:[^</span><span class="se">\\</span><span class="s1">]|</span><span class="se">\\</span><span class="s1">.)+?)(@((?:[^</span><span class="se">\\</span><span class="s1">@]|</span><span class="se">\\</span><span class="s1">.)+))?$'</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">m</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">KerberosException</span><span class="p">(</span><span class="s2">"invalid principal syntax"</span><span class="p">)</span>
+
+            <span class="k">def</span><span class="w"> </span><span class="nf">unquote_component</span><span class="p">(</span><span class="n">comp</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">'</span><span class="se">\\</span><span class="s1">(.)'</span><span class="p">,</span> <span class="sa">r</span><span class="s1">'\1'</span><span class="p">,</span> <span class="n">comp</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">realm</span> <span class="o">=</span> <span class="n">unquote_component</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">realm</span> <span class="o">=</span> <span class="n">default_realm</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">components</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">unquote_component</span><span class="p">(</span><span class="n">qc</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">qc</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s1">'(?:[^</span><span class="se">\\</span><span class="s1">/]|</span><span class="se">\\</span><span class="s1">.)+'</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))]</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="o">......</span>
+
+    <span class="c1"># __eq__ / __str__ / __repr__ and friends omitted.</span>
+    <span class="c1"># from_asn1 and components_to_asn1 convert Principal to/from asn1 structures</span>
+    <span class="c1"># and are used heavily in getKerberosTGT / getKerberosTGS (see the kerberosv5.py section)</span>
+</code></pre></div>
+<p>In getST we can see how a Principal is assigned:</p>
+<div class="highlight"><pre><span></span><code><span class="n">principal</span> <span class="o">=</span> <span class="n">ccache</span><span class="o">.</span><span class="n">credentials</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">'server'</span><span class="p">]</span><span class="o">.</span><span class="n">prettyPrint</span><span class="p">()</span>
+</code></pre></div>
+<h2 id="cryptopy-kerberos-enctype-implementations-rc4-aes">crypto.py — Kerberos Enctype Implementations (RC4 / AES)</h2>
+<p>Implements encryption / decryption and key derivation (string_to_key) for the Kerberos enctypes (RC4-HMAC, AES128/256-CTS-HMAC-SHA1, etc.); MD4 / MD5 support the RC4 family.</p>
+<p>By the way, the impacket root directory holds another crypto.py of the same name implementing generic algorithms such as AES-CMAC-PRF-128 and AES-CMAC; smb3.py and ccache.py both import from these two crypto modules, and secretsdump.py uses both. They have different jobs: krb5/crypto.py serves the Kerberos enctypes, while the root crypto.py serves generic protocol needs (e.g. AES-CMAC for SMB3 signing).</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># eg.impacket/krb5/ccache.py</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">impacket.krb5</span><span class="w"> </span><span class="kn">import</span> <span class="n">crypto</span><span class="p">,</span> <span class="n">constants</span><span class="p">,</span> <span class="n">types</span>
+    <span class="o">.......</span>
+        <span class="n">seq_set</span><span class="p">(</span><span class="n">tgt_rep</span><span class="p">,</span><span class="s1">'ticket'</span><span class="p">,</span> <span class="n">ticket</span><span class="o">.</span><span class="n">to_asn1</span><span class="p">)</span>
+        <span class="n">cipher</span> <span class="o">=</span> <span class="n">crypto</span><span class="o">.</span><span class="n">_enctype_table</span><span class="p">[</span><span class="bp">self</span><span class="p">[</span><span class="s1">'key'</span><span class="p">][</span><span class="s1">'keytype'</span><span class="p">]]()</span>
+        <span class="n">tgt</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">tgt</span><span class="p">[</span><span class="s1">'KDC_REP'</span><span class="p">]</span> <span class="o">=</span> <span class="n">encoder</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">tgt_rep</span><span class="p">)</span>
+
+<span class="c1"># eg.impacket/smb3.py</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">Cryptodome.Cipher</span><span class="w"> </span><span class="kn">import</span> <span class="n">AES</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">impacket</span><span class="w"> </span><span class="kn">import</span> <span class="n">nmb</span><span class="p">,</span> <span class="n">ntlm</span><span class="p">,</span> <span class="n">uuid</span><span class="p">,</span> <span class="n">crypto</span>
+    <span class="o">........</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_Session</span><span class="p">[</span><span class="s1">'SessionKey'</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="n">packet</span><span class="o">.</span><span class="n">getData</span><span class="p">()</span>
+                <span class="n">signature</span> <span class="o">=</span> <span class="n">crypto</span><span class="o">.</span><span class="n">AES_CMAC</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_Session</span><span class="p">[</span><span class="s1">'SigningKey'</span><span class="p">],</span> <span class="n">p</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
+</code></pre></div>
+<h2 id="gssapipy-gss-api-wrapper-mic-wrap">gssapi.py — GSS-API Wrapper (MIC / WRAP)</h2>
+<p>GSS-API is the industry-standard security API defined in RFC 2743, commonly used for Kerberos authentication of services such as MongoDB, PostgreSQL and FTP. It helps to distinguish GSS-API from the Kerberos protocol itself: GSS-API stands for <a href="https://en.wikipedia.org/wiki/Generic_Security_Services_Application_Program_Interface">Generic Security Services Application Program Interface</a> — an API specification, i.e. the programming interface defined when implementing the Kerberos protocol.</p>
+<blockquote>
+<p>The dominant GSS-API mechanism implementation in use is Kerberos. Unlike the GSS-API, the Kerberos API has not been standardized and various existing implementations use incompatible APIs. The GSS-API allows Kerberos implementations to be API compatible.</p>
+</blockquote>
+<p>Meaning: with this specification, as long as vendors implement Kerberos to spec, at minimum any client can talk to any vendor's KDC, and conversely a server can serve clients of any implementation.</p>
+<p><strong>In short: <code>Kerberos</code> is the authentication protocol designed by cryptographers, <code>GSS-API</code> is the programming interface architects defined to implement it, and vendors such as <code>MIT Kerberos</code> and <code>Windows AD</code> achieve API-level compatibility by implementing GSS-API — that is, Kerberos protocol communication on top of GSS-API. SPNEGO (Simple and Protected GSS-API Negotiation, RFC 4178), in turn, is a mechanism for negotiating which GSS-API mechanism (e.g. Kerberos or NTLM) is actually used; Microsoft relies on it heavily in SMB and HTTP authentication to pass Windows credentials around.</strong></p>
+<p><img alt="This figure shows the GSS-API and protocol layers between an application and the security mechanism." src="https://docs.oracle.com/cd/E19253-01/819-7056/images/Layers1.gif" /></p>
+<p>The concrete protocol standard: https://datatracker.ietf.org/doc/html/rfc4121 — The Kerberos Version 5 Generic Security Service Application Program Interface (GSS-API) Mechanism: Version 2.</p>
+<p>gssapi.py implements GSS-API for both the RC4 and AES encryption forms.</p>
+<p>The MIC structure is the <em>Message Integrity Code</em>, used for tamper protection. A client can explicitly disable it by sending <em>ISC_REQ_NO_INTEGRITY</em>; alternatively, whether message-integrity checking is enabled is decided server-side by <em>NegpDetermineTokenPackage</em> on the first <em>InitializeSecurityContext</em> call — if the initial token is an NTLM or Kerberos token, <em>ISC_REQ_INTEGRITY</em> will not be turned on; if the initiator is SMB, the flag defaults to 1 and the server signs. CVE-2019-1040 bypasses the NTLM MIC protection and lets us flip these flags so the server skips LDAP signing (classic combos: Exchange + CVE-2019-1040 for full-domain takeover, or RBCD + PrinterBug/PetitPotam + CVE-2019-1040).</p>
+<p>The WRAP structure provides confidentiality: once the GSS-API initial token establishes the context, subsequent traffic is encrypted/decrypted via wrap / unwrap.</p>
+<p><img alt="This figure compares the gss_get_mic and gss_wrap functions." src="https://docs.oracle.com/cd/E19253-01/819-7056/images/MICVsWrap1.gif" /></p>
+<p><img alt="This figure shows how a message integrity code is verified." src="https://docs.oracle.com/cd/E19253-01/819-7056/images/VerificationGM.gif" /></p>
+<p><img alt="This figure shows how a wrapped message with a message integrity code is verified." src="https://docs.oracle.com/cd/E19253-01/819-7056/images/VerificationWrap.gif" /></p>
+<p>The key GSS-API C functions are (note the real API uses the all-lowercase <code>gss_</code> prefix):</p>
+<div class="highlight"><pre><span></span><code>gss_acquire_cred     Obtains the user's identity proof, often a secret cryptographic key
+gss_import_name      Converts a username or hostname into a form that identifies a security entity
+gss_init_sec_context Generates a client token to send to the server, usually a challenge
+gss_accept_sec_context Processes a token from gss_init_sec_context and can generate a response token to return
+gss_wrap             Converts application data into a secure message token (typically encrypted)
+gss_unwrap           Converts a secure message token back into application data
+</code></pre></div>
+<p>Typical steps for using GSS-API:</p>
+<ol>
+<li>
+<p>Each application (initiator or acceptor) explicitly acquires credentials unless the credentials were acquired automatically, using <strong>gss_acquire_cred()</strong> or <strong>gss_add_cred()</strong>.</p>
+</li>
+<li>
+<p>The initiator starts a security context and the acceptor accepts it. <strong>gss_init_sec_context()</strong> establishes the context between the application and the remote server; on success it returns a context handle plus a context-level token to send to the acceptor. Before calling <strong>gss_init_sec_context()</strong> the client should:</p>
+</li>
+<li>
+<p>Acquire credentials with <strong>gss_acquire_cred()</strong> if needed — normally the client receives credentials at login; <strong>gss_acquire_cred()</strong> can only retrieve initial credentials from the running OS.</p>
+</li>
+<li>Import the server name into GSS-API internal form with <strong>gss_import_name()</strong>. For more on names and <strong>gss_import_name()</strong>, see <a href="https://docs.oracle.com/cd/E19253-01/819-7056/6n91eac41/index.html#overview-28">Names in GSS-API</a>.</li>
+</ol>
+<p>When calling <strong>gss_init_sec_context()</strong>, the client typically passes:</p>
+<ul>
+<li><code>GSS_C_NO_CREDENTIAL</code> for cred_handle, meaning default credentials</li>
+<li><code>GSS_C_NULL_OID</code> for mech_type, meaning the default mechanism</li>
+<li><code>GSS_C_NO_CONTEXT</code> for context_handle, meaning the initially empty context. Since <strong>gss_init_sec_context()</strong> is usually called in a loop, later calls pass the handle returned earlier</li>
+<li><code>GSS_C_NO_BUFFER</code> for input_token, meaning an initially empty token; alternatively a pointer to a gss_buffer_desc whose length field is zero</li>
+<li>The server name imported into GSS-API internal form with <strong>gss_import_name()</strong>.</li>
+<li>The context acceptor may require several handshakes before the context is fully established — the acceptor asks the initiator to send several pieces of context information first. For portability, always initiate the context inside a loop that checks whether the context is fully established.</li>
+<li>
+<p>The other side of context establishment is accepting it, via <strong>gss_accept_sec_context()</strong>. Usually the server accepts the context the client started with <strong>gss_init_sec_context()</strong>. Output tokens are returned by <strong>gss_accept_sec_context()</strong> and fed back in as input tokens on later calls; when there is nothing more to send to the initiator, the function returns a zero-length output token. Besides checking the return status, the loop should check the output token length to see whether more tokens must be sent; before the loop, initialize the output token length to zero (use <code>GSS_C_NO_BUFFER</code> or zero the structure's length field).</p>
+</li>
+<li>
+<p>The sender applies security protection to the data being transferred — encrypting the message or tagging it with an identifier token — then transmits the protected message.</p>
+</li>
+</ul>
+<p>------.</p>
+<p>Note –.</p>
+<p>The sender may choose to apply no protection, in which case the message gets only the default GSS-API security service, i.e. verification.</p>
+<p>------:</p>
+<ol>
+<li>
+<p>The acceptor decrypts the message as needed and verifies it where appropriate.</p>
+</li>
+<li>
+<p>(Optional) The acceptor returns the identifier token to the sender for confirmation.</p>
+</li>
+<li>
+<p>Both applications destroy the shared security context; storage routines may release any remaining GSS-API data.</p>
+</li>
+</ol>
+<p>What impacket mainly uses from gssapi.py are its static variables:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># eg.impacket/krb5/kerberosv5.py</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">impacket.krb5.gssapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">CheckSumField</span><span class="p">,</span> <span class="n">GSS_C_DCE_STYLE</span><span class="p">,</span> <span class="n">GSS_C_MUTUAL_FLAG</span><span class="p">,</span> <span class="n">GSS_C_REPLAY_FLAG</span><span class="p">,</span> 
+
+<span class="n">gssapi</span><span class="o">.</span><span class="n">py</span>
+<span class="c1"># Constants</span>
+<span class="n">GSS_C_DCE_STYLE</span>     <span class="o">=</span> <span class="mh">0x1000</span>
+<span class="n">GSS_C_DELEG_FLAG</span>    <span class="o">=</span> <span class="mi">1</span>
+<span class="n">GSS_C_MUTUAL_FLAG</span>   <span class="o">=</span> <span class="mi">2</span>
+<span class="n">GSS_C_REPLAY_FLAG</span>   <span class="o">=</span> <span class="mi">4</span>
+<span class="n">GSS_C_SEQUENCE_FLAG</span> <span class="o">=</span> <span class="mi">8</span>
+<span class="n">GSS_C_CONF_FLAG</span>     <span class="o">=</span> <span class="mh">0x10</span>
+<span class="n">GSS_C_INTEG_FLAG</span>    <span class="o">=</span> <span class="mh">0x20</span>
+
+<span class="c1"># Mic Semantics</span>
+<span class="n">GSS_HMAC</span> <span class="o">=</span> <span class="mh">0x11</span>
+<span class="c1"># Wrap Semantics</span>
+<span class="n">GSS_RC4</span>  <span class="o">=</span> <span class="mh">0x10</span>
+
+<span class="c1"># 2.  Key Derivation for Per-Message Tokens</span>
+<span class="n">KG_USAGE_ACCEPTOR_SEAL</span>  <span class="o">=</span> <span class="mi">22</span>
+<span class="n">KG_USAGE_ACCEPTOR_SIGN</span>  <span class="o">=</span> <span class="mi">23</span>
+<span class="n">KG_USAGE_INITIATOR_SEAL</span> <span class="o">=</span> <span class="mi">24</span>
+<span class="n">KG_USAGE_INITIATOR_SIGN</span> <span class="o">=</span> <span class="mi">25</span>
+
+<span class="n">KRB5_AP_REQ</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s1">'&lt;H'</span><span class="p">,</span> <span class="mh">0x1</span><span class="p">)</span>
+
+<span class="c1"># 1.1.1. Initial Token - Checksum field</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CheckSumField</span><span class="p">(</span><span class="n">Structure</span><span class="p">):</span>
+    <span class="n">structure</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s1">'Lgth'</span><span class="p">,</span><span class="s1">'&lt;L=16'</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">'Bnd'</span><span class="p">,</span><span class="s1">'16s=b""'</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">'Flags'</span><span class="p">,</span><span class="s1">'&lt;L=0'</span><span class="p">),</span>
+    <span class="p">)</span>
+</code></pre></div>
+<h3 id="spnegopy-in-the-impacket-root-directory">spnego.py (in the impacket root directory)</h3>
+<p>A quick look at SPNEGO while we are here. One clarification first: SPNEGO is <em>not</em> "Microsoft's extension of Kerberos" — it is an IETF GSS-API negotiation mechanism (RFC 4178) by which client and server agree on which security mechanism (e.g. Kerberos or NTLM) to actually use; Microsoft uses it pervasively in SMB, HTTP authentication and elsewhere.</p>
+<p>The Kerberos authentication flow:</p>
+<p><img alt="image description" src="https://img-blog.csdnimg.cn/4ea9b9b3bfea44d4ab77afbb01721929.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBA56ug6ZSh5bmz,size_19,color_FFFFFF,t_70,g_se,x_16" /></p>
+<p>The SPNEGO authentication flow:</p>
+<p><img alt="SPNEGO web authentication is supported within a single Kerberos realm. Shows the challenge-response handshake." src="https://www.ibm.com/docs/zh/SSEQTP_liberty/com.ibm.websphere.wlp.doc/images/SPNEGO_Main_flow.gif" /></p>
+<ol>
+<li>First, the user logs on to the Microsoft domain controller <code>MYDOMAIN.EXAMPLE.COM</code> from a workstation.</li>
+<li>The user then tries to access a web application, requesting a protected resource with the browser, which sends an <code>HTTP GET</code> to the Liberty server.</li>
+<li>SPNEGO authentication on the Liberty server answers with an <code>HTTP 401</code> challenge carrying the <code>WWW-Authenticate: Negotiate</code> header.</li>
+<li>The browser recognizes the negotiate header because it is configured for integrated Windows authentication. It resolves the requested URL's host name, builds the target Kerberos SPN <code>HTTP/myLibertyMachine.example.com</code>, and requests a Kerberos service ticket from the Microsoft KDC (<code>TGS_REQ</code>). The <code>TGS</code> returns the service ticket (<code>TGS_REP</code>). The service ticket (the SPNEGO token) proves the user's identity and authorization for the service (the Liberty server).</li>
+<li>The browser then answers the Liberty server's negotiate challenge with the SPNEGO token obtained in the previous step, placed in the <code>Authorization</code> header.</li>
+<li>SPNEGO authentication on the Liberty server sees the SPNEGO token in the HTTP header, validates it and extracts the user's identity (principal).</li>
+<li>After obtaining the identity, the Liberty server validates the user against its user registry and performs authorization checks.</li>
+<li>If access is granted, the Liberty server responds with <code>HTTP 200</code> and includes an LTPA cookie for subsequent requests.</li>
+</ol>
+<p>Within impacket, the commonly used pieces are SPNEGO_NegTokenInit, TypesMech, SPNEGO_NegTokenResp and ASN1_AID — mostly in ntlmrelayx relay attacks. Per https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-smb2/06451bf2-578a-4b9d-94c0-8ce531bf14c4 , SMB invokes MS-SPNG (SPNEGO) to authenticate users:</p>
+<p><img alt="Relationship to other protocols" src="https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-smb2/ms-smb2_files/image002.png" /></p>
+<p>The authentication flow:</p>
+<p><img alt="Authentication flow" src="https://img-blog.csdnimg.cn/4ea9b9b3bfea44d4ab77afbb01721929.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBA56ug6ZSh5bmz,size_19,color_FFFFFF,t_70,g_se,x_16" /></p>
+<p>In spnego.py, the SPNEGO_NegTokenInit and SPNEGO_NegTokenResp classes are likewise the ones used to parse and modify SMB auth requests:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># eg./impacket/examples/ntlmrelayx/clients/smtprelayclient.py</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">impacket.spnego</span><span class="w"> </span><span class="kn">import</span> <span class="n">SPNEGO_NegTokenResp</span>
+<span class="o">......</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sendAuth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">authenticateMessageBlob</span><span class="p">,</span> <span class="n">serverChallenge</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">unpack</span><span class="p">(</span><span class="s1">'B'</span><span class="p">,</span> <span class="n">authenticateMessageBlob</span><span class="p">[:</span><span class="mi">1</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">SPNEGO_NegTokenResp</span><span class="o">.</span><span class="n">SPNEGO_NEG_TOKEN_RESP</span><span class="p">:</span>
+            <span class="n">respToken2</span> <span class="o">=</span> <span class="n">SPNEGO_NegTokenResp</span><span class="p">(</span><span class="n">authenticateMessageBlob</span><span class="p">)</span>
+            <span class="n">token</span> <span class="o">=</span> <span class="n">respToken2</span><span class="p">[</span><span class="s1">'ResponseToken'</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">token</span> <span class="o">=</span> <span class="n">authenticateMessageBlob</span>
+        <span class="n">auth</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">putcmd</span><span class="p">(</span><span class="n">auth</span><span class="p">)</span>
+        <span class="n">typ</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">getreply</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">typ</span> <span class="o">==</span> <span class="mi">235</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="s1">'AUTH'</span>
+            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="n">STATUS_SUCCESS</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">'SMTP: </span><span class="si">%s</span><span class="s1">'</span> <span class="o">%</span> <span class="s1">''</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="n">STATUS_ACCESS_DENIED</span>
+</code></pre></div>
+<h2 id="kerberosv5py-getkerberostgt-getkerberostgs-auth-flow">kerberosv5.py — getKerberosTGT / getKerberosTGS Auth Flow</h2>
+<p>The most important functions in this file are getKerberosTGT and getKerberosTGS — the heart of the Kerberos authentication flow.</p>
+<p>getKerberosTGT first initializes an AS_REQ, sets the header fields such as pvno and msg-type, then fills in req-body fields such as sname and cname:</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">getKerberosTGT</span><span class="p">(</span><span class="n">clientName</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">domain</span><span class="p">,</span> <span class="n">lmhash</span><span class="p">,</span> <span class="n">nthash</span><span class="p">,</span> <span class="n">aesKey</span><span class="o">=</span><span class="s1">''</span><span class="p">,</span> <span class="n">kdcHost</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">requestPAC</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="o">....</span>
+    <span class="n">asReq</span> <span class="o">=</span> <span class="n">AS_REQ</span><span class="p">()</span>
+    <span class="n">domain</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+    <span class="n">serverName</span> <span class="o">=</span> <span class="n">Principal</span><span class="p">(</span><span class="s1">'krbtgt/</span><span class="si">%s</span><span class="s1">'</span><span class="o">%</span><span class="n">domain</span><span class="p">,</span>        
+    <span class="nb">type</span><span class="o">=</span><span class="n">constants</span><span class="o">.</span><span class="n">PrincipalNameType</span><span class="o">.</span><span class="n">NT_PRINCIPAL</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>  
+    <span class="o">....</span>
+    <span class="n">asReq</span><span class="p">[</span><span class="s1">'pvno'</span><span class="p">]</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">asReq</span><span class="p">[</span><span class="s1">'msg-type'</span><span class="p">]</span> <span class="o">=</span>  <span class="nb">int</span><span class="p">(</span><span class="n">constants</span><span class="o">.</span><span class="n">ApplicationTagNumbers</span><span class="o">.</span><span class="n">AS_REQ</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+    <span class="o">....</span>
+    <span class="n">reqBody</span> <span class="o">=</span> <span class="n">seq_set</span><span class="p">(</span><span class="n">asReq</span><span class="p">,</span> <span class="s1">'req-body'</span><span class="p">)</span>
+    <span class="o">....</span>
+    <span class="n">reqBody</span><span class="p">[</span><span class="s1">'till'</span><span class="p">]</span> <span class="o">=</span> <span class="n">KerberosTime</span><span class="o">.</span><span class="n">to_asn1</span><span class="p">(</span><span class="n">now</span><span class="p">)</span>
+    <span class="n">reqBody</span><span class="p">[</span><span class="s1">'rtime'</span><span class="p">]</span> <span class="o">=</span> <span class="n">KerberosTime</span><span class="o">.</span><span class="n">to_asn1</span><span class="p">(</span><span class="n">now</span><span class="p">)</span>
+    <span class="o">....</span>
+            <span class="k">if</span> <span class="n">aesKey</span> <span class="o">!=</span> <span class="sa">b</span><span class="s1">''</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">aesKey</span><span class="p">)</span> <span class="o">==</span> <span class="mi">32</span><span class="p">:</span>
+                <span class="n">supportedCiphers</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">constants</span><span class="o">.</span><span class="n">EncryptionTypes</span><span class="o">.</span><span class="n">aes256_cts_hmac_sha1_96</span><span class="o">.</span><span class="n">value</span><span class="p">),)</span>
+                <span class="o">.....</span>
+</code></pre></div>
+<p>After the aesKey is set, the request goes out via sendReceive. Since the first request carries no pre-authentication data (preAuth=False), a KDC that requires pre-auth returns a KRB_ERROR:</p>
+<div class="highlight"><pre><span></span><code>    <span class="k">try</span><span class="p">:</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">sendReceive</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">domain</span><span class="p">,</span> <span class="n">kdcHost</span><span class="p">)</span>
+        <span class="o">....</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">asRep</span> <span class="o">=</span> <span class="n">decoder</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">asn1Spec</span> <span class="o">=</span> <span class="n">KRB_ERROR</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="o">....</span>
+</code></pre></div>
+<p><img alt="AS-REQ first attempt returns KRB_ERROR" src="https://img-blog.csdnimg.cn/4ea9b9b3bfea44d4ab77afbb01721929.png" /></p>
+<p>Next the timestamp is encrypted with the user key (derived from the NTLM hash / AES key) and a new AS_REQ with PADATA is built:</p>
+<div class="highlight"><pre><span></span><code>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nthash</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">)</span> <span class="ow">and</span> <span class="n">nthash</span> <span class="o">!=</span> <span class="sa">b</span><span class="s1">''</span><span class="p">:</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">Key</span><span class="p">(</span><span class="n">cipher</span><span class="o">.</span><span class="n">enctype</span><span class="p">,</span> <span class="n">nthash</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">aesKey</span> <span class="o">!=</span> <span class="sa">b</span><span class="s1">''</span><span class="p">:</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">Key</span><span class="p">(</span><span class="n">cipher</span><span class="o">.</span><span class="n">enctype</span><span class="p">,</span> <span class="n">aesKey</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">cipher</span><span class="o">.</span><span class="n">string_to_key</span><span class="p">(</span><span class="n">password</span><span class="p">,</span> <span class="n">encryptionTypesData</span><span class="p">[</span><span class="n">enctype</span><span class="p">],</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">preAuth</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">enctype</span> <span class="ow">in</span> <span class="n">encryptionTypesData</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">'No Encryption Data Available!'</span><span class="p">)</span>
+
+        <span class="c1"># Let's build the timestamp</span>
+        <span class="n">timeStamp</span> <span class="o">=</span> <span class="n">PA_ENC_TS_ENC</span><span class="p">()</span>
+
+        <span class="n">now</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()</span>
+        <span class="n">timeStamp</span><span class="p">[</span><span class="s1">'patimestamp'</span><span class="p">]</span> <span class="o">=</span> <span class="n">KerberosTime</span><span class="o">.</span><span class="n">to_asn1</span><span class="p">(</span><span class="n">now</span><span class="p">)</span>
+        <span class="n">timeStamp</span><span class="p">[</span><span class="s1">'pausec'</span><span class="p">]</span> <span class="o">=</span> <span class="n">now</span><span class="o">.</span><span class="n">microsecond</span>
+
+        <span class="c1"># Encrypt the shyte</span>
+        <span class="n">encodedTimeStamp</span> <span class="o">=</span> <span class="n">encoder</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">timeStamp</span><span class="p">)</span>
+
+        <span class="c1"># Key Usage 1</span>
+        <span class="c1"># AS-REQ PA-ENC-TIMESTAMP padata timestamp, encrypted with the</span>
+        <span class="c1"># client key (Section 5.2.7.2)</span>
+        <span class="n">encriptedTimeStamp</span> <span class="o">=</span> <span class="n">cipher</span><span class="o">.</span><span class="n">encrypt</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">encodedTimeStamp</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="n">encryptedData</span> <span class="o">=</span> <span class="n">EncryptedData</span><span class="p">()</span>
+        <span class="n">encryptedData</span><span class="p">[</span><span class="s1">'etype'</span><span class="p">]</span> <span class="o">=</span> <span class="n">cipher</span><span class="o">.</span><span class="n">enctype</span>
+        <span class="n">encryptedData</span><span class="p">[</span><span class="s1">'cipher'</span><span class="p">]</span> <span class="o">=</span> <span class="n">encriptedTimeStamp</span>
+        <span class="n">encodedEncryptedData</span> <span class="o">=</span> <span class="n">encoder</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">encryptedData</span><span class="p">)</span>
+
+        <span class="c1"># Now prepare the new AS_REQ again with the PADATA</span>
+        <span class="c1"># ToDo: cannot we reuse the previous one?</span>
+        <span class="n">asReq</span> <span class="o">=</span> <span class="n">AS_REQ</span><span class="p">()</span>
+
+        <span class="n">asReq</span><span class="p">[</span><span class="s1">'pvno'</span><span class="p">]</span> <span class="o">=</span> <span class="mi">5</span>
+        <span class="n">asReq</span><span class="p">[</span><span class="s1">'msg-type'</span><span class="p">]</span> <span class="o">=</span>  <span class="nb">int</span><span class="p">(</span><span class="n">constants</span><span class="o">.</span><span class="n">ApplicationTagNumbers</span><span class="o">.</span><span class="n">AS_REQ</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+        <span class="n">asReq</span><span class="p">[</span><span class="s1">'padata'</span><span class="p">]</span> <span class="o">=</span> <span class="n">noValue</span>
+        <span class="n">asReq</span><span class="p">[</span><span class="s1">'padata'</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">noValue</span>
+        <span class="n">asReq</span><span class="p">[</span><span class="s1">'padata'</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s1">'padata-type'</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">constants</span><span class="o">.</span><span class="n">PreAuthenticationDataTypes</span><span class="o">.</span><span class="n">PA_ENC_TIMESTAMP</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">asReq</span><span class="p">[</span><span class="s1">'padata'</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s1">'padata-value'</span><span class="p">]</span> <span class="o">=</span> <span class="n">encodedEncryptedData</span>
+
+        <span class="n">asReq</span><span class="p">[</span><span class="s1">'padata'</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">noValue</span>
+        <span class="n">asReq</span><span class="p">[</span><span class="s1">'padata'</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="s1">'padata-type'</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">constants</span><span class="o">.</span><span class="n">PreAuthenticationDataTypes</span><span class="o">.</span><span class="n">PA_PAC_REQUEST</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">asReq</span><span class="p">[</span><span class="s1">'padata'</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="s1">'padata-value'</span><span class="p">]</span> <span class="o">=</span> <span class="n">encodedPacRequest</span>
+<span class="o">......</span>
+</code></pre></div>
+<p>The function simply returns the AS_REP packet as the tgt variable. The getTGT example script then calls getKerberosTGT and uses ccache.py's fromTGT to extract the ticket from the reply and save it as a ccache file:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># eg./examples/getTGT.py</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">userName</span> <span class="o">=</span> <span class="n">Principal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__user</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">constants</span><span class="o">.</span><span class="n">PrincipalNameType</span><span class="o">.</span><span class="n">NT_PRINCIPAL</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">tgt</span><span class="p">,</span> <span class="n">cipher</span><span class="p">,</span> <span class="n">oldSessionKey</span><span class="p">,</span> <span class="n">sessionKey</span> <span class="o">=</span> <span class="n">getKerberosTGT</span><span class="p">(</span><span class="n">userName</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__password</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__domain</span><span class="p">,</span><span class="n">unhexlify</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__lmhash</span><span class="p">),</span><span class="n">unhexlify</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__nthash</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">__aesKey</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">__kdcHost</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">saveTicket</span><span class="p">(</span><span class="n">tgt</span><span class="p">,</span><span class="n">oldSessionKey</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">saveTicket</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ticket</span><span class="p">,</span> <span class="n">sessionKey</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">'Saving ticket in </span><span class="si">%s</span><span class="s1">'</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__user</span> <span class="o">+</span> <span class="s1">'.ccache'</span><span class="p">))</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">impacket.krb5.ccache</span><span class="w"> </span><span class="kn">import</span> <span class="n">CCache</span>
+        <span class="n">ccache</span> <span class="o">=</span> <span class="n">CCache</span><span class="p">()</span>
+
+        <span class="n">ccache</span><span class="o">.</span><span class="n">fromTGT</span><span class="p">(</span><span class="n">ticket</span><span class="p">,</span> <span class="n">sessionKey</span><span class="p">,</span> <span class="n">sessionKey</span><span class="p">)</span>
+        <span class="n">ccache</span><span class="o">.</span><span class="n">saveFile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__user</span> <span class="o">+</span> <span class="s1">'.ccache'</span><span class="p">)</span>
+</code></pre></div>
+<p>Of course the function returns more than the raw AS_REP — it also decrypts the session key with the user key:</p>
+<div class="highlight"><pre><span></span><code>    try:
+        plainText = cipher.decrypt(key, 3, cipherText)
+        encASRepPart = decoder.decode(plainText, asn1Spec = EncASRepPart())[0]
+         # Get the session key and the ticket
+        cipher = _enctype_table[encASRepPart['key']['keytype']]
+        sessionKey = Key(cipher.enctype,encASRepPart['key']['keyvalue'].asOctets())
+
+.......
+    if isinstance(nthash, bytes) and nthash != b'':
+        key = Key(cipher.enctype, nthash)
+</code></pre></div>
+<p><img alt="Decrypting EncASRepPart yields the session key" src="https://img-blog.csdnimg.cn/4ea9b9b3bfea44d4ab77afbb01721929.png" /></p>
+<p>Now let's see what the AS_REQ header and req-body actually contain:</p>
+<p><img alt="AS_REQ field layout" src="https://img-blog.csdnimg.cn/4ea9b9b3bfea44d4ab77afbb01721929.png" /></p>
+<div class="highlight"><pre><span></span><code>1.pvno Kerberos protocol version
+2.msg-type message typeKRB_AS_REQ(0x0a)
+3.PA_DATA Pre-authentication Data，pre-authentication data，each auth message has type and value。
+PA-DATA PA-ENC-TIMESTAMP userHASHtimestamp
+    padata-type: padata type
+        padata-value: padata value
+            etype:  encryption type
+            cipher: encrypted value
+PA-DATA PA-PAC-REQUEST：PAC extension
+    padata-type: padata type
+        padata-value: padata value
+        include-pac: whether to include PAC，if included, PAC is returned in the response
+4.req-body request body
+padding:padding
+kdc-options:KDC option settings
+cname: client username
+realm: realm 
+sname: server username，in AS_REQ sname is krbtgt，type is KRB_NT_SRV_INST
+till: expiry timerubeuskekeo20370913024805Zcan be used as detection signature
+nonce：randomly generated number，for replay detection
+etype: encryption typeKDC selects encryption per etype
+</code></pre></div>
+<p>In the AS_REP reply you can see the TGT and the session key encrypted with the user key (enc-part).</p>
+<p>Next, the getKerberosTGS function.</p>
+<p>It builds a TGS_REQ from the supplied TGT and session key (the AP_REQ carries the TGT plus an Authenticator encrypted under the session key):</p>
+<div class="highlight"><pre><span></span><code>    <span class="k">try</span><span class="p">:</span>
+        <span class="n">decodedTGT</span> <span class="o">=</span> <span class="n">decoder</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">tgt</span><span class="p">,</span> <span class="n">asn1Spec</span> <span class="o">=</span> <span class="n">AS_REP</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="n">decodedTGT</span> <span class="o">=</span> <span class="n">decoder</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">tgt</span><span class="p">,</span> <span class="n">asn1Spec</span> <span class="o">=</span> <span class="n">TGS_REP</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">domain</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+    <span class="c1"># Extract the ticket from the TGT</span>
+    <span class="n">ticket</span> <span class="o">=</span> <span class="n">Ticket</span><span class="p">()</span>
+    <span class="n">ticket</span><span class="o">.</span><span class="n">from_asn1</span><span class="p">(</span><span class="n">decodedTGT</span><span class="p">[</span><span class="s1">'ticket'</span><span class="p">])</span>
+    <span class="o">....</span>
+        <span class="n">now</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()</span>
+    <span class="n">authenticator</span><span class="p">[</span><span class="s1">'cusec'</span><span class="p">]</span> <span class="o">=</span>  <span class="n">now</span><span class="o">.</span><span class="n">microsecond</span>
+    <span class="n">authenticator</span><span class="p">[</span><span class="s1">'ctime'</span><span class="p">]</span> <span class="o">=</span> <span class="n">KerberosTime</span><span class="o">.</span><span class="n">to_asn1</span><span class="p">(</span><span class="n">now</span><span class="p">)</span>
+
+    <span class="n">encodedAuthenticator</span> <span class="o">=</span> <span class="n">encoder</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">authenticator</span><span class="p">)</span>
+
+    <span class="c1"># Key Usage 7</span>
+    <span class="c1"># TGS-REQ PA-TGS-REQ padata AP-REQ Authenticator (includes</span>
+    <span class="c1"># TGS authenticator subkey), encrypted with the TGS session</span>
+    <span class="c1"># key (Section 5.5.1)</span>
+    <span class="n">encryptedEncodedAuthenticator</span> <span class="o">=</span> <span class="n">cipher</span><span class="o">.</span><span class="n">encrypt</span><span class="p">(</span><span class="n">sessionKey</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="n">encodedAuthenticator</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</code></pre></div>
+<p>Having received part 1 (the TGT) and part 2 (the session-key-encrypted Authenticator), the KDC first decrypts the TGT with the krbtgt key to recover the client identity and session key, then decrypts part 2 with that session key to recover the client identity inside the Authenticator; if the two match, authentication passes. The KDC then encrypts a fresh ticket with the key of the target service requested in part 1 and returns two things to the client:</p>
+<div class="highlight"><pre><span></span><code> 1ticketcontainingclient IDclientclient / session
+ 2 TGS sessionclient / session
+</code></pre></div>
+<p>The client decrypts part 2 with the TGS session key and obtains the new client/server session key:</p>
+<div class="highlight"><pre><span></span><code>    <span class="n">tgs</span> <span class="o">=</span> <span class="n">decoder</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">asn1Spec</span> <span class="o">=</span> <span class="n">TGS_REP</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">cipherText</span> <span class="o">=</span> <span class="n">tgs</span><span class="p">[</span><span class="s1">'enc-part'</span><span class="p">][</span><span class="s1">'cipher'</span><span class="p">]</span>
+
+    <span class="c1"># Key Usage 8</span>
+    <span class="c1"># TGS-REP encrypted part (includes application session</span>
+    <span class="c1"># key), encrypted with the TGS session key (Section 5.4.2)</span>
+    <span class="n">plainText</span> <span class="o">=</span> <span class="n">cipher</span><span class="o">.</span><span class="n">decrypt</span><span class="p">(</span><span class="n">sessionKey</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="n">cipherText</span><span class="p">)</span>
+
+    <span class="n">encTGSRepPart</span> <span class="o">=</span> <span class="n">decoder</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">plainText</span><span class="p">,</span> <span class="n">asn1Spec</span> <span class="o">=</span> <span class="n">EncTGSRepPart</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">newSessionKey</span> <span class="o">=</span> <span class="n">Key</span><span class="p">(</span><span class="n">encTGSRepPart</span><span class="p">[</span><span class="s1">'key'</span><span class="p">][</span><span class="s1">'keytype'</span><span class="p">],</span> <span class="n">encTGSRepPart</span><span class="p">[</span><span class="s1">'key'</span><span class="p">][</span><span class="s1">'keyvalue'</span><span class="p">]</span><span class="o">.</span><span class="n">asOctets</span><span class="p">())</span>
+</code></pre></div>
+<p>The subsequent TGS parsing again happens in the getST script via ccache.py's fromTGS:</p>
+<div class="highlight"><pre><span></span><code>    <span class="k">def</span><span class="w"> </span><span class="nf">saveTicket</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ticket</span><span class="p">,</span> <span class="n">sessionKey</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">'Saving ticket in </span><span class="si">%s</span><span class="s1">'</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__saveFileName</span> <span class="o">+</span> <span class="s1">'.ccache'</span><span class="p">))</span>
+        <span class="n">ccache</span> <span class="o">=</span> <span class="n">CCache</span><span class="p">()</span>
+
+        <span class="n">ccache</span><span class="o">.</span><span class="n">fromTGS</span><span class="p">(</span><span class="n">ticket</span><span class="p">,</span> <span class="n">sessionKey</span><span class="p">,</span> <span class="n">sessionKey</span><span class="p">)</span>
+        <span class="n">ccache</span><span class="o">.</span><span class="n">saveFile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__saveFileName</span> <span class="o">+</span> <span class="s1">'.ccache'</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="pacpy-privilege-attribute-certificate-pac-structures">pac.py — Privilege Attribute Certificate (PAC) Structures</h2>
+<p>The Privilege Attribute Certificate (PAC) is carried by authentication protocols to convey authorization information and control access to resources. The Kerberos protocol [RFC4120] itself provides no authorization; the PAC was created precisely to supply that authorization data for the Kerberos protocol extensions [MS-KILE]. The PAC structure encodes the authorization information per [MS-KILE], including group membership, extra credential information, profile and policy data, and supporting security metadata.</p>
+<p><img alt="Encapsulation layers" src="https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-pac/ms-pac_files/image001.png" /></p>
+<p>The module mainly provides the PAC data structures, shown below:</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">KERB_SID_AND_ATTRIBUTES</span><span class="p">(</span><span class="n">NDRSTRUCT</span><span class="p">):</span>
+<span class="c1"># used forSIDand inKERB_VALIDATION_INFOused forcontaining SID groupinformation</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">KERB_SID_AND_ATTRIBUTES_ARRAY</span><span class="p">(</span><span class="n">NDRUniConformantArray</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">PKERB_SID_AND_ATTRIBUTES_ARRAY</span><span class="p">(</span><span class="n">NDRPOINTER</span><span class="p">):</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">DOMAIN_GROUP_MEMBERSHIP</span><span class="p">(</span><span class="n">NDRSTRUCT</span><span class="p">):</span>
+<span class="c1"># domaingroupinPAC_DEVICE_INFO</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">DOMAIN_GROUP_MEMBERSHIP_ARRAY</span><span class="p">(</span><span class="n">NDRUniConformantArray</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">PDOMAIN_GROUP_MEMBERSHIP_ARRAY</span><span class="p">(</span><span class="n">NDRPOINTER</span><span class="p">):</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">PACTYPE</span><span class="p">(</span><span class="n">Structure</span><span class="p">):</span>
+<span class="c1"># PACTYPE PAC specified PAC_INFO_BUFFERgroup PACTYPE PAC</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">PAC_INFO_BUFFER</span><span class="p">(</span><span class="n">Structure</span><span class="p">):</span>
+<span class="c1"># inPACTYPEPAC_INFO_BUFFERgroup PAC PAC_INFO_BUFFERgroup thisPAC_INFO_BUFFER (KDC) servernotthen PAC</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">KERB_VALIDATION_INFO</span><span class="p">(</span><span class="n">NDRSTRUCT</span><span class="p">):</span>
+<span class="c1"># KERB_VALIDATION_INFO DC userinformation KERB_VALIDATION_INFOisasgroupinPACTYPE BuffersgroupPAC_INFO_BUFFER OffsetspecifiedPAC_INFO_BUFFER ulTypesetsas 0x00000001</span>
+<span class="c1"># KERB_VALIDATION_INFO NETLOGON_VALIDATION_SAM_INFO4 outputand Active Directory thisinformationNTLM inserverwithdomain NETLOGON_VALIDATION_SAM_INFO4 this KERB_VALIDATION_INFO including NTLM and NTLM notused for [MS-KILE] KERB_VALIDATION_INFO RPC [MS-RPCE] group</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">PKERB_VALIDATION_INFO</span><span class="p">(</span><span class="n">NDRPOINTER</span><span class="p">):</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">PAC_CREDENTIAL_INFO</span><span class="p">(</span><span class="n">Structure</span><span class="p">):</span>
+<span class="c1"># PAC_CREDENTIAL_INFOinformationPAC_CREDENTIAL_INFOused forIDLPAC_CREDENTIAL_DATAcontaininguserthisnotis[MS-KILE] method Kerberos AS-REQPAC_CREDENTIAL_INFOcontaininguser AS PKINITcontaining PAC thisAS reply key PKINIT output</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">SECPKG_SUPPLEMENTAL_CRED</span><span class="p">(</span><span class="n">NDRSTRUCT</span><span class="p">):</span>
+<span class="c1"># nameandthe</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SECPKG_SUPPLEMENTAL_CRED_ARRAY</span><span class="p">(</span><span class="n">NDRUniConformantArray</span><span class="p">):</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">PAC_CREDENTIAL_DATA</span><span class="p">(</span><span class="n">NDRSTRUCT</span><span class="p">):</span>
+<span class="c1"># group Kerberos client</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">NTLM_SUPPLEMENTAL_CREDENTIAL</span><span class="p">(</span><span class="n">NDRSTRUCT</span><span class="p">):</span>
+<span class="c1"># used for NTLM LAN Manager(LM OWF)NT(NT OWF).PAC the[MS-NLMP]specifiedinformation PKINIT [MS-PKCA] usercontaining PAC NTLM_SUPPLEMENTAL_CREDENTIAL RPC [MS-RPCE]</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">PAC_CLIENT_INFO</span><span class="p">(</span><span class="n">Structure</span><span class="p">):</span>
+<span class="c1"># PACcontainingclientnameused for PAC ticketclientPAC_CLIENT_INFO in PACTYPE Buffers groupBuffersgroupPAC_INFO_BUFFEROffset specifiedPAC_INFO_BUFFERulType setsas 0x0000000A</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">PAC_SIGNATURE_DATA</span><span class="p">(</span><span class="n">Structure</span><span class="p">):</span>
+<span class="c1"># PAC_SIGNATURE_DATAserverKDC PACPACTYPE BuffersgroupBuffersgroupPAC_INFO_BUFFER Offsetspecified PAC_INFO_BUFFERulTypecontaining0x00000006PAC_INFO_BUFFERulType KDC containing 0x00000007 PAC is[MS-KILE] PAC asused for KDC can PAC</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">S4U_DELEGATION_INFO</span><span class="p">(</span><span class="n">NDRSTRUCT</span><span class="p">):</span>
+<span class="c1"># S4U_DELEGATION_INFOused forinformation outputthis Kerberos clientorserverthelistused foruser (S4U2proxy)thiscanin</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">UPN_DNS_INFO</span><span class="p">(</span><span class="n">Structure</span><span class="p">):</span>
+<span class="c1"># containingclient UPN realm (FQDN)SAM name SIDused forwithticketclient UPNFQDNSAM name SIDUPN_DNS_INFOin PACTYPE groupgroup PAC_INFO_BUFFERspecified PAC_INFO_BUFFERulTypesetsas 0x0000000C</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">PAC_CLIENT_CLAIMS_INFO</span><span class="p">(</span><span class="n">Structure</span><span class="p">):</span>
+<span class="c1"># PAC thecontainingclientgroup blobPAC_CLIENT_CLAIMS_INFO in PACTYPEBuffers group,BuffersgroupPAC_INFO_BUFFER Offsetspecified PAC_INFO_BUFFERulTypesetsas 0x0000000D</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">PAC_DEVICE_INFO</span><span class="p">(</span><span class="n">NDRSTRUCT</span><span class="p">):</span>
+<span class="c1"># PAC thecontainingDCinformationPAC_DEVICE_INFOisasgroupinPACTYPE groupPAC_INFO_BUFFER specifiedPAC_INFO_BUFFERulTypesetsas 0x0000000E</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">PAC_DEVICE_CLAIMS_INFO</span><span class="p">(</span><span class="n">Structure</span><span class="p">):</span>
+<span class="c1"># PAC thecontainingclientgroupblobPAC_DEVICE_CLAIMS_INFO in PACTYPE Buffers group BuffersgroupPAC_INFO_BUFFER Offsetspecified PAC_INFO_BUFFERulTypesetsas 0x0000000F</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">VALIDATION_INFO</span><span class="p">(</span><span class="n">TypeSerialization1</span><span class="p">):</span>
+</code></pre></div>
+<p>/examples/getPac.py uses it to parse the received PAC data:</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">S4U2SELF</span><span class="p">:</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">printPac</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="c1"># (1) decode the ticket enc-part and pull the PAC out through AD_IF_RELEVANT</span>
+        <span class="n">encTicketPart</span> <span class="o">=</span> <span class="n">decoder</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">asn1Spec</span><span class="o">=</span><span class="n">EncTicketPart</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">adIfRelevant</span> <span class="o">=</span> <span class="n">decoder</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">encTicketPart</span><span class="p">[</span><span class="s1">'authorization-data'</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s1">'ad-data'</span><span class="p">],</span> <span class="n">asn1Spec</span><span class="o">=</span><span class="n">AD_IF_RELEVANT</span><span class="p">())[</span>
+            <span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># So here we have the PAC</span>
+        <span class="n">pacType</span> <span class="o">=</span> <span class="n">PACTYPE</span><span class="p">(</span><span class="n">adIfRelevant</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">'ad-data'</span><span class="p">]</span><span class="o">.</span><span class="n">asOctets</span><span class="p">())</span>
+        <span class="n">buff</span> <span class="o">=</span> <span class="n">pacType</span><span class="p">[</span><span class="s1">'Buffers'</span><span class="p">]</span>
+
+        <span class="c1"># (2) walk the PAC_INFO_BUFFERs and dispatch by ulType</span>
+        <span class="k">for</span> <span class="n">bufferN</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">pacType</span><span class="p">[</span><span class="s1">'cBuffers'</span><span class="p">]):</span>
+            <span class="n">infoBuffer</span> <span class="o">=</span> <span class="n">PAC_INFO_BUFFER</span><span class="p">(</span><span class="n">buff</span><span class="p">)</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">pacType</span><span class="p">[</span><span class="s1">'Buffers'</span><span class="p">][</span><span class="n">infoBuffer</span><span class="p">[</span><span class="s1">'Offset'</span><span class="p">]</span><span class="o">-</span><span class="mi">8</span><span class="p">:][:</span><span class="n">infoBuffer</span><span class="p">[</span><span class="s1">'cbBufferSize'</span><span class="p">]]</span>
+            <span class="k">if</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span><span class="o">.</span><span class="n">level</span> <span class="o">==</span> <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">"TYPE 0x</span><span class="si">%x</span><span class="s2">"</span> <span class="o">%</span> <span class="n">infoBuffer</span><span class="p">[</span><span class="s1">'ulType'</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">infoBuffer</span><span class="p">[</span><span class="s1">'ulType'</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="c1"># (3) logon info (KERB_VALIDATION_INFO): skip the 4-byte pointer ReferentID, then parse the NDR structure</span>
+                <span class="n">type1</span> <span class="o">=</span> <span class="n">TypeSerialization1</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+                <span class="n">newdata</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">type1</span><span class="p">)</span><span class="o">+</span><span class="mi">4</span><span class="p">:]</span>
+                <span class="n">kerbdata</span> <span class="o">=</span> <span class="n">KERB_VALIDATION_INFO</span><span class="p">()</span>
+                <span class="n">kerbdata</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="n">newdata</span><span class="p">)</span>
+                <span class="n">kerbdata</span><span class="o">.</span><span class="n">fromStringReferents</span><span class="p">(</span><span class="n">newdata</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">kerbdata</span><span class="o">.</span><span class="n">getData</span><span class="p">()):])</span>
+                <span class="n">kerbdata</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">'Domain SID:'</span><span class="p">,</span> <span class="n">kerbdata</span><span class="p">[</span><span class="s1">'LogonDomainId'</span><span class="p">]</span><span class="o">.</span><span class="n">formatCanonical</span><span class="p">())</span>
+            <span class="c1"># the remaining types (CLIENT_INFO / SERVER_CHECKSUM / PRIVSVR_CHECKSUM / UPN_DNS_INFO)</span>
+            <span class="c1"># only dump in DEBUG mode and share the same shape as above — omitted</span>
+            <span class="k">elif</span> <span class="n">infoBuffer</span><span class="p">[</span><span class="s1">'ulType'</span><span class="p">]</span> <span class="o">==</span> <span class="n">PAC_CLIENT_INFO_TYPE</span><span class="p">:</span>
+                <span class="o">......</span>
+            <span class="k">elif</span> <span class="n">infoBuffer</span><span class="p">[</span><span class="s1">'ulType'</span><span class="p">]</span> <span class="o">==</span> <span class="n">PAC_SERVER_CHECKSUM</span><span class="p">:</span>
+                <span class="o">......</span>
+            <span class="k">elif</span> <span class="n">infoBuffer</span><span class="p">[</span><span class="s1">'ulType'</span><span class="p">]</span> <span class="o">==</span> <span class="n">PAC_PRIVSVR_CHECKSUM</span><span class="p">:</span>
+                <span class="o">......</span>
+            <span class="k">elif</span> <span class="n">infoBuffer</span><span class="p">[</span><span class="s1">'ulType'</span><span class="p">]</span> <span class="o">==</span> <span class="n">PAC_UPN_DNS_INFO</span><span class="p">:</span>
+                <span class="o">......</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">hexdump</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+            <span class="n">buff</span> <span class="o">=</span> <span class="n">buff</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">infoBuffer</span><span class="p">):]</span>
+</code></pre></div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../ch-03/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Chapter 3 — LDAP Directory Services (ldap)">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Chapter 3 — LDAP Directory Services (ldap)
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../ch-05/" class="md-footer__link md-footer__link--next" aria-label="Next: Chapter 5 — DCE/RPC Interfaces (dcerpc)">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Chapter 5 — DCE/RPC Interfaces (dcerpc)
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.top", "navigation.tracking", "navigation.footer", "search.highlight", "search.suggest", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
