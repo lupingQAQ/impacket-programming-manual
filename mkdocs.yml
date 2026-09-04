@@ -1,0 +1,67 @@
+site_name: Impacket Programming Manual
+site_description: >-
+  Write your own AD PoC with impacket — source-level guides to Kerberos,
+  DCE/RPC, DCOM and WMI programming, bilingual (English + Chinese).
+site_url: https://lupingqaq.github.io/impacket-programming-manual/
+repo_url: https://github.com/lupingQAQ/impacket-programming-manual
+repo_name: lupingQAQ/impacket-programming-manual
+edit_uri: edit/main/docs/
+theme:
+  name: material
+  language: en
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.top
+    - navigation.tracking
+    - navigation.footer
+    - search.highlight
+    - search.suggest
+    - content.code.copy
+extra:
+  alternate:
+    - name: English
+      link: /impacket-programming-manual/
+      lang: en
+    - name: 简体中文
+      link: /impacket-programming-manual/zh-CN/
+      lang: zh
+plugins:
+  - search
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - attr_list
+  - md_in_html
+nav:
+  - Home: index.md
+  - "Reading Guide": sec-01.md
+  - "Chapter 1 — impacket Overview & Directory Layout": ch-01.md
+  - "Chapter 2 — structure.py, the Universal Serialization Base Class": ch-02.md
+  - "Chapter 3 — LDAP Directory Services (ldap)": ch-03.md
+  - "Chapter 4 — Kerberos Authentication (krb5)": ch-04.md
+  - "Chapter 5 — DCE/RPC Interfaces (dcerpc)": ch-05.md
+  - "Chapter 6 — DCOM and WMI": ch-06.md
+  - "Chapter 7 — A Quick Tour of the Common Libraries": ch-07.md
+  - 简体中文:
+      - 首页: zh-CN/index.md
+      - "阅读指南": zh-CN/sec-01.md
+      - "第 1 章 impacket 总览与目录结构": zh-CN/ch-01.md
+      - "第 2 章 通用序列化基类 structure.py": zh-CN/ch-02.md
+      - "第 3 章 LDAP 目录服务（ldap）": zh-CN/ch-03.md
+      - "第 4 章 Kerberos 认证（krb5）": zh-CN/ch-04.md
+      - "第 5 章 DCE/RPC 接口（dcerpc）": zh-CN/ch-05.md
+      - "第 6 章 DCOM 与 WMI": zh-CN/ch-06.md
+      - "第 7 章 common 基础库速览": zh-CN/ch-07.md

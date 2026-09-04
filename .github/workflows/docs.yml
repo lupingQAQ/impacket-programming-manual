@@ -1,0 +1,45 @@
+name: docs
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - run: pip install mkdocs-material
+      - run: mkdocs build --site-dir site
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+  enable-pages:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enable Pages with workflow build type
+        run: |
+          gh api -X POST "repos/$REPO/pages" -f build_type=workflow || \
+          gh api -X PATCH "repos/$REPO/pages" -f build_type=workflow || true
+          sleep 5
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+  deploy:
+    needs: [build, enable-pages]
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

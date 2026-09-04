@@ -1,0 +1,26 @@
+name: release
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create release with assets
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            --title "${GITHUB_REF_NAME}" \
+            --notes "$(cat <<'EOF'
+          Docs-site release.
+
+          - New bilingual docs site: https://lupingqaq.github.io/impacket-programming-manual/
+          - Content unchanged from v2.1 editions (EN + ZH + dual PDFs)
+          - Assets: both PDF editions
+          EOF
+          )" \
+            impacket_programming_manual_EN.pdf "impacket编程手册.pdf"
+        env:
+          GH_TOKEN: ${{ github.token }}
