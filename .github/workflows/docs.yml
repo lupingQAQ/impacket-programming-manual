@@ -1,17 +1,16 @@
-﻿name: docs
+name: docs
 on:
   push:
     branches: [main]
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
   pages: write
-  id-token: write
 concurrency:
   group: pages
   cancel-in-progress: true
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,43 +19,17 @@ jobs:
           python-version: '3.x'
       - run: pip install mkdocs-material
       - run: mkdocs build --site-dir site
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: site
-  enable-pages:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Enable Pages with workflow build type
+      - name: Point Pages at gh-pages branch
         run: |
-          code=$(curl -s -o /tmp/r1.json -w "%{http_code}" -X POST \
-            -H "Authorization: Bearer $GITHUB_TOKEN" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/$REPO/pages" \
-            -d '{"build_type":"workflow"}')
-          echo "POST /pages -> $code"
-          head -c 400 /tmp/r1.json || true
-          if [ "$code" != "201" ] && [ "$code" != "409" ]; then
-            code2=$(curl -s -o /tmp/r2.json -w "%{http_code}" -X PATCH \
-              -H "Authorization: Bearer $GITHUB_TOKEN" \
-              -H "Accept: application/vnd.github+json" \
-              "https://api.github.com/repos/$REPO/pages" \
-              -d '{"build_type":"workflow"}')
-            echo "PATCH /pages -> $code2"
-            head -c 400 /tmp/r2.json || true
-            echo "::warning::pages enable POST=$code PATCH=$code2"
-          else
-            echo "pages enabled (POST=$code)"
-          fi
-          sleep 5
+          curl -s -X POST -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" -d '{"source":{"branch":"gh-pages","path":"/"}}' "https://api.github.com/repos/$REPO/pages" || true
+          curl -s -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" -d '{"source":{"branch":"gh-pages","path":"/"}}' "https://api.github.com/repos/$REPO/pages" || true
         env:
           GITHUB_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
-  deploy:
-    needs: [build, enable-pages]
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Publish site to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
+          force_orphan: true
+          commit_message: "deploy docs site"
