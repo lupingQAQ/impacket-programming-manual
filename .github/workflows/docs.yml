@@ -1,4 +1,4 @@
-name: docs
+﻿name: docs
 on:
   push:
     branches: [main]
@@ -28,11 +28,28 @@ jobs:
     steps:
       - name: Enable Pages with workflow build type
         run: |
-          gh api -X POST "repos/$REPO/pages" -f build_type=workflow || \
-          gh api -X PATCH "repos/$REPO/pages" -f build_type=workflow || true
+          code=$(curl -s -o /tmp/r1.json -w "%{http_code}" -X POST \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$REPO/pages" \
+            -d '{"build_type":"workflow"}')
+          echo "POST /pages -> $code"
+          head -c 400 /tmp/r1.json || true
+          if [ "$code" != "201" ] && [ "$code" != "409" ]; then
+            code2=$(curl -s -o /tmp/r2.json -w "%{http_code}" -X PATCH \
+              -H "Authorization: Bearer $GITHUB_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/$REPO/pages" \
+              -d '{"build_type":"workflow"}')
+            echo "PATCH /pages -> $code2"
+            head -c 400 /tmp/r2.json || true
+            echo "::warning::pages enable POST=$code PATCH=$code2"
+          else
+            echo "pages enabled (POST=$code)"
+          fi
           sleep 5
         env:
-          GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
   deploy:
     needs: [build, enable-pages]
