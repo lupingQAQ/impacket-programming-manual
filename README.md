@@ -9,7 +9,7 @@
 <p align="center"><em style="font-family: Georgia, serif; font-size: 1.1em; color: #777;">Stop copy-pasting impacket examples — learn to write your own PoC against the Kerberos / RPC / DCOM stack.</em></p>
 
 <p align="center">
-  <a href="https://github.com/lupingQAQ/impacket-programming-manual/releases"><img src="https://img.shields.io/badge/release-v2.0-blue" alt="release v2.0"></a>
+  <a href="https://github.com/lupingQAQ/impacket-programming-manual/releases"><img src="https://img.shields.io/badge/release-v2.1-blue" alt="release v2.1"></a>
   <a href="https://github.com/lupingQAQ/impacket-programming-manual/stargazers"><img src="https://img.shields.io/github/stars/lupingQAQ/impacket-programming-manual?style=flat&logo=github" alt="stars"></a>
   <a href="https://github.com/lupingQAQ/impacket-programming-manual/forks"><img src="https://img.shields.io/github/forks/lupingQAQ/impacket-programming-manual?style=flat&logo=github" alt="forks"></a>
   <a href="https://github.com/lupingQAQ/impacket-programming-manual/issues"><img src="https://img.shields.io/github/issues/lupingQAQ/impacket-programming-manual?style=flat&logo=github" alt="issues"></a>
@@ -68,10 +68,10 @@ Case studies woven through the chapters: **Zerologon (CVE-2020-1472)** in nrpc, 
 ## Highlights
 
 - **Source-level, not example-level** — every chapter reads the actual impacket source: `getKerberosTGT`/`getKerberosTGS` internals, ccache/keytab binary layouts, `DCERPCTransportFactory` dispatch, `DCOMConnection`/`INTERFACE`/`IRemUnknown` object model, `IWbemServices` method tables.
+- **Annotated code excerpts** — long listings are compressed to key code paths with step-numbered annotations (`① ② ③…` in Chinese, `(1) (2) (3)…` in English), so you see the flow at a glance instead of scrolling through hundreds of lines of boilerplate.
 - **Upstream-verified quotes** — all cited code was checked against the current fortra/impacket master; known upstream quirks (the `par.py` opnum 39 tuple, `hept_map` spelling, `MimiUnbind` vs `MiniUnbind`) are preserved and annotated instead of silently "fixed".
-- **Textbook structure (2nd edition)** — five parts, numbered chapters, a reading guide with prerequisite table, consistent terminology (封送/marshaling, 注册表项/registry key), tables aligned with the Microsoft protocol docs ([MS-KILE], [MS-NRPC], [MS-DCOM], [MS-WMI]…).
-- **Dual editions** — the revised Chinese edition and a full English edition are maintained side by side; the 144 code listings are byte-identical across both.
-- **PDF ready** — print editions for both languages are generated from the same Markdown source.
+- **Descriptive TOC** — every module heading carries a content summary (`### nrpc.py — Netlogon Authentication & Zerologon (CVE-2020-1472)`), not just a bare filename.
+- **Fully bilingual** — the English edition's code blocks carry zero CJK characters; all annotations and method descriptions are translated.
 
 <a id="getting-started"></a>
 

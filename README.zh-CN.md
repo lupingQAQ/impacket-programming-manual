@@ -9,7 +9,7 @@
 <p align="center"><em style="font-family: Georgia, serif; font-size: 1.1em; color: #777;">不止会用 impacket 的示例脚本——学会基于 Kerberos / RPC / DCOM 协议栈编写自己的 PoC。</em></p>
 
 <p align="center">
-  <a href="https://github.com/lupingQAQ/impacket-programming-manual/releases"><img src="https://img.shields.io/badge/release-v2.0-blue" alt="release v2.0"></a>
+  <a href="https://github.com/lupingQAQ/impacket-programming-manual/releases"><img src="https://img.shields.io/badge/release-v2.1-blue" alt="release v2.1"></a>
   <a href="https://github.com/lupingQAQ/impacket-programming-manual/stargazers"><img src="https://img.shields.io/github/stars/lupingQAQ/impacket-programming-manual?style=flat&logo=github" alt="stars"></a>
   <a href="https://github.com/lupingQAQ/impacket-programming-manual/forks"><img src="https://img.shields.io/github/forks/lupingQAQ/impacket-programming-manual?style=flat&logo=github" alt="forks"></a>
   <a href="https://github.com/lupingQAQ/impacket-programming-manual/issues"><img src="https://img.shields.io/github/issues/lupingQAQ/impacket-programming-manual?style=flat&logo=github" alt="issues"></a>
@@ -67,11 +67,10 @@
 
 ## 特色
 
-- **源码级讲解，而非示例级** —— 每一章都在读 impacket 真实源码：`getKerberosTGT`/`getKerberosTGS` 内部流程、ccache/keytab 二进制布局、`DCERPCTransportFactory` 分发逻辑、`DCOMConnection`/`INTERFACE`/`IRemUnknown` 对象模型、`IWbemServices` 方法表。
-- **引用代码与上游逐条核对** —— 全部代码引用已与 fortra/impacket 最新 master 比对；上游自身的历史笔误（par.py opnum 39 元组、`hept_map` 拼写、`MimiUnbind` 与 `MiniUnbind` 的分歧）按源码原样保留并加注说明，而非"顺手改掉"。
-- **教科书式结构（第二版）** —— 五部分七章、阅读指南与前置知识表、术语全书统一（封送/marshaling、注册表项/registry key）、表格与微软协议文档（[MS-KILE]、[MS-NRPC]、[MS-DCOM]、[MS-WMI]…）对齐。
-- **中英双语双版本** —— 修订版中文与完整英文版并行维护，144 个代码清单两版逐字节一致。
-- **随附 PDF** —— 两种语言的印刷版由同一 Markdown 源生成。
+- **带注释的代码摘录** —— 长代码段压缩为关键路径 + 步骤编号注释（中文版 ①②③、英文版 (1)(2)(3)），一眼看清调用链而非翻阅数百行样板代码。
+- **引用代码与上游逐条核对** —— 全部代码引用已与 fortra/impacket 最新 master 比对；上游自身的历史笔误（par.py opnum 39 元组、`hept_map` 拼写、`MimiUnbind` 与 `MiniUnbind` 的分歧）按源码原样保留并加注说明。
+- **描述性目录** —— 每个模块标题带内容摘要（`### nrpc.py — Netlogon 认证与 Zerologon（CVE-2020-1472）`），而非裸文件名。
+- **英文版代码块零中文** —— 英文版所有注释与方法描述已完全英文化。
 
 <a id="getting-started"></a>
 
