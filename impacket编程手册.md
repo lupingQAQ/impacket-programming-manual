@@ -2,7 +2,7 @@
 
 **author:鲁平**
 
-个人公众号：Security丨Art，欢迎大佬前来批评指教
+个人公众号：IndexSec，欢迎大佬前来批评指教
 
 
 

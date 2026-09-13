@@ -43,7 +43,7 @@
 
 Almost every public exploit for recent Active Directory vulnerabilities was built directly on impacket modules — `sam-the-admin`, `CVE-2022-33679`, `noPac`, `Zerologon` tooling, `PetitPotam`-style relay chains… Yet nearly all existing articles only explain how to *run* the example scripts. This manual fills the gap the other way around: it walks module by module through the impacket source tree, so when the next domain vulnerability drops you can grab impacket and **write your own PoC fast**.
 
-- **Author:** Lu Ping (鲁平) · WeChat blog: `Security丨Art`
+- **Author:** Lu Ping (鲁平) · WeChat blog: `IndexSec`
 - **Length:** ~5,600 lines, 7 chapters, 5 parts — with an English edition translated from the revised Chinese 2nd edition
 - **Covers:** LDAP · Kerberos (krb5) · GSS-API/SPNEGO · DCE/RPC (NDR, EPM, transport) · 20+ MS protocol modules (SAMR, NRPC, LSAD, RRP, SRVS, RPRN/PAR, TSCH, BKRP, DRSUAPI…) · DCOM & WMI (dcomrt, oaut, comev, scmp, vds, wmi) · the common support libraries
 
@@ -112,7 +112,7 @@ Corrections are very welcome — especially:
 
 Fork → branch → PR. Typos and citation fixes are just as appreciated.
 
-**Contact:** WeChat blog `Security丨Art` · [GitHub Issues](https://github.com/lupingQAQ/impacket-programming-manual/issues)
+**Contact:** WeChat blog `IndexSec` · [GitHub Issues](https://github.com/lupingQAQ/impacket-programming-manual/issues)
 
 <a id="disclaimer"></a>
 

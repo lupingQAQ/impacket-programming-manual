@@ -43,7 +43,7 @@
 
 近年来几乎每个 Active Directory 域漏洞的公开利用脚本都直接基于 impacket 模块开发——`sam-the-admin`、`CVE-2022-33679`、`noPac`、Zerologon 工具链、`PetitPotam` 类中继攻击……但网上文章几乎都只在讲怎么**运行**这些示例脚本。本手册反其道而行：逐模块拆解 impacket 源码树，让下次域漏洞爆发时，你能直接拿起 impacket **快速写出自己的 PoC**。
 
-- **作者：** 鲁平 · 微信公众号：`Security丨Art`
+- **作者：** 鲁平 · 微信公众号：`IndexSec`
 - **篇幅：** 约 5600 行，五部分七章；英文版与修订后的中文第二版同步维护
 - **覆盖：** LDAP · Kerberos（krb5）· GSS-API/SPNEGO · DCE/RPC（NDR、EPM、transport）· 20+ 个 MS 协议模块（SAMR、NRPC、LSAD、RRP、SRVS、RPRN/PAR、TSCH、BKRP、DRSUAPI…）· DCOM 与 WMI（dcomrt、oaut、comev、scmp、vds、wmi）· common 基础库
 
@@ -111,7 +111,7 @@ git clone https://github.com/lupingQAQ/impacket-programming-manual.git
 
 Fork → 分支 → PR。错别字与引用补充同样感谢。
 
-**联系方式：** 微信公众号 `Security丨Art` · [GitHub Issues](https://github.com/lupingQAQ/impacket-programming-manual/issues)
+**联系方式：** 微信公众号 `IndexSec` · [GitHub Issues](https://github.com/lupingQAQ/impacket-programming-manual/issues)
 
 <a id="disclaimer"></a>
 
