@@ -24,11 +24,13 @@ jobs:
           - Bilingual docs site: https://lupingqaq.github.io/impacket-programming-manual/
           - Assets: both PDF editions (EN + ZH)
           EOF
+          cp "impacket编程手册.pdf" impacket_programming_manual_ZH.pdf
           gh release create "${GITHUB_REF_NAME}" \
             --title "${GITHUB_REF_NAME}" \
             --notes-file release-notes.md \
-            impacket_programming_manual_EN.pdf "impacket编程手册.pdf" \
+            impacket_programming_manual_EN.pdf impacket_programming_manual_ZH.pdf \
           || gh release upload "${GITHUB_REF_NAME}" \
-            impacket_programming_manual_EN.pdf "impacket编程手册.pdf" --clobber
+            impacket_programming_manual_EN.pdf impacket_programming_manual_ZH.pdf --clobber
+          gh release delete-asset "${GITHUB_REF_NAME}" impacket.pdf -y 2>/dev/null || true
         env:
           GH_TOKEN: ${{ github.token }}
