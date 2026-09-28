@@ -9,11 +9,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Create release with assets
+      - name: Create or update release with assets
         run: |
-          gh release create "${GITHUB_REF_NAME}" \
-            --title "${GITHUB_REF_NAME}" \
-            --notes "$(cat <<'EOF'
+          cat > release-notes.md <<'EOF'
           impacket-programming-manual v2.3
 
           Synced with impacket 0.12-0.14. New Part VI covers the interfaces and support
@@ -21,12 +19,16 @@ jobs:
           acl.py and dpapi_ng.py - plus two case studies: BadSuccessor (CVE-2025-53779)
           and CVE-2025-33073 (reflective relay to SYSTEM).
 
-          - 8 runnable PoCs added under example/
+          - 4 runnable PoCs under example/ (ICPR / GKDI / NEGOEX / RAA); SCMR, SMB ACL, DPAPI-NG and BadSuccessor use impacket's own examples
           - English edition: repaired the machine-garbled RPC glossary comments (336 lines)
           - Bilingual docs site: https://lupingqaq.github.io/impacket-programming-manual/
           - Assets: both PDF editions (EN + ZH)
           EOF
-          )" \
-            impacket_programming_manual_EN.pdf "impacket编程手册.pdf"
+          gh release create "${GITHUB_REF_NAME}" \
+            --title "${GITHUB_REF_NAME}" \
+            --notes-file release-notes.md \
+            impacket_programming_manual_EN.pdf "impacket编程手册.pdf" \
+          || gh release upload "${GITHUB_REF_NAME}" \
+            impacket_programming_manual_EN.pdf "impacket编程手册.pdf" --clobber
         env:
           GH_TOKEN: ${{ github.token }}
