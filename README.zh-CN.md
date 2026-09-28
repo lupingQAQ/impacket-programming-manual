@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="https://github.com/xzxxzzzz000/impacket-programming-manual/assets/24671887/2c9fd1fb-98f8-46c3-ad70-8d083e0a082b" alt="impacket-programming-manual" width="220" />
-</p>
-
 <h1 align="center">impacket-programming-manual</h1>
 
 <h3 align="center">impacket 编程手册 · 域渗透脚本开发（The impacket Programming Manual）</h3>
@@ -9,7 +5,7 @@
 <p align="center"><em style="font-family: Georgia, serif; font-size: 1.1em; color: #777;">不止会用 impacket 的示例脚本——学会基于 Kerberos / RPC / DCOM 协议栈编写自己的 PoC。</em></p>
 
 <p align="center">
-  <a href="https://github.com/lupingQAQ/impacket-programming-manual/releases"><img src="https://img.shields.io/badge/release-v2.1-blue" alt="release v2.1"></a>
+  <a href="https://github.com/lupingQAQ/impacket-programming-manual/releases"><img src="https://img.shields.io/badge/release-v2.3-blue" alt="release v2.3"></a>
   <a href="https://github.com/lupingQAQ/impacket-programming-manual/stargazers"><img src="https://img.shields.io/github/stars/lupingQAQ/impacket-programming-manual?style=flat&logo=github" alt="stars"></a>
   <a href="https://github.com/lupingQAQ/impacket-programming-manual/forks"><img src="https://img.shields.io/github/forks/lupingQAQ/impacket-programming-manual?style=flat&logo=github" alt="forks"></a>
   <a href="https://github.com/lupingQAQ/impacket-programming-manual/issues"><img src="https://img.shields.io/github/issues/lupingQAQ/impacket-programming-manual?style=flat&logo=github" alt="issues"></a>
@@ -44,8 +40,8 @@
 近年来几乎每个 Active Directory 域漏洞的公开利用脚本都直接基于 impacket 模块开发——`sam-the-admin`、`CVE-2022-33679`、`noPac`、Zerologon 工具链、`PetitPotam` 类中继攻击……但网上文章几乎都只在讲怎么**运行**这些示例脚本。本手册反其道而行：逐模块拆解 impacket 源码树，让下次域漏洞爆发时，你能直接拿起 impacket **快速写出自己的 PoC**。
 
 - **作者：** 鲁平 · 微信公众号：`IndexSec`
-- **篇幅：** 约 5600 行，五部分七章；英文版与修订后的中文第二版同步维护
-- **覆盖：** LDAP · Kerberos（krb5）· GSS-API/SPNEGO · DCE/RPC（NDR、EPM、transport）· 20+ 个 MS 协议模块（SAMR、NRPC、LSAD、RRP、SRVS、RPRN/PAR、TSCH、BKRP、DRSUAPI…）· DCOM 与 WMI（dcomrt、oaut、comev、scmp、vds、wmi）· common 基础库
+- **篇幅：** 约 5400 行，六部分九章；英文版与修订后的中文第二版同步维护
+- **覆盖：** LDAP · Kerberos（krb5）· GSS-API/SPNEGO · DCE/RPC（NDR、EPM、transport）· 20+ 个 MS 协议模块（SAMR、NRPC、LSAD、RRP、SRVS、RPRN/PAR、TSCH、BKRP、DRSUAPI…）· DCOM 与 WMI（dcomrt、oaut、comev、scmp、vds、wmi）· common 基础库 · **impacket 0.12–0.14 新增接口**：ICPR（AD CS 证书注册）、GKDI（组密钥分发）、NEGOEX（SPNEGO 扩展协商）、RAA（远程授权）、SCMR，以及 `acl.py`、`dpapi_ng.py` 支持模块
 
 <a id="whats-inside"></a>
 
@@ -60,8 +56,10 @@
 | 第三部分 DCE/RPC | 第 5 章 dcerpc | RPC 基础（NDR、rpcrt、EPM、transport）+ 按功能分五组的 20+ 接口模块 | 第 2、4 章 |
 | 第四部分 DCOM 与 WMI | 第 6 章 MS-DCOM | COM/DCOM 编程、dcomrt、oaut/comev/scmp/vds/wmi 子模块 | 第 5 章 |
 | 第五部分 基础库 | 第 7 章 common | SMB2/3、DPAPI、NTDS（ese）、TDS 等 | 按需 |
+| 第六部分 新版接口与实战案例 | 第 8 章 0.12–0.14 新增接口与支持库 | ICPR · GKDI · NEGOEX · RAA · SCMR · `acl.py` · `dpapi_ng.py` | 第 2、5 章 |
+| | 第 9 章 实战案例 | BadSuccessor（CVE-2025-53779）与 CVE-2025-33073 的 PoC 编写 | 第 3、5 章 |
 
-穿插的实战案例分析：nrpc 中的 **Zerologon（CVE-2020-1472）**、rprn/par 中的 **PrinterBug / PrintNightmare**、gssapi 中的 **CVE-2019-1040 NTLM MIC 绕过**、**Exchange RPC over HTTP 中继**（rpcmap / ProxyRelay）、Akamai 的 **Cold Hard Cache** RPC 安全回调缓存滥用、**WMI 事件持久化**（wmipersist）、黄金 PAC 构造等。
+穿插的实战案例分析：nrpc 中的 **Zerologon（CVE-2020-1472）**、rprn/par 中的 **PrinterBug / PrintNightmare**、gssapi 中的 **CVE-2019-1040 NTLM MIC 绕过**、**Exchange RPC over HTTP 中继**（rpcmap / ProxyRelay）、Akamai 的 **Cold Hard Cache** RPC 安全回调缓存滥用、**WMI 事件持久化**（wmipersist）、黄金 PAC 构造等；新增的第六部分还包含 **BadSuccessor（CVE-2025-53779）**（滥用 Windows Server 2025 的 dMSA 账户类型）与 **CVE-2025-33073**（反射式中继，在未强制 SMB 签名的机器上直接拿到 SYSTEM）。
 
 <a id="highlights"></a>
 
@@ -71,6 +69,7 @@
 - **引用代码与上游逐条核对** —— 全部代码引用已与 fortra/impacket 最新 master 比对；上游自身的历史笔误（par.py opnum 39 元组、`hept_map` 拼写、`MimiUnbind` 与 `MiniUnbind` 的分歧）按源码原样保留并加注说明。
 - **描述性目录** —— 每个模块标题带内容摘要（`### nrpc.py — Netlogon 认证与 Zerologon（CVE-2020-1472）`），而非裸文件名。
 - **英文版代码块零中文** —— 英文版所有注释与方法描述已完全英文化。
+- **与上游保持同步** —— 第六部分跟随 impacket **0.12–0.14**（ICPR、GKDI、NEGOEX、RAA、SCMR、`acl.py`、`dpapi_ng.py`）与最新攻击面（BadSuccessor、CVE-2025-33073）；对上游没有独立示例的接口，在 [`example/`](example/) 下补了可运行 PoC。
 
 <a id="getting-started"></a>
 
@@ -84,6 +83,7 @@ git clone https://github.com/lupingQAQ/impacket-programming-manual.git
 - 离线阅读：下载 [`impacket编程手册.pdf`](impacket编程手册.pdf) 或 [`impacket_programming_manual_EN.pdf`](impacket_programming_manual_EN.pdf)
 - 推荐路线：按手册开头的**阅读指南**表格推进——基础（第 1–2 章）→ Kerberos（第 4 章）→ 按功能组选读 RPC 接口模块（第 5 章）
 - 实验环境：一套 Windows AD 实验（两台虚拟机 + `pip install impacket`），跟着案例逐模块复现
+- 可运行 PoC：[`example/`](example/) 目录只补充了上游**没有独立示例**的四个接口——证书注册（ICPR）、GKDI 取密钥、NEGOEX 解析、RAA 权限枚举；SCMR、SMB ACL、DPAPI-NG、BadSuccessor 直接用 impacket 自带的 `examples/services.py`、`smbclient.py`、`GetLAPSPassword.py`、`badsuccessor.py` 即可
 
 <a id="repository-layout"></a>
 
@@ -96,7 +96,9 @@ git clone https://github.com/lupingQAQ/impacket-programming-manual.git
 ├── impacket编程手册.md                # 中文版手册（内容源头）
 ├── impacket编程手册.pdf               # 中文印刷版
 ├── impacket_programming_manual_EN.md # 英文版手册
-└── impacket_programming_manual_EN.pdf# 英文印刷版
+├── impacket_programming_manual_EN.pdf # 英文印刷版
+├── example/                          # 第六部分各接口的可运行 PoC
+└── docs/                             # mkdocs 源码（中英双语文档站）
 ```
 
 <a id="contributing"></a>

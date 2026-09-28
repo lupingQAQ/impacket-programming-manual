@@ -55,6 +55,8 @@ nav:
   - "Chapter 5 — DCE/RPC Interfaces (dcerpc)": ch-05.md
   - "Chapter 6 — DCOM and WMI": ch-06.md
   - "Chapter 7 — A Quick Tour of the Common Libraries": ch-07.md
+  - "Chapter 8 — New Interfaces & Support Libraries (0.12–0.14)": ch-08.md
+  - "Chapter 9 — Case Studies: BadSuccessor & CVE-2025-33073": ch-09.md
   - 简体中文:
       - 首页: zh-CN/index.md
       - "阅读指南": zh-CN/sec-01.md
@@ -65,3 +67,5 @@ nav:
       - "第 5 章 DCE/RPC 接口（dcerpc）": zh-CN/ch-05.md
       - "第 6 章 DCOM 与 WMI": zh-CN/ch-06.md
       - "第 7 章 common 基础库速览": zh-CN/ch-07.md
+      - "第 8 章 0.12–0.14 新增接口与支持库": zh-CN/ch-08.md
+      - "第 9 章 实战案例：BadSuccessor 与 CVE-2025-33073": zh-CN/ch-09.md

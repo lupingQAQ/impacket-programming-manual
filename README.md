@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="https://github.com/xzxxzzzz000/impacket-programming-manual/assets/24671887/2c9fd1fb-98f8-46c3-ad70-8d083e0a082b" alt="impacket-programming-manual" width="220" />
-</p>
-
 <h1 align="center">impacket-programming-manual</h1>
 
 <h3 align="center">The impacket Programming Manual · impacket 编程手册（域渗透脚本开发）</h3>
@@ -9,7 +5,7 @@
 <p align="center"><em style="font-family: Georgia, serif; font-size: 1.1em; color: #777;">Stop copy-pasting impacket examples — learn to write your own PoC against the Kerberos / RPC / DCOM stack.</em></p>
 
 <p align="center">
-  <a href="https://github.com/lupingQAQ/impacket-programming-manual/releases"><img src="https://img.shields.io/badge/release-v2.1-blue" alt="release v2.1"></a>
+  <a href="https://github.com/lupingQAQ/impacket-programming-manual/releases"><img src="https://img.shields.io/badge/release-v2.3-blue" alt="release v2.3"></a>
   <a href="https://github.com/lupingQAQ/impacket-programming-manual/stargazers"><img src="https://img.shields.io/github/stars/lupingQAQ/impacket-programming-manual?style=flat&logo=github" alt="stars"></a>
   <a href="https://github.com/lupingQAQ/impacket-programming-manual/forks"><img src="https://img.shields.io/github/forks/lupingQAQ/impacket-programming-manual?style=flat&logo=github" alt="forks"></a>
   <a href="https://github.com/lupingQAQ/impacket-programming-manual/issues"><img src="https://img.shields.io/github/issues/lupingQAQ/impacket-programming-manual?style=flat&logo=github" alt="issues"></a>
@@ -44,8 +40,8 @@
 Almost every public exploit for recent Active Directory vulnerabilities was built directly on impacket modules — `sam-the-admin`, `CVE-2022-33679`, `noPac`, `Zerologon` tooling, `PetitPotam`-style relay chains… Yet nearly all existing articles only explain how to *run* the example scripts. This manual fills the gap the other way around: it walks module by module through the impacket source tree, so when the next domain vulnerability drops you can grab impacket and **write your own PoC fast**.
 
 - **Author:** Lu Ping (鲁平) · WeChat blog: `IndexSec`
-- **Length:** ~5,600 lines, 7 chapters, 5 parts — with an English edition translated from the revised Chinese 2nd edition
-- **Covers:** LDAP · Kerberos (krb5) · GSS-API/SPNEGO · DCE/RPC (NDR, EPM, transport) · 20+ MS protocol modules (SAMR, NRPC, LSAD, RRP, SRVS, RPRN/PAR, TSCH, BKRP, DRSUAPI…) · DCOM & WMI (dcomrt, oaut, comev, scmp, vds, wmi) · the common support libraries
+- **Length:** ~5,400 lines, 9 chapters, 6 parts — with an English edition translated from the revised Chinese 2nd edition
+- **Covers:** LDAP · Kerberos (krb5) · GSS-API/SPNEGO · DCE/RPC (NDR, EPM, transport) · 20+ MS protocol modules (SAMR, NRPC, LSAD, RRP, SRVS, RPRN/PAR, TSCH, BKRP, DRSUAPI…) · DCOM & WMI (dcomrt, oaut, comev, scmp, vds, wmi) · the common support libraries · **the impacket 0.12–0.14 additions**: ICPR (AD CS certificate enrollment), GKDI (group key distribution), NEGOEX (SPNEGO extended negotiation), RAA (remote authorization), SCMR, plus the `acl.py` and `dpapi_ng.py` helpers
 
 <a id="whats-inside"></a>
 
@@ -60,8 +56,10 @@ Almost every public exploit for recent Active Directory vulnerabilities was buil
 | III. DCE/RPC | Ch.5 `dcerpc` | RPC basics (NDR, rpcrt, EPM, transport) + 20+ interface modules in 5 functional groups | Ch.2, 4 |
 | IV. DCOM & WMI | Ch.6 MS-DCOM | COM/DCOM programming, dcomrt, oaut/comev/scmp/vds/wmi submodules | Ch.5 |
 | V. Support libraries | Ch.7 `common` | SMB2/3, DPAPI, NTDS (ese), TDS and friends | as needed |
+| VI. New interfaces & case studies | Ch.8 interfaces & support libraries added in 0.12–0.14 | ICPR · GKDI · NEGOEX · RAA · SCMR · `acl.py` · `dpapi_ng.py` | Ch.2, 5 |
+| | Ch.9 case studies | BadSuccessor (CVE-2025-53779) and CVE-2025-33073 — PoC walk-throughs | Ch.3, 5 |
 
-Case studies woven through the chapters: **Zerologon (CVE-2020-1472)** in nrpc, **PrinterBug / PrintNightmare** in rprn/par, **CVE-2019-1040 NTLM MIC bypass** in gssapi, **Exchange RPC-over-HTTP relay** (rpcmap / ProxyRelay), Akamai's **Cold Hard Cache** RPC security-callback bypass, **WMI persistence** (wmipersist), golden PAC forging and more.
+Case studies woven through the chapters: **Zerologon (CVE-2020-1472)** in nrpc, **PrinterBug / PrintNightmare** in rprn/par, **CVE-2019-1040 NTLM MIC bypass** in gssapi, **Exchange RPC-over-HTTP relay** (rpcmap / ProxyRelay), Akamai's **Cold Hard Cache** RPC security-callback bypass, **WMI persistence** (wmipersist), golden PAC forging — and, in the added Part VI, **BadSuccessor (CVE-2025-53779)**, which abuses the Windows Server 2025 dMSA account type, and **CVE-2025-33073**, the reflective relay that yields SYSTEM on any host without SMB signing.
 
 <a id="highlights"></a>
 
@@ -72,6 +70,7 @@ Case studies woven through the chapters: **Zerologon (CVE-2020-1472)** in nrpc, 
 - **Upstream-verified quotes** — all cited code was checked against the current fortra/impacket master; known upstream quirks (the `par.py` opnum 39 tuple, `hept_map` spelling, `MimiUnbind` vs `MiniUnbind`) are preserved and annotated instead of silently "fixed".
 - **Descriptive TOC** — every module heading carries a content summary (`### nrpc.py — Netlogon Authentication & Zerologon (CVE-2020-1472)`), not just a bare filename.
 - **Fully bilingual** — the English edition's code blocks carry zero CJK characters; all annotations and method descriptions are translated.
+- **Kept current with upstream** — Part VI tracks impacket **0.12–0.14** (ICPR, GKDI, NEGOEX, RAA, SCMR, `acl.py`, `dpapi_ng.py`) and the recent attack surface (BadSuccessor, CVE-2025-33073); the interfaces with no upstream example get a runnable PoC under [`example/`](example/).
 
 <a id="getting-started"></a>
 
@@ -85,6 +84,7 @@ git clone https://github.com/lupingQAQ/impacket-programming-manual.git
 - Offline reading: grab [`impacket编程手册.pdf`](impacket编程手册.pdf) or [`impacket_programming_manual_EN.pdf`](impacket_programming_manual_EN.pdf)
 - Recommended path: follow the **Reading Guide** table at the top of the manual — foundations (Ch.1–2) → Kerberos (Ch.4) → pick RPC interface modules by functional group (Ch.5)
 - Practice environment: a Windows AD lab (e.g. two VMs + `pip install impacket`), then re-implement the case studies module by module
+- Runnable PoCs: the [`example/`](example/) folder ships four scripts for the Part VI interfaces that upstream has **no standalone example** for — certificate enrollment (ICPR), GKDI key fetch, NEGOEX parsing, and RAA permission enumeration. For SCMR, SMB ACLs, DPAPI-NG and BadSuccessor, use impacket's own `examples/services.py`, `smbclient.py`, `GetLAPSPassword.py` and `badsuccessor.py`
 
 <a id="repository-layout"></a>
 
@@ -97,7 +97,9 @@ git clone https://github.com/lupingQAQ/impacket-programming-manual.git
 ├── impacket编程手册.md                # Chinese edition (source of truth)
 ├── impacket编程手册.pdf               # Chinese print edition
 ├── impacket_programming_manual_EN.md # English edition
-└── impacket_programming_manual_EN.pdf# English print edition
+├── impacket_programming_manual_EN.pdf # English print edition
+├── example/                          # runnable PoCs for the Part VI interfaces
+└── docs/                             # mkdocs source (bilingual docs site)
 ```
 
 <a id="contributing"></a>

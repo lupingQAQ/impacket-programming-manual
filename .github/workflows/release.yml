@@ -14,11 +14,17 @@ jobs:
           gh release create "${GITHUB_REF_NAME}" \
             --title "${GITHUB_REF_NAME}" \
             --notes "$(cat <<'EOF'
-          Docs-site release.
+          impacket-programming-manual v2.3
 
-          - New bilingual docs site: https://lupingqaq.github.io/impacket-programming-manual/
-          - Content unchanged from v2.1 editions (EN + ZH + dual PDFs)
-          - Assets: both PDF editions
+          Synced with impacket 0.12-0.14. New Part VI covers the interfaces and support
+          libraries added upstream - ICPR (AD CS enrollment), GKDI, NEGOEX, RAA, SCMR,
+          acl.py and dpapi_ng.py - plus two case studies: BadSuccessor (CVE-2025-53779)
+          and CVE-2025-33073 (reflective relay to SYSTEM).
+
+          - 8 runnable PoCs added under example/
+          - English edition: repaired the machine-garbled RPC glossary comments (336 lines)
+          - Bilingual docs site: https://lupingqaq.github.io/impacket-programming-manual/
+          - Assets: both PDF editions (EN + ZH)
           EOF
           )" \
             impacket_programming_manual_EN.pdf "impacket编程手册.pdf"

