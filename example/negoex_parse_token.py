@@ -1,21 +1,23 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Impacket Programming Manual - supporting example
+# Impacket - Collection of Python classes for working with network protocols.
 #
-# [MS-NEGOEX] SPNEGO Extended Negotiation: parse / build NEGOEX messages.
+# Copyright Fortra, LLC and its affiliated companies
 #
-# NEGOEX (magic "NEGOEXTS") is the part of SPNEGO that can carry multiple
-# authentication mechanisms and metadata. This script shows the two things you
-# actually need for research:
-#   1. build an INITIATOR_NEGO token and an EXCHANGE_MESSAGE (AP_REQUEST);
-#   2. split a concatenated token back into its messages and print the auth
-#      scheme GUIDs it advertises.
+# All rights reserved.
 #
-# You can also feed a token captured from the wire (hex) with -hex.
+# This software is provided under a slightly modified version
+# of the Apache Software License. See the accompanying LICENSE file
+# for more information.
 #
-# NOTE: negoex.py currently lives on impacket master (0.14.0.dev), not in a
-# release. Companion section: Chapter 8.3.
-# For LAB / authorized security testing only.
+# Description:
+#   MS-NEGOEX (SPNEGO Extended Negotiation) build / parse utility.
+#   Builds a demo NEGOEX token, or decodes a token captured from the wire
+#   (hex string or raw file) and prints its message sequence and the
+#   advertised auth-scheme GUIDs.
+#
+# Author:
+#   Lu Ping (@lupingQAQ)
 
 import argparse
 import binascii
@@ -30,11 +32,6 @@ from impacket.negoex import (
     createExchangeMessage,
     parseNegoExToken,
 )
-
-try:
-    from impacket.negoex import _normalizeGuid  # internal, best-effort
-except ImportError:  # pragma: no cover
-    _normalizeGuid = None
 
 
 def describe(token):
