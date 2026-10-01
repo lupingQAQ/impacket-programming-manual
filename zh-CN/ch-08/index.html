@@ -1,0 +1,1663 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Write your own AD PoC with impacket — source-level guides to Kerberos, DCE/RPC, DCOM and WMI programming, bilingual (English + Chinese).">
+      
+      
+      
+        <link rel="canonical" href="https://lupingqaq.github.io/impacket-programming-manual/zh-CN/ch-08/">
+      
+      
+        <link rel="prev" href="../ch-07/">
+      
+      
+        <link rel="next" href="../ch-09/">
+      
+      
+        
+          <link rel="alternate" href="/impacket-programming-manual/" hreflang="en">
+        
+          <link rel="alternate" href="/impacket-programming-manual/zh-CN/" hreflang="zh">
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>第 8 章 0.12–0.14 新增接口与支持库 - Impacket Programming Manual</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#_1" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Impacket Programming Manual" class="md-header__button md-logo" aria-label="Impacket Programming Manual" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Impacket Programming Manual
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              第 8 章 0.12–0.14 新增接口与支持库
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="Select language">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="/impacket-programming-manual/" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="/impacket-programming-manual/zh-CN/" hreflang="zh" class="md-select__link">
+              简体中文
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/lupingQAQ/impacket-programming-manual" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    lupingQAQ/impacket-programming-manual
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Impacket Programming Manual" class="md-nav__button md-logo" aria-label="Impacket Programming Manual" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Impacket Programming Manual
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/lupingQAQ/impacket-programming-manual" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    lupingQAQ/impacket-programming-manual
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sec-01/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reading Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ch-01/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chapter 1 — impacket Overview & Directory Layout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ch-02/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chapter 2 — structure.py, the Universal Serialization Base Class
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ch-03/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chapter 3 — LDAP Directory Services (ldap)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ch-04/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chapter 4 — Kerberos Authentication (krb5)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ch-05/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chapter 5 — DCE/RPC Interfaces (dcerpc)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ch-06/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chapter 6 — DCOM and WMI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ch-07/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chapter 7 — A Quick Tour of the Common Libraries
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ch-08/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chapter 8 — New Interfaces & Support Libraries (0.12–0.14)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ch-09/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chapter 9 — Case Studies: BadSuccessor & CVE-2025-33073
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    简体中文
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    简体中文
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sec-01/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    阅读指南
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ch-01/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 1 章 impacket 总览与目录结构
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ch-02/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 2 章 通用序列化基类 structure.py
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ch-03/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 3 章 LDAP 目录服务（ldap）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ch-04/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 4 章 Kerberos 认证（krb5）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ch-05/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 5 章 DCE/RPC 接口（dcerpc）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ch-06/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 6 章 DCOM 与 WMI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ch-07/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 7 章 common 基础库速览
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 8 章 0.12–0.14 新增接口与支持库
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 8 章 0.12–0.14 新增接口与支持库
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#8-impacket-012-014" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第 8 章 新版 impacket 新增接口与支持库（0.12 – 0.14）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="第 8 章 新版 impacket 新增接口与支持库（0.12 – 0.14）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#81-ms-icpr-icprpy-ad-cs-rpc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.1 [MS-ICPR] icpr.py — 证书注册接口（AD CS 的 RPC 通道）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#82-ms-gkdi-gkdipy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.2 [MS-GKDI] gkdi.py — 组密钥分发协议
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#83-ms-negoex-negoexpy-spnego" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3 [MS-NEGOEX] negoex.py — SPNEGO 扩展协商
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#84-ms-raa-raapy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.4 [MS-RAA] raa.py — 远程授权枚举
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#85-ms-scmr-scmrpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.5 [MS-SCMR] scmr.py — 服务控制管理器
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#86-aclpy-smbntfs-acl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.6 acl.py — 面向 SMB/NTFS 的 ACL 辅助库
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#87-dpapi_ngpy-dpapi-cng" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.7 dpapi_ng.py — DPAPI 下一代（CNG）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ch-09/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 9 章 实战案例：BadSuccessor 与 CVE-2025-33073
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#8-impacket-012-014" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第 8 章 新版 impacket 新增接口与支持库（0.12 – 0.14）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="第 8 章 新版 impacket 新增接口与支持库（0.12 – 0.14）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#81-ms-icpr-icprpy-ad-cs-rpc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.1 [MS-ICPR] icpr.py — 证书注册接口（AD CS 的 RPC 通道）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#82-ms-gkdi-gkdipy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.2 [MS-GKDI] gkdi.py — 组密钥分发协议
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#83-ms-negoex-negoexpy-spnego" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3 [MS-NEGOEX] negoex.py — SPNEGO 扩展协商
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#84-ms-raa-raapy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.4 [MS-RAA] raa.py — 远程授权枚举
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#85-ms-scmr-scmrpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.5 [MS-SCMR] scmr.py — 服务控制管理器
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#86-aclpy-smbntfs-acl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.6 acl.py — 面向 SMB/NTFS 的 ACL 辅助库
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#87-dpapi_ngpy-dpapi-cng" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.7 dpapi_ng.py — DPAPI 下一代（CNG）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="_1">第六部分 新版接口与实战案例</h1>
+<p>impacket 大致保持着每年一个大版本的迭代节奏：<strong>0.12.0</strong>（2024-09）、<strong>0.13.0</strong>（2025-10）、<strong>0.13.1</strong>（2026-05），主线（0.14.0.dev）仍在持续合入新协议。本部分承接前五部分，补齐这些新增、尚未在正文中覆盖的 RPC 接口与支持库，并以两个最新的公开漏洞——<strong>BadSuccessor（CVE-2025-53779）</strong>与 <strong>CVE-2025-33073</strong>——为例，演示如何基于 impacket 自己动手编写 PoC。</p>
+<h2 id="8-impacket-012-014">第 8 章 新版 impacket 新增接口与支持库（0.12 – 0.14）</h2>
+<p>相对旧版本，这一轮新增的模块如下表所示。它们大多不是"再造一个 SAMR"，而是补上了 AD 攻击链上此前只能靠自研代码或第三方工具完成的环节：证书注册、组密钥分发、认证协商、授权枚举与 ACL 操作。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">模块</th>
+<th style="text-align: left;">规范</th>
+<th style="text-align: left;">引入版本</th>
+<th style="text-align: left;">一句话用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>dcerpc/v5/icpr.py</code></td>
+<td style="text-align: left;">[MS-ICPR] ICertPassage</td>
+<td style="text-align: left;">0.13.0</td>
+<td style="text-align: left;">通过 RPC 向企业 CA 提交证书请求（AD CS）</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>dcerpc/v5/gkdi.py</code></td>
+<td style="text-align: left;">[MS-GKDI] Group Key Distribution</td>
+<td style="text-align: left;">0.12.0</td>
+<td style="text-align: left;">获取组密钥信封（DNSSEC 根密钥保护 / DPAPI-NG）</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>negoex.py</code></td>
+<td style="text-align: left;">[MS-NEGOEX] SPNEGO Extended Negotiation</td>
+<td style="text-align: left;">0.14.0.dev（主线，未发行）</td>
+<td style="text-align: left;">解析与构造 SPNEGO 扩展协商（NEGOEX）报文</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>dcerpc/v5/raa.py</code></td>
+<td style="text-align: left;">[MS-RAA] Remote Authorization API</td>
+<td style="text-align: left;">主线</td>
+<td style="text-align: left;">以指定身份对安全描述符做"服务端授权判决"</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>dcerpc/v5/scmr.py</code></td>
+<td style="text-align: left;">[MS-SCMR] Service Control Manager</td>
+<td style="text-align: left;">早已存在</td>
+<td style="text-align: left;">远程服务管理（psexec / smbexec 的底层）</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>acl.py</code></td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">0.13.1</td>
+<td style="text-align: left;">面向 SMB/NTFS 的可复用 ACL 读写辅助</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>dpapi_ng.py</code></td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">0.12+</td>
+<td style="text-align: left;">DPAPI 下一代（CNG）解密，用于 gMSA / dMSA / LAPSv2</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>说明：<code>scmr.py</code> 并非新增，但此前正文未单列；本章一并补齐，因为它正是理解"横向移动为什么总是落到服务"的关键。<code>negoex.py</code> 目前只存在于主线（0.14.0.dev），尚未进入正式发行版，引用时请以对应 commit 为准。</p>
+</blockquote>
+<h3 id="81-ms-icpr-icprpy-ad-cs-rpc">8.1 [MS-ICPR] icpr.py — 证书注册接口（AD CS 的 RPC 通道）</h3>
+<p>[MS-ICPR]（ICertPassage Remote Protocol）定义了客户端向企业证书颁发机构（CA）提交证书请求的 RPC 接口。它对应的 RPC 接口名是 <strong>ICertPassage</strong>，端点通常挂在命名管道 <code>\pipe\cert</code> 上（也可通过 EPM 动态发现）。在 AD CS 攻击里，它的意义在于：<strong>"中继到 CA 申领证书"这条路径不再只能打 HTTP 注册端点（ESC8 的经典打法），还可以直接打 RPC。</strong></p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">impacket.uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">uuidtup_to_bin</span>
+
+<span class="n">MSRPC_UUID_ICPR</span> <span class="o">=</span> <span class="n">uuidtup_to_bin</span><span class="p">((</span><span class="s2">"91ae6020-9e3c-11cf-8d7c-00aa00c091be"</span><span class="p">,</span> <span class="s2">"0.0"</span><span class="p">))</span>
+</code></pre></div>
+<p>该接口只定义了一个 opnum 0 方法 <code>CertServerRequest</code>。请求与响应中复用 [MS-WCCE] 2.2.2.2 定义的 <code>CERTTRANSBLOB</code> 结构（一个长度 + 一个字节数组）：</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">CERTTRANSBLOB</span><span class="p">(</span><span class="n">NDRSTRUCT</span><span class="p">):</span>
+    <span class="n">structure</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s2">"cb"</span><span class="p">,</span> <span class="n">ULONG</span><span class="p">),</span>      <span class="c1"># 字节数组长度</span>
+        <span class="p">(</span><span class="s2">"pb"</span><span class="p">,</span> <span class="n">PBYTE</span><span class="p">),</span>      <span class="c1"># 字节数组内容</span>
+    <span class="p">)</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">CertServerRequest</span><span class="p">(</span><span class="n">NDRCALL</span><span class="p">):</span>
+    <span class="n">opnum</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">structure</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s2">"dwFlags"</span><span class="p">,</span> <span class="n">DWORD</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"pwszAuthority"</span><span class="p">,</span> <span class="n">LPWSTR</span><span class="p">),</span>      <span class="c1"># CA 名称（可为空，由服务端默认）</span>
+        <span class="p">(</span><span class="s2">"pdwRequestId"</span><span class="p">,</span> <span class="n">DWORD</span><span class="p">),</span>        <span class="c1"># 请求 id，首次填 0</span>
+        <span class="p">(</span><span class="s2">"pctbAttribs"</span><span class="p">,</span> <span class="n">CERTTRANSBLOB</span><span class="p">),</span>   <span class="c1"># 请求属性，换行分隔，如 CertificateTemplate:User</span>
+        <span class="p">(</span><span class="s2">"pctbRequest"</span><span class="p">,</span> <span class="n">CERTTRANSBLOB</span><span class="p">),</span>   <span class="c1"># DER 编码的 PKCS#10 CSR</span>
+    <span class="p">)</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">CertServerRequestResponse</span><span class="p">(</span><span class="n">NDRCALL</span><span class="p">):</span>
+    <span class="n">structure</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s2">"pdwRequestId"</span><span class="p">,</span> <span class="n">DWORD</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"pdwDisposition"</span><span class="p">,</span> <span class="n">ULONG</span><span class="p">),</span>        <span class="c1"># 处置结果：3=已颁发，5=待审批</span>
+        <span class="p">(</span><span class="s2">"pctbCert"</span><span class="p">,</span> <span class="n">CERTTRANSBLOB</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"pctbEncodedCert"</span><span class="p">,</span> <span class="n">CERTTRANSBLOB</span><span class="p">),</span>        <span class="c1"># 颁发的证书（DER）</span>
+        <span class="p">(</span><span class="s2">"pctbDispositionMessage"</span><span class="p">,</span> <span class="n">CERTTRANSBLOB</span><span class="p">),</span>
+    <span class="p">)</span>
+</code></pre></div>
+<p>模块末尾提供了辅助函数 <code>hCertServerRequest</code>，把"拼属性、转 CSR、发请求、判断处置结果"几件事一次做完：</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">hCertServerRequest</span><span class="p">(</span>
+    <span class="n">dce</span><span class="p">:</span> <span class="n">DCERPC_v5</span><span class="p">,</span>
+    <span class="n">csr</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span>
+    <span class="n">attributes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">request_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">ca</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">attribs</span> <span class="o">=</span> <span class="n">checkNullString</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">attributes</span><span class="p">))</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf-16le"</span><span class="p">)</span>
+    <span class="n">pctb_attribs</span> <span class="o">=</span> <span class="n">CERTTRANSBLOB</span><span class="p">()</span>
+    <span class="n">pctb_attribs</span><span class="p">[</span><span class="s2">"cb"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">attribs</span><span class="p">)</span>
+    <span class="n">pctb_attribs</span><span class="p">[</span><span class="s2">"pb"</span><span class="p">]</span> <span class="o">=</span> <span class="n">attribs</span>
+
+    <span class="n">pctb_request</span> <span class="o">=</span> <span class="n">CERTTRANSBLOB</span><span class="p">()</span>
+    <span class="n">pctb_request</span><span class="p">[</span><span class="s2">"cb"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">csr</span><span class="p">)</span>
+    <span class="n">pctb_request</span><span class="p">[</span><span class="s2">"pb"</span><span class="p">]</span> <span class="o">=</span> <span class="n">csr</span>
+
+    <span class="n">request</span> <span class="o">=</span> <span class="n">CertServerRequest</span><span class="p">()</span>
+    <span class="n">request</span><span class="p">[</span><span class="s2">"dwFlags"</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">request</span><span class="p">[</span><span class="s2">"pwszAuthority"</span><span class="p">]</span> <span class="o">=</span> <span class="n">checkNullString</span><span class="p">(</span><span class="n">ca</span><span class="p">)</span>
+    <span class="n">request</span><span class="p">[</span><span class="s2">"pdwRequestId"</span><span class="p">]</span> <span class="o">=</span> <span class="n">request_id</span>
+    <span class="n">request</span><span class="p">[</span><span class="s2">"pctbAttribs"</span><span class="p">]</span> <span class="o">=</span> <span class="n">pctb_attribs</span>
+    <span class="n">request</span><span class="p">[</span><span class="s2">"pctbRequest"</span><span class="p">]</span> <span class="o">=</span> <span class="n">pctb_request</span>
+
+    <span class="n">response</span> <span class="o">=</span> <span class="n">dce</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+    <span class="c1"># ... pdwDisposition == 3 表示成功，== 5 表示待审批</span>
+    <span class="k">return</span> <span class="sa">b</span><span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">response</span><span class="p">[</span><span class="s2">"pctbEncodedCert"</span><span class="p">][</span><span class="s2">"pb"</span><span class="p">])</span>
+</code></pre></div>
+<p>下面是自写 PoC 的最小骨架：先用 <code>cryptography</code> 生成一把密钥与 CSR，再绑定 ICertPassage 提交。<code>example/icpr_enroll_cert.py</code> 是可直接运行的完整版本。</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># eg.example/icpr_enroll_cert.py（节选）</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">impacket.dcerpc.v5</span><span class="w"> </span><span class="kn">import</span> <span class="n">transport</span><span class="p">,</span> <span class="n">epm</span><span class="p">,</span> <span class="n">icpr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">impacket.dcerpc.v5.rpcrt</span><span class="w"> </span><span class="kn">import</span> <span class="n">RPC_C_AUTHN_LEVEL_PKT_PRIVACY</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">enroll</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">ca_name</span><span class="p">,</span> <span class="n">template</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">domain</span><span class="p">):</span>
+    <span class="c1"># 1. 通过 EPM 解析 ICertPassage 的动态端点，走 ncacn_ip_tcp</span>
+    <span class="n">binding</span> <span class="o">=</span> <span class="n">epm</span><span class="o">.</span><span class="n">hept_map</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">icpr</span><span class="o">.</span><span class="n">MSRPC_UUID_ICPR</span><span class="p">,</span> <span class="n">protocol</span><span class="o">=</span><span class="s2">"ncacn_ip_tcp"</span><span class="p">)</span>
+    <span class="n">rpctransport</span> <span class="o">=</span> <span class="n">transport</span><span class="o">.</span><span class="n">DCERPCTransportFactory</span><span class="p">(</span><span class="n">binding</span><span class="p">)</span>
+    <span class="n">rpctransport</span><span class="o">.</span><span class="n">set_credentials</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">domain</span><span class="p">)</span>
+    <span class="n">dce</span> <span class="o">=</span> <span class="n">rpctransport</span><span class="o">.</span><span class="n">get_dce_rpc</span><span class="p">()</span>
+    <span class="n">dce</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+    <span class="n">dce</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">icpr</span><span class="o">.</span><span class="n">MSRPC_UUID_ICPR</span><span class="p">)</span>
+
+    <span class="c1"># 2. 用 cryptography 生成私钥与 CSR</span>
+    <span class="n">key</span><span class="p">,</span> <span class="n">csr_der</span> <span class="o">=</span> <span class="n">build_csr</span><span class="p">(</span><span class="n">template</span><span class="p">)</span>
+
+    <span class="c1"># 3. 提交：属性用换行分隔；ca 传 CA 的"名称"（netbios\CA 或 CA 名）</span>
+    <span class="n">cert_der</span> <span class="o">=</span> <span class="n">icpr</span><span class="o">.</span><span class="n">hCertServerRequest</span><span class="p">(</span><span class="n">dce</span><span class="p">,</span> <span class="n">csr_der</span><span class="p">,</span> <span class="p">[</span><span class="s2">"CertificateTemplate:</span><span class="si">%s</span><span class="s2">"</span> <span class="o">%</span> <span class="n">template</span><span class="p">],</span> <span class="n">ca</span><span class="o">=</span><span class="n">ca_name</span><span class="p">)</span>
+    <span class="n">dce</span><span class="o">.</span><span class="n">disconnect</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">key</span><span class="p">,</span> <span class="n">cert_der</span>
+</code></pre></div>
+<p>实战中，ntlmrelayx 的 <code>rpcattack.py</code> 正是用这套接口实现"中继到 ICPR 申领证书"的 <code>ICPRRPCAttack</code>：拿到中继会话后，用 <code>ADCSAttack.generate_csr</code> 造 CSR，再调用 <code>icpr.hCertServerRequest(...)</code>，最后把证书写成 PKCS#12（pfx）。由于 ICPR 只走明文 RPC，<strong>若 CA 强制加密 / 启用 EPA，此路径会失败</strong>——这也是攻击者更偏好 HTTP 端点的原因，但它恰恰说明"关闭一个通道不等于关闭整个攻击面"。</p>
+<h3 id="82-ms-gkdi-gkdipy">8.2 [MS-GKDI] gkdi.py — 组密钥分发协议</h3>
+<p>[MS-GKDI]（Group Key Distribution Protocol）用于在域内向 KDS（Key Distribution Service）根密钥请求"组密钥信封"（Group Key Envelope, GKE）。它服务的典型场景有两类：DNSSEC 根密钥保护和 <strong>DPAPI-NG（CNG）</strong>——也就是 gMSA、dMSA、Windows LAPS v2 这些"托管密码"的解密。</p>
+<div class="highlight"><pre><span></span><code><span class="n">MSRPC_UUID_GKDI</span> <span class="o">=</span> <span class="n">uuidtup_to_bin</span><span class="p">((</span><span class="s1">'B9785960-524F-11DF-8B6D-83DCDED72085'</span><span class="p">,</span> <span class="s1">'1.0'</span><span class="p">))</span>
+</code></pre></div>
+<p>接口同样只有一个 opnum 0 方法 <code>GkdiRpcGetKey</code>：</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">GkdiRpcGetKey</span><span class="p">(</span><span class="n">NDRCALL</span><span class="p">):</span>
+    <span class="n">opnum</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">structure</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s1">'cbTargetSD'</span><span class="p">,</span> <span class="n">ULONG</span><span class="p">),</span>       <span class="c1"># 目标安全描述符长度</span>
+        <span class="p">(</span><span class="s1">'pbTargetSD'</span><span class="p">,</span> <span class="n">BYTE_ARRAY</span><span class="p">),</span>  <span class="c1"># 目标安全描述符：服务端据此判断调用者是否有权取密钥</span>
+        <span class="p">(</span><span class="s1">'pRootKeyID'</span><span class="p">,</span> <span class="n">PGUID</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">'L0KeyID'</span><span class="p">,</span> <span class="n">LONG</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">'L1KeyID'</span><span class="p">,</span> <span class="n">LONG</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">'L2KeyID'</span><span class="p">,</span> <span class="n">LONG</span><span class="p">),</span>
+    <span class="p">)</span>
+</code></pre></div>
+<p>辅助函数 <code>GkdiGetKey</code> 用起来很直接——把目标的安全描述符和三级索引传进去即可：</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">GkdiGetKey</span><span class="p">(</span><span class="n">dce</span><span class="p">,</span> <span class="n">target_sd</span><span class="p">,</span> <span class="n">l0</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">l1</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">l2</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">root_key_id</span><span class="o">=</span><span class="n">NULL</span><span class="p">):</span>
+    <span class="n">request</span> <span class="o">=</span> <span class="n">GkdiRpcGetKey</span><span class="p">()</span>
+    <span class="n">request</span><span class="p">[</span><span class="s1">'cbTargetSD'</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">target_sd</span><span class="p">)</span>
+    <span class="n">request</span><span class="p">[</span><span class="s1">'pbTargetSD'</span><span class="p">]</span> <span class="o">=</span> <span class="n">target_sd</span><span class="o">.</span><span class="n">getData</span><span class="p">()</span>
+    <span class="n">request</span><span class="p">[</span><span class="s1">'pRootKeyID'</span><span class="p">]</span> <span class="o">=</span> <span class="n">root_key_id</span>
+    <span class="n">request</span><span class="p">[</span><span class="s1">'L0KeyID'</span><span class="p">]</span> <span class="o">=</span> <span class="n">l0</span>
+    <span class="n">request</span><span class="p">[</span><span class="s1">'L1KeyID'</span><span class="p">]</span> <span class="o">=</span> <span class="n">l1</span>
+    <span class="n">request</span><span class="p">[</span><span class="s1">'L2KeyID'</span><span class="p">]</span> <span class="o">=</span> <span class="n">l2</span>
+    <span class="k">return</span> <span class="n">dce</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+</code></pre></div>
+<p>响应是一个字节串，需交给 <code>GroupKeyEnvelope</code> 解析。该结构里真正有用的是 <strong>L1Key / L2Key</strong> 以及 KDF、加密算法参数——它们是后续派生具体数据密钥（KEK）的原料：</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">GroupKeyEnvelope</span><span class="p">(</span><span class="n">Structure</span><span class="p">):</span>
+    <span class="n">structure</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s1">'Version'</span><span class="p">,</span> <span class="s1">'&lt;L=0'</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">'Magic'</span><span class="p">,</span> <span class="s1">'&lt;L=0'</span><span class="p">),</span>
+        <span class="c1"># ... L0Index / L1Index / L2Index / RootKeyId 等</span>
+        <span class="p">(</span><span class="s1">'KdfAlgo'</span><span class="p">,</span> <span class="s1">':'</span><span class="p">),</span> <span class="p">(</span><span class="s1">'KdfPara'</span><span class="p">,</span> <span class="s1">':'</span><span class="p">,</span> <span class="n">KDFParameter</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">'SecAlgo'</span><span class="p">,</span> <span class="s1">':'</span><span class="p">),</span> <span class="p">(</span><span class="s1">'SecPara'</span><span class="p">,</span> <span class="s1">':'</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">'L1Key'</span><span class="p">,</span> <span class="s1">':'</span><span class="p">),</span> <span class="p">(</span><span class="s1">'L2Key'</span><span class="p">,</span> <span class="s1">':'</span><span class="p">),</span>
+    <span class="p">)</span>
+</code></pre></div>
+<p>调用路径（参考 <code>examples/GetLAPSPassword.py</code> 的 <code>getLAPSv2Decrypt</code>）非常固定：先从 LDAP 读到的 LAPS blob 里解析出 <code>KeyIdentifier</code>（含 L0/L1/L2 与 RootKeyId），再用 <code>hept_map</code> 解析 GKDI 的 <code>ncacn_ip_tcp</code> 动态端点并绑定：</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">impacket.dcerpc.v5.gkdi</span><span class="w"> </span><span class="kn">import</span> <span class="n">MSRPC_UUID_GKDI</span><span class="p">,</span> <span class="n">GkdiGetKey</span><span class="p">,</span> <span class="n">GroupKeyEnvelope</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">impacket.dpapi_ng</span><span class="w"> </span><span class="kn">import</span> <span class="n">EncryptedPasswordBlob</span><span class="p">,</span> <span class="n">KeyIdentifier</span><span class="p">,</span> <span class="n">compute_kek</span><span class="p">,</span> <span class="n">unwrap_cek</span><span class="p">,</span> <span class="n">decrypt_plaintext</span>
+
+<span class="n">stringBinding</span> <span class="o">=</span> <span class="n">hept_map</span><span class="p">(</span><span class="n">destHost</span><span class="o">=</span><span class="n">target</span><span class="p">,</span> <span class="n">remoteIf</span><span class="o">=</span><span class="n">MSRPC_UUID_GKDI</span><span class="p">,</span> <span class="n">protocol</span><span class="o">=</span><span class="s1">'ncacn_ip_tcp'</span><span class="p">)</span>
+<span class="n">resp</span> <span class="o">=</span> <span class="n">GkdiGetKey</span><span class="p">(</span><span class="n">dce</span><span class="p">,</span> <span class="n">target_sd</span><span class="o">=</span><span class="n">target_sd</span><span class="p">,</span> <span class="n">l0</span><span class="o">=</span><span class="n">key_id</span><span class="p">[</span><span class="s1">'L0Index'</span><span class="p">],</span> <span class="n">l1</span><span class="o">=</span><span class="n">key_id</span><span class="p">[</span><span class="s1">'L1Index'</span><span class="p">],</span>
+                  <span class="n">l2</span><span class="o">=</span><span class="n">key_id</span><span class="p">[</span><span class="s1">'L2Index'</span><span class="p">],</span> <span class="n">root_key_id</span><span class="o">=</span><span class="n">key_id</span><span class="p">[</span><span class="s1">'RootKeyId'</span><span class="p">])</span>
+<span class="n">gke</span> <span class="o">=</span> <span class="n">GroupKeyEnvelope</span><span class="p">(</span><span class="sa">b</span><span class="s1">''</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">resp</span><span class="p">[</span><span class="s1">'pbbOut'</span><span class="p">]))</span>
+<span class="n">kek</span> <span class="o">=</span> <span class="n">compute_kek</span><span class="p">(</span><span class="n">gke</span><span class="p">,</span> <span class="n">key_id</span><span class="p">)</span>
+</code></pre></div>
+<p>拿到 GKE 之后的具体解密属于 DPAPI-NG 的范畴，见 8.7 节。<code>example/gkdi_get_key.py</code> 给出了一个独立可运行的取密钥示例。</p>
+<h3 id="83-ms-negoex-negoexpy-spnego">8.3 [MS-NEGOEX] negoex.py — SPNEGO 扩展协商</h3>
+<p>[MS-NEGOEX]（SPNEGO Extended Negotiation Security Mechanism）是 SPNEGO 的扩展：SPNEGO 只做一次简单的 OID 交换，无法表达"需要多轮交换的认证机制"以及元数据；NEGOEX 用一个独立的状态机补上了这两点。在 SPNEGO 内部，NEGOEX 以 OID <code>1.3.6.1.4.1.311.2.2.30</code> 标识，报文的魔数是小端的 <code>NEGOEXTS</code>（<code>0x535458454f47454e</code>）。</p>
+<div class="highlight"><pre><span></span><code><span class="n">MESSAGE_SIGNATURE</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">'NEGOEXTS'</span>
+<span class="n">NEGOEX_OID</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">'</span><span class="se">\x2b\x06\x01\x04\x01\x82\x37\x02\x02\x1e</span><span class="s1">'</span>
+<span class="n">AUTH_SCHEME_PKU2U</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">UUID</span><span class="p">(</span><span class="s1">'235f69ad-73fb-4dbc-8203-0629e739339b'</span><span class="p">)</span>
+<span class="n">CHECKSUM_SCHEME_RFC3961</span> <span class="o">=</span> <span class="mi">1</span>
+</code></pre></div>
+<p>NEGOEX 定义了 8 种报文类型，全部由 <code>MessageHeader</code> 开头（签名 + 类型 + 序号 + 头长 + 总长 + ConversationId）：</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">MESSAGE_TYPE</span><span class="p">(</span><span class="n">IntEnum</span><span class="p">):</span>
+    <span class="n">INITIATOR_NEGO</span>   <span class="o">=</span> <span class="mi">0</span>   <span class="c1"># 发起方协商（携带本端支持的认证机制）</span>
+    <span class="n">ACCEPTOR_NEGO</span>    <span class="o">=</span> <span class="mi">1</span>   <span class="c1"># 接受方协商</span>
+    <span class="n">INITIATOR_META_DATA</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">ACCEPTOR_META_DATA</span>  <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">CHALLENGE</span>        <span class="o">=</span> <span class="mi">4</span>   <span class="c1"># 机制相关的质询数据</span>
+    <span class="n">AP_REQUEST</span>       <span class="o">=</span> <span class="mi">5</span>   <span class="c1"># 机制相关的认证请求数据</span>
+    <span class="n">VERIFY</span>           <span class="o">=</span> <span class="mi">6</span>   <span class="c1"># 完整性校验（RFC 3961 校验和）</span>
+    <span class="n">ALERT</span>            <span class="o">=</span> <span class="mi">7</span>   <span class="c1"># 告警</span>
+</code></pre></div>
+<p>模块把每种报文都封装成了 <code>Structure</code> 子类：<code>NegoMessage</code>、<code>ExchangeMessage</code>、<code>VerifyMessage</code>、<code>AlertMessage</code>；并提供了 <code>parseNegoExToken</code>（把一段拼接的 NEGOEX token 拆成多条报文）与 <code>createNegoMessage</code> / <code>createExchangeMessage</code> / <code>createVerifyMessage</code> / <code>createAlertMessage</code>（构造报文）。真正驱动整个交换的是 <code>NegoExContext</code> 状态机：</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">NegoExContext</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Drives a NEGOEX negotiation as either initiator or acceptor."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">registerAuthScheme</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scheme</span><span class="p">):</span> <span class="o">...</span>          <span class="c1"># 注册本端支持的认证机制</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">createInitialToken</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">optimisticToken</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># 构造 INITIATOR_NEGO；带 optimisticToken 时可省掉一次往返（[MS-NEGOEX] 3.1.5.4）</span>
+        <span class="o">...</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">processToken</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="c1"># 解析对端 token，推进状态机，返回需要交给认证机制处理的 exchange 载荷</span>
+        <span class="o">...</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_processVerify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">verifyMsg</span><span class="p">):</span>
+        <span class="c1"># 用方案提供的密钥校验 VERIFY 的 RFC3961 校验和</span>
+        <span class="n">keyUsage</span> <span class="o">=</span> <span class="n">NEGOEX_KEYUSAGE_ACCEPTOR</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isInitiator</span> <span class="k">else</span> <span class="n">NEGOEX_KEYUSAGE_INITIATOR</span>
+        <span class="n">expected</span> <span class="o">=</span> <span class="n">make_checksum</span><span class="p">(</span><span class="n">checksumType</span><span class="p">,</span> <span class="n">Key</span><span class="p">(</span><span class="n">enctype</span><span class="p">,</span> <span class="n">keyBytes</span><span class="p">),</span> <span class="n">keyUsage</span><span class="p">,</span> <span class="sa">b</span><span class="s1">''</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_messageHistory</span><span class="p">))</span>
+        <span class="o">...</span>
+</code></pre></div>
+<p>其中校验和使用了 RFC 3961 的密钥用途编号：<strong>发起方签名用 23，接受方签名用 25</strong>。<code>parseNegoExToken</code> 是这套代码里最实用的一环——它把一段 NEGOEX token 拆成有序的报文列表，每条都带着原始字节（<code>raw_data</code>），便于做协议分析或校验和复算：</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">impacket.negoex</span><span class="w"> </span><span class="kn">import</span> <span class="n">parseNegoExToken</span><span class="p">,</span> <span class="n">MESSAGE_TYPE</span>
+
+<span class="k">for</span> <span class="n">pm</span> <span class="ow">in</span> <span class="n">parseNegoExToken</span><span class="p">(</span><span class="n">token_bytes</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">pm</span><span class="o">.</span><span class="n">getMessageType</span><span class="p">()</span> <span class="o">==</span> <span class="n">MESSAGE_TYPE</span><span class="o">.</span><span class="n">INITIATOR_NEGO</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">pm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">getAuthSchemeList</span><span class="p">())</span>   <span class="c1"># 对端支持的认证机制 GUID 列表</span>
+</code></pre></div>
+<p>对攻击研究而言，NEGOEX 的价值在于它把"备选认证机制"摆上了台面：<code>ntlmrelayx</code> 在 0.13.1 中特意<strong>不再向 SMB 对端广告 NEGOEX</strong>（见 ChangeLog "avoiding unsupported NEGOEX advertisement"），正是因为不当的 NEGOEX 广告会改变协商结果、干扰中继。理解这段状态机，是判断"一次协商最终会落到 Kerberos 还是 NTLM"的关键。<code>example/negoex_parse_token.py</code> 演示了如何用十六进制 token 复算校验和。</p>
+<blockquote>
+<p>版本提示：<code>negoex.py</code> 截至写作时仍属主线（0.14.0.dev）未发行特性，接口可能微调，仅建议用于研究与解析。</p>
+</blockquote>
+<h3 id="84-ms-raa-raapy">8.4 [MS-RAA] raa.py — 远程授权枚举</h3>
+<p>[MS-RAA]（Remote Authorization API Protocol）把 Windows 本地的 Authz API 搬到了 RPC 上。它最漂亮的地方在于：<strong>它允许你把一份安全描述符发给服务端，直接问"对于某个身份（SID），这份描述符到底授予了什么权限"——由服务端来做继承、ScopedPolicyID 剥离等全部计算。</strong> 这比在本地手撕 DACL 精确得多，尤其适合在 BadSuccessor 这类攻击前做权限确认。</p>
+<div class="highlight"><pre><span></span><code><span class="n">MSRPC_UUID_RAA</span> <span class="o">=</span> <span class="n">uuidtup_to_bin</span><span class="p">((</span><span class="s1">'0b1c2170-5732-4e0e-8cd3-d9b16f3b84d7'</span><span class="p">,</span> <span class="s1">'0.0'</span><span class="p">))</span>
+
+<span class="c1"># 两个对象 UUID：后者会关闭服务端对 SYSTEM_SCOPED_POLICY_ID_ACE 的剥离</span>
+<span class="n">RAA_OBJECT_UUID_DEFAULT</span>           <span class="o">=</span> <span class="s1">'9a81c2bd-a525-471d-a4ed-49907c0b23da'</span>
+<span class="n">RAA_OBJECT_UUID_NO_SCOPED_POLICY</span>  <span class="o">=</span> <span class="s1">'5fc860e0-6f6e-4fc2-83cd-46324f25e90b'</span>
+</code></pre></div>
+<p>接口共 7 个 opnum：</p>
+<div class="highlight"><pre><span></span><code><span class="n">OPNUMS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="mi">0</span> <span class="p">:</span> <span class="p">(</span><span class="n">AuthzrFreeContext</span><span class="p">,</span> <span class="n">AuthzrFreeContextResponse</span><span class="p">),</span>
+    <span class="mi">1</span> <span class="p">:</span> <span class="p">(</span><span class="n">AuthzrInitializeContextFromSid</span><span class="p">,</span> <span class="n">AuthzrInitializeContextFromSidResponse</span><span class="p">),</span>   <span class="c1"># SID -&gt; 授权上下文</span>
+    <span class="mi">2</span> <span class="p">:</span> <span class="p">(</span><span class="n">AuthzrInitializeCompoundContext</span><span class="p">,</span> <span class="n">AuthzrInitializeCompoundContextResponse</span><span class="p">),</span> <span class="c1"># 用户+设备复合上下文</span>
+    <span class="mi">3</span> <span class="p">:</span> <span class="p">(</span><span class="n">AuthzrAccessCheck</span><span class="p">,</span> <span class="n">AuthzrAccessCheckResponse</span><span class="p">),</span>   <span class="c1"># 核心：拿安全描述符做访问判决</span>
+    <span class="mi">4</span> <span class="p">:</span> <span class="p">(</span><span class="n">AuthzGetInformationFromContext</span><span class="p">,</span> <span class="n">AuthzGetInformationFromContextResponse</span><span class="p">),</span>   <span class="c1"># 取组成员/声明</span>
+    <span class="mi">5</span> <span class="p">:</span> <span class="p">(</span><span class="n">AuthzrModifyClaims</span><span class="p">,</span> <span class="n">AuthzrModifyClaimsResponse</span><span class="p">),</span>
+    <span class="mi">6</span> <span class="p">:</span> <span class="p">(</span><span class="n">AuthzrModifySids</span><span class="p">,</span> <span class="n">AuthzrModifySidsResponse</span><span class="p">),</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>注意测试用例（<code>tests/dcerpc/test_raa.py</code>）显示该接口走 <strong><code>ncacn_ip_tcp</code> 且要求 <code>RPC_C_AUTHN_LEVEL_PKT_PRIVACY</code></strong>，因为服务端要以调用者身份为准。典型用法是先 <code>hAuthzrInitializeContextFromSid</code> 把 SID 变成上下文，再 <code>hAuthzrAccessCheck</code> 传入安全描述符和期望的访问掩码：</p>
+<div class="highlight"><pre><span></span><code><span class="n">sid_ctx</span> <span class="o">=</span> <span class="n">raa</span><span class="o">.</span><span class="n">hAuthzrInitializeContextFromSid</span><span class="p">(</span><span class="n">dce</span><span class="p">,</span> <span class="n">target_sid</span><span class="p">,</span> <span class="n">flags</span><span class="o">=</span><span class="n">raa</span><span class="o">.</span><span class="n">AUTHZ_COMPUTE_PRIVILEGES</span><span class="p">)</span>
+<span class="n">resp</span> <span class="o">=</span> <span class="n">raa</span><span class="o">.</span><span class="n">hAuthzrAccessCheck</span><span class="p">(</span><span class="n">dce</span><span class="p">,</span> <span class="n">sid_ctx</span><span class="p">[</span><span class="s1">'ContextHandle'</span><span class="p">],</span> <span class="n">securityDescriptor</span><span class="p">,</span> <span class="n">desiredAccess</span><span class="p">,</span>
+                              <span class="n">objectTypeList</span><span class="o">=</span><span class="p">[],</span> <span class="n">resultListLength</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">granted</span> <span class="o">=</span> <span class="n">resp</span><span class="p">[</span><span class="s1">'pReply'</span><span class="p">][</span><span class="s1">'GrantedAccessMask'</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>   <span class="c1"># 服务端算出的最终授权结果</span>
+</code></pre></div>
+<p>有了它，"某个普通用户对某个 OU 是否具备 <code>CreateChild</code>（0x1）或对 <code>msDS-DelegatedManagedServiceAccount</code> 的创建权"这类问题，可以让服务端直接给出答案，而不必自己实现一套（容易出错的）ACL 继承算法。<code>example/raa_enum_permissions.py</code> 用它来判断"指定 SID 能否在目标 OU 下创建子对象"。</p>
+<h3 id="85-ms-scmr-scmrpy">8.5 [MS-SCMR] scmr.py — 服务控制管理器</h3>
+<p>[MS-SCMR] 是远程服务管理协议，端点 <code>\pipe\svcctl</code>。它是 <code>psexec.py</code> / <code>smbexec.py</code> / <code>services.py</code> 的底层——<strong>域内横向移动最终几乎都要落到"在目标上起一个服务"</strong>，所以理解它是绕不开的。</p>
+<div class="highlight"><pre><span></span><code><span class="n">MSRPC_UUID_SCMR</span> <span class="o">=</span> <span class="n">uuidtup_to_bin</span><span class="p">((</span><span class="s1">'367ABB81-9844-35F1-AD32-98F038001003'</span><span class="p">,</span> <span class="s1">'2.0'</span><span class="p">))</span>
+</code></pre></div>
+<p>模块提供了成体系的辅助函数，覆盖服务生命周期：</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">impacket.dcerpc.v5</span><span class="w"> </span><span class="kn">import</span> <span class="n">scmr</span>
+
+<span class="c1"># 打开 SCM 数据库 -&gt; 打开/创建服务 -&gt; 启动/控制服务</span>
+<span class="n">scHandle</span> <span class="o">=</span> <span class="n">scmr</span><span class="o">.</span><span class="n">hROpenSCManagerW</span><span class="p">(</span><span class="n">dce</span><span class="p">,</span> <span class="s1">'DUMMY</span><span class="se">\x00</span><span class="s1">'</span><span class="p">,</span> <span class="s1">'ServicesActive</span><span class="se">\x00</span><span class="s1">'</span><span class="p">,</span> <span class="n">scmr</span><span class="o">.</span><span class="n">SC_MANAGER_ALL_ACCESS</span><span class="p">)[</span><span class="s1">'lpScHandle'</span><span class="p">]</span>
+<span class="n">svcHandle</span> <span class="o">=</span> <span class="n">scmr</span><span class="o">.</span><span class="n">hROpenServiceW</span><span class="p">(</span><span class="n">dce</span><span class="p">,</span> <span class="n">scHandle</span><span class="p">,</span> <span class="s1">'MyService</span><span class="se">\x00</span><span class="s1">'</span><span class="p">)</span>
+<span class="n">scmr</span><span class="o">.</span><span class="n">hRQueryServiceStatus</span><span class="p">(</span><span class="n">dce</span><span class="p">,</span> <span class="n">svcHandle</span><span class="p">)</span>
+<span class="n">scmr</span><span class="o">.</span><span class="n">hRQueryServiceConfigW</span><span class="p">(</span><span class="n">dce</span><span class="p">,</span> <span class="n">svcHandle</span><span class="p">)</span>      <span class="c1"># 查二进制路径等配置</span>
+<span class="n">scmr</span><span class="o">.</span><span class="n">hRChangeServiceConfigW</span><span class="p">(</span><span class="n">dce</span><span class="p">,</span> <span class="n">svcHandle</span><span class="p">,</span> <span class="n">lpBinaryPathName</span><span class="o">=</span><span class="s1">'C:</span><span class="se">\\</span><span class="s1">evil.exe</span><span class="se">\x00</span><span class="s1">'</span><span class="p">)</span>
+<span class="n">scmr</span><span class="o">.</span><span class="n">hRStartServiceW</span><span class="p">(</span><span class="n">dce</span><span class="p">,</span> <span class="n">svcHandle</span><span class="p">)</span>
+</code></pre></div>
+<p>一个常见的"自写脚本"场景是<strong>枚举服务、把可写二进制路径的服务记下来做 DLL 劫持 / 服务替换</strong>：</p>
+<div class="highlight"><pre><span></span><code><span class="n">resp</span> <span class="o">=</span> <span class="n">scmr</span><span class="o">.</span><span class="n">hREnumServicesStatusW</span><span class="p">(</span><span class="n">dce</span><span class="p">,</span> <span class="n">scHandle</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">svc</span> <span class="ow">in</span> <span class="n">resp</span><span class="p">[</span><span class="s1">'lpServiceStatus'</span><span class="p">]:</span>
+    <span class="n">cfg</span> <span class="o">=</span> <span class="n">scmr</span><span class="o">.</span><span class="n">hRQueryServiceConfigW</span><span class="p">(</span><span class="n">dce</span><span class="p">,</span> <span class="n">scmr</span><span class="o">.</span><span class="n">hROpenServiceW</span><span class="p">(</span><span class="n">dce</span><span class="p">,</span> <span class="n">scHandle</span><span class="p">,</span> <span class="n">svc</span><span class="p">[</span><span class="s1">'lpServiceName'</span><span class="p">])[</span><span class="s1">'lpServiceHandle'</span><span class="p">])</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">svc</span><span class="p">[</span><span class="s1">'lpServiceName'</span><span class="p">],</span> <span class="n">cfg</span><span class="p">[</span><span class="s1">'lpServiceConfig'</span><span class="p">][</span><span class="s1">'lpBinaryPathName'</span><span class="p">])</span>
+</code></pre></div>
+<blockquote>
+<p>版本提示：0.13.1 修复了 SCMR "failure action" 编组的问题（ChangeLog #2046/#2152）；如果你在旧版本上调用 <code>RChangeServiceConfig2W</code> 设置失败动作异常，升级即可。</p>
+</blockquote>
+<h3 id="86-aclpy-smbntfs-acl">8.6 acl.py — 面向 SMB/NTFS 的 ACL 辅助库</h3>
+<p>0.13.1 新增了一个<strong>可复用</strong>的 ACL 辅助模块 <code>impacket/acl.py</code>（作者 Gefen Altshuler）。过去要改远程文件的 ACL，得自己在 <code>ldaptypes</code> 与 <code>smb3structs</code> 之间来回转换；现在它把这些封装成 <code>SecurityAttributes</code>、<code>SMBFileACL</code> 等类，并复用了 <code>ldaptypes</code> 的 ACE/DACL 结构。</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 支持的权限简写，映射到 NT 访问掩码</span>
+<span class="n">SUPPORTED_PERMISSIONS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"R"</span><span class="p">:</span> <span class="mh">0x00120089</span><span class="p">,</span>   <span class="c1"># 读</span>
+    <span class="s2">"W"</span><span class="p">:</span> <span class="mh">0x00100116</span><span class="p">,</span>   <span class="c1"># 写</span>
+    <span class="s2">"D"</span><span class="p">:</span> <span class="mh">0x00110000</span><span class="p">,</span>   <span class="c1"># 删除</span>
+    <span class="s2">"X"</span><span class="p">:</span> <span class="mh">0x00000020</span><span class="p">,</span>   <span class="c1"># 执行</span>
+    <span class="s2">"F"</span><span class="p">:</span> <span class="mh">0x001F01FF</span><span class="p">,</span>   <span class="c1"># 完全控制</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>它面向的是"通过 SMB 读写文件安全描述符"这一场景，配合 0.13.1 给 <code>smbclient.py</code> 增加的 ACL 管理能力使用。（SMB 侧 ACL 增删改直接用上游 <code>examples/smbclient.py</code> 自带的 ACL 命令即可，无需本地重复实现。）这个模块的意义在于：<strong>它把"ACL 操作"从 LDAP 场景延伸到了 SMB 文件场景</strong>，补齐了此前只有 <code>dacledit</code>（LDAP）而缺 SMB 侧工具的空白。</p>
+<h3 id="87-dpapi_ngpy-dpapi-cng">8.7 dpapi_ng.py — DPAPI 下一代（CNG）</h3>
+<p><code>impacket/dpapi_ng.py</code> 实现了 DPAPI-NG（又叫 DPAPI CNG）的解密流程。它与 <code>gkdi.py</code> 是"上下游"关系：<strong>GKDI 负责取回组密钥信封，dpapi_ng 负责用它把被保护的数据解开。</strong> 覆盖面包括 gMSA / dMSA 的 <code>msDS-ManagedPassword</code>、Windows LAPS v2 的 <code>msLAPS-EncryptedPassword</code>、以及证书私钥（<code>msDS-KeyCredentialLink</code>）。</p>
+<p>模块内的关键函数形成了清晰的一条链：</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">SP800_108_Counter</span><span class="p">(</span><span class="n">master</span><span class="p">,</span> <span class="n">key_len</span><span class="p">,</span> <span class="n">prf</span><span class="p">,</span> <span class="n">num_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">b</span><span class="s1">''</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="sa">b</span><span class="s1">''</span><span class="p">):</span> <span class="o">...</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_kdf_context</span><span class="p">(</span><span class="n">key_guid</span><span class="p">,</span> <span class="n">l0</span><span class="p">,</span> <span class="n">l1</span><span class="p">,</span> <span class="n">l2</span><span class="p">):</span> <span class="o">...</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_l2_key</span><span class="p">(</span><span class="n">key_id</span><span class="p">:</span> <span class="n">KeyIdentifier</span><span class="p">,</span> <span class="n">gke</span><span class="p">:</span> <span class="n">GroupKeyEnvelope</span><span class="p">):</span> <span class="o">...</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_kek</span><span class="p">(</span><span class="n">gke</span><span class="p">:</span> <span class="n">GroupKeyEnvelope</span><span class="p">,</span> <span class="n">key_id</span><span class="p">:</span> <span class="n">KeyIdentifier</span><span class="p">):</span> <span class="o">...</span>      <span class="c1"># 用 GKE 派生 KEK</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">aes_unwrap</span><span class="p">(</span><span class="n">wrapping_key</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">wrapped_key</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">):</span> <span class="o">...</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">unwrap_cek</span><span class="p">(</span><span class="n">kek</span><span class="p">,</span> <span class="n">encrypted_cek</span><span class="p">):</span> <span class="o">...</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">decrypt_plaintext</span><span class="p">(</span><span class="n">cek</span><span class="p">,</span> <span class="n">iv</span><span class="p">,</span> <span class="n">encrypted_blob</span><span class="p">):</span> <span class="o">...</span>
+</code></pre></div>
+<p>其中 KDF 采用了 NIST SP 800-108 的计数器模式（<code>SP800_108_Counter</code>），并用到了固定标签 <code>KDS service</code>（生成 KEK）等常量：</p>
+<div class="highlight"><pre><span></span><code><span class="n">KDS_SERVICE_LABEL</span>  <span class="o">=</span> <span class="s2">"KDS service</span><span class="se">\0</span><span class="s2">"</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf-16-le"</span><span class="p">)</span>
+<span class="n">KEK_PUBLIC_KEY_LABEL</span> <span class="o">=</span> <span class="s2">"KDS public key</span><span class="se">\0</span><span class="s2">"</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf-16le"</span><span class="p">)</span>
+</code></pre></div>
+<p>完整的解密链路可以直接参考 <code>examples/GetLAPSPassword.py</code>：</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 1. LDAP 读到 msLAPS-EncryptedPassword（EncryptedPasswordBlob）</span>
+<span class="n">blob</span> <span class="o">=</span> <span class="n">EncryptedPasswordBlob</span><span class="p">(</span><span class="n">rawEncryptedLAPSBlob</span><span class="p">)</span>
+<span class="n">key_id</span> <span class="o">=</span> <span class="n">blob</span><span class="p">[</span><span class="s1">'KeyIdentifier'</span><span class="p">]</span>
+<span class="c1"># 2. 用 GKDI 取回 GroupKeyEnvelope（见 8.2）</span>
+<span class="n">gke</span> <span class="o">=</span> <span class="n">GroupKeyEnvelope</span><span class="p">(</span><span class="sa">b</span><span class="s1">''</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">GkdiGetKey</span><span class="p">(</span><span class="o">...</span><span class="p">)[</span><span class="s1">'pbbOut'</span><span class="p">]))</span>
+<span class="c1"># 3. 派生 KEK -&gt; 解包 CEK -&gt; 解密明文</span>
+<span class="n">kek</span> <span class="o">=</span> <span class="n">compute_kek</span><span class="p">(</span><span class="n">gke</span><span class="p">,</span> <span class="n">key_id</span><span class="p">)</span>
+<span class="n">cek</span> <span class="o">=</span> <span class="n">unwrap_cek</span><span class="p">(</span><span class="n">kek</span><span class="p">,</span> <span class="n">blob</span><span class="p">[</span><span class="s1">'EncryptedCek'</span><span class="p">])</span>
+<span class="n">plaintext</span> <span class="o">=</span> <span class="n">decrypt_plaintext</span><span class="p">(</span><span class="n">cek</span><span class="p">,</span> <span class="n">blob</span><span class="p">[</span><span class="s1">'Iv'</span><span class="p">],</span> <span class="n">blob</span><span class="p">[</span><span class="s1">'EncryptedBlob'</span><span class="p">])</span>
+</code></pre></div>
+<p>这条链路是<strong>读取 Windows LAPS v2 与 gMSA/dMSA 托管密码</strong>的通用姿势。完整可运行的示例见上游 <code>examples/GetLAPSPassword.py</code>（其 <code>getLAPSv2Decrypt</code> 就是这条链路）。</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../ch-07/" class="md-footer__link md-footer__link--prev" aria-label="Previous: 第 7 章 common 基础库速览">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                第 7 章 common 基础库速览
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../ch-09/" class="md-footer__link md-footer__link--next" aria-label="Next: 第 9 章 实战案例：BadSuccessor 与 CVE-2025-33073">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                第 9 章 实战案例：BadSuccessor 与 CVE-2025-33073
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.top", "navigation.tracking", "navigation.footer", "search.highlight", "search.suggest", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

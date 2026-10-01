@@ -1,0 +1,1662 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Write your own AD PoC with impacket — source-level guides to Kerberos, DCE/RPC, DCOM and WMI programming, bilingual (English + Chinese).">
+      
+      
+      
+        <link rel="canonical" href="https://lupingqaq.github.io/impacket-programming-manual/ch-08/">
+      
+      
+        <link rel="prev" href="../ch-07/">
+      
+      
+        <link rel="next" href="../ch-09/">
+      
+      
+        
+          <link rel="alternate" href="/impacket-programming-manual/" hreflang="en">
+        
+          <link rel="alternate" href="/impacket-programming-manual/zh-CN/" hreflang="zh">
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Chapter 8 — New Interfaces & Support Libraries (0.12–0.14) - Impacket Programming Manual</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#part-vi-new-interfaces-case-studies" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Impacket Programming Manual" class="md-header__button md-logo" aria-label="Impacket Programming Manual" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Impacket Programming Manual
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Chapter 8 — New Interfaces & Support Libraries (0.12–0.14)
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="Select language">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="/impacket-programming-manual/" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="/impacket-programming-manual/zh-CN/" hreflang="zh" class="md-select__link">
+              简体中文
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/lupingQAQ/impacket-programming-manual" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    lupingQAQ/impacket-programming-manual
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Impacket Programming Manual" class="md-nav__button md-logo" aria-label="Impacket Programming Manual" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Impacket Programming Manual
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/lupingQAQ/impacket-programming-manual" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    lupingQAQ/impacket-programming-manual
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sec-01/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reading Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ch-01/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chapter 1 — impacket Overview & Directory Layout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ch-02/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chapter 2 — structure.py, the Universal Serialization Base Class
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ch-03/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chapter 3 — LDAP Directory Services (ldap)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ch-04/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chapter 4 — Kerberos Authentication (krb5)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ch-05/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chapter 5 — DCE/RPC Interfaces (dcerpc)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ch-06/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chapter 6 — DCOM and WMI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ch-07/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chapter 7 — A Quick Tour of the Common Libraries
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chapter 8 — New Interfaces & Support Libraries (0.12–0.14)
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chapter 8 — New Interfaces & Support Libraries (0.12–0.14)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#chapter-8-new-interfaces-and-support-libraries-in-impacket-012-014" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chapter 8 New Interfaces and Support Libraries in impacket 0.12-0.14
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Chapter 8 New Interfaces and Support Libraries in impacket 0.12-0.14">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#81-ms-icpr-icprpy-certificate-enrollment-over-rpc-the-ad-cs-channel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.1 [MS-ICPR] icpr.py - Certificate Enrollment over RPC (the AD CS channel)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#82-ms-gkdi-gkdipy-group-key-distribution-protocol" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.2 [MS-GKDI] gkdi.py - Group Key Distribution Protocol
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#83-ms-negoex-negoexpy-spnego-extended-negotiation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3 [MS-NEGOEX] negoex.py - SPNEGO Extended Negotiation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#84-ms-raa-raapy-remote-authorization-enumeration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.4 [MS-RAA] raa.py - Remote Authorization Enumeration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#85-ms-scmr-scmrpy-service-control-manager" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.5 [MS-SCMR] scmr.py - Service Control Manager
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#86-aclpy-acl-helpers-for-smbntfs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.6 acl.py - ACL Helpers for SMB/NTFS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#87-dpapi_ngpy-dpapi-next-generation-cng" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.7 dpapi_ng.py - DPAPI Next Generation (CNG)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ch-09/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chapter 9 — Case Studies: BadSuccessor & CVE-2025-33073
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    简体中文
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    简体中文
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../zh-CN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../zh-CN/sec-01/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    阅读指南
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../zh-CN/ch-01/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 1 章 impacket 总览与目录结构
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../zh-CN/ch-02/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 2 章 通用序列化基类 structure.py
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../zh-CN/ch-03/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 3 章 LDAP 目录服务（ldap）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../zh-CN/ch-04/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 4 章 Kerberos 认证（krb5）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../zh-CN/ch-05/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 5 章 DCE/RPC 接口（dcerpc）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../zh-CN/ch-06/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 6 章 DCOM 与 WMI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../zh-CN/ch-07/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 7 章 common 基础库速览
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../zh-CN/ch-08/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 8 章 0.12–0.14 新增接口与支持库
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../zh-CN/ch-09/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 9 章 实战案例：BadSuccessor 与 CVE-2025-33073
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#chapter-8-new-interfaces-and-support-libraries-in-impacket-012-014" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chapter 8 New Interfaces and Support Libraries in impacket 0.12-0.14
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Chapter 8 New Interfaces and Support Libraries in impacket 0.12-0.14">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#81-ms-icpr-icprpy-certificate-enrollment-over-rpc-the-ad-cs-channel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.1 [MS-ICPR] icpr.py - Certificate Enrollment over RPC (the AD CS channel)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#82-ms-gkdi-gkdipy-group-key-distribution-protocol" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.2 [MS-GKDI] gkdi.py - Group Key Distribution Protocol
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#83-ms-negoex-negoexpy-spnego-extended-negotiation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3 [MS-NEGOEX] negoex.py - SPNEGO Extended Negotiation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#84-ms-raa-raapy-remote-authorization-enumeration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.4 [MS-RAA] raa.py - Remote Authorization Enumeration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#85-ms-scmr-scmrpy-service-control-manager" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.5 [MS-SCMR] scmr.py - Service Control Manager
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#86-aclpy-acl-helpers-for-smbntfs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.6 acl.py - ACL Helpers for SMB/NTFS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#87-dpapi_ngpy-dpapi-next-generation-cng" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.7 dpapi_ng.py - DPAPI Next Generation (CNG)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="part-vi-new-interfaces-case-studies">Part VI New Interfaces &amp; Case Studies</h1>
+<p>impacket has settled into roughly one major release a year: <strong>0.12.0</strong> (Sep 2024), <strong>0.13.0</strong> (Oct 2025), <strong>0.13.1</strong> (May 2026), with master (0.14.0.dev) still absorbing new protocols. This part picks up where Parts I-V left off: it covers the RPC interfaces and support libraries added by those releases that the main text does not yet cover, then walks through two recent public vulnerabilities - <strong>BadSuccessor (CVE-2025-53779)</strong> and <strong>CVE-2025-33073</strong> - to show how to build your own PoC on top of impacket.</p>
+<h2 id="chapter-8-new-interfaces-and-support-libraries-in-impacket-012-014">Chapter 8 New Interfaces and Support Libraries in impacket 0.12-0.14</h2>
+<p>The modules added in this cycle are listed below. Most of them are not "another SAMR"; rather they fill the gaps on the AD attack chain that previously required custom code or third-party tooling: certificate enrollment, group key distribution, authentication negotiation, authorization enumeration, and ACL manipulation.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Module</th>
+<th style="text-align: left;">Spec</th>
+<th style="text-align: left;">Introduced</th>
+<th style="text-align: left;">One-line purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>dcerpc/v5/icpr.py</code></td>
+<td style="text-align: left;">[MS-ICPR] ICertPassage</td>
+<td style="text-align: left;">0.13.0</td>
+<td style="text-align: left;">Submit certificate requests to an enterprise CA over RPC (AD CS)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>dcerpc/v5/gkdi.py</code></td>
+<td style="text-align: left;">[MS-GKDI] Group Key Distribution</td>
+<td style="text-align: left;">0.12.0</td>
+<td style="text-align: left;">Fetch the group key envelope (DNSSEC root key protection / DPAPI-NG)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>negoex.py</code></td>
+<td style="text-align: left;">[MS-NEGOEX] SPNEGO Extended Negotiation</td>
+<td style="text-align: left;">0.14.0.dev (master, unreleased)</td>
+<td style="text-align: left;">Parse and build SPNEGO extended negotiation (NEGOEX) messages</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>dcerpc/v5/raa.py</code></td>
+<td style="text-align: left;">[MS-RAA] Remote Authorization API</td>
+<td style="text-align: left;">master</td>
+<td style="text-align: left;">Server-side authorization decision for a security descriptor</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>dcerpc/v5/scmr.py</code></td>
+<td style="text-align: left;">[MS-SCMR] Service Control Manager</td>
+<td style="text-align: left;">long-standing</td>
+<td style="text-align: left;">Remote service management (the layer under psexec / smbexec)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>acl.py</code></td>
+<td style="text-align: left;">-</td>
+<td style="text-align: left;">0.13.1</td>
+<td style="text-align: left;">Reusable ACL read/write helpers for SMB/NTFS</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>dpapi_ng.py</code></td>
+<td style="text-align: left;">-</td>
+<td style="text-align: left;">0.12+</td>
+<td style="text-align: left;">DPAPI Next Generation (CNG) decryption for gMSA / dMSA / LAPSv2</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>Note: <code>scmr.py</code> is not new, but the main text never covered it alone; it is included here because it is key to understanding why lateral movement so often ends in "start a service". <code>negoex.py</code> currently lives only on master (0.14.0.dev) and is not in a release yet - cite the specific commit when you use it.</p>
+</blockquote>
+<h3 id="81-ms-icpr-icprpy-certificate-enrollment-over-rpc-the-ad-cs-channel">8.1 [MS-ICPR] icpr.py - Certificate Enrollment over RPC (the AD CS channel)</h3>
+<p>[MS-ICPR] (ICertPassage Remote Protocol) defines the RPC interface a client uses to submit a certificate request to an enterprise Certificate Authority (CA). Its RPC interface is named <strong>ICertPassage</strong>, normally exposed on the named pipe <code>\pipe\cert</code> (and discoverable via EPM). Its significance in AD CS attacks is that <strong>the "relay to the CA and enroll" path no longer has to go through the HTTP enrollment endpoint (the classic ESC8 route) - it can be driven directly over RPC.</strong></p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">impacket.uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">uuidtup_to_bin</span>
+
+<span class="n">MSRPC_UUID_ICPR</span> <span class="o">=</span> <span class="n">uuidtup_to_bin</span><span class="p">((</span><span class="s2">"91ae6020-9e3c-11cf-8d7c-00aa00c091be"</span><span class="p">,</span> <span class="s2">"0.0"</span><span class="p">))</span>
+</code></pre></div>
+<p>The interface defines a single opnum 0 method, <code>CertServerRequest</code>. Its request and response reuse the <code>CERTTRANSBLOB</code> structure from [MS-WCCE] 2.2.2.2 (a length plus a byte array):</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">CERTTRANSBLOB</span><span class="p">(</span><span class="n">NDRSTRUCT</span><span class="p">):</span>
+    <span class="n">structure</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s2">"cb"</span><span class="p">,</span> <span class="n">ULONG</span><span class="p">),</span>      <span class="c1"># byte array length</span>
+        <span class="p">(</span><span class="s2">"pb"</span><span class="p">,</span> <span class="n">PBYTE</span><span class="p">),</span>      <span class="c1"># byte array contents</span>
+    <span class="p">)</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">CertServerRequest</span><span class="p">(</span><span class="n">NDRCALL</span><span class="p">):</span>
+    <span class="n">opnum</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">structure</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s2">"dwFlags"</span><span class="p">,</span> <span class="n">DWORD</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"pwszAuthority"</span><span class="p">,</span> <span class="n">LPWSTR</span><span class="p">),</span>        <span class="c1"># CA name (may be empty, server default)</span>
+        <span class="p">(</span><span class="s2">"pdwRequestId"</span><span class="p">,</span> <span class="n">DWORD</span><span class="p">),</span>          <span class="c1"># request id, 0 on first call</span>
+        <span class="p">(</span><span class="s2">"pctbAttribs"</span><span class="p">,</span> <span class="n">CERTTRANSBLOB</span><span class="p">),</span>   <span class="c1"># newline-separated attributes, e.g. CertificateTemplate:User</span>
+        <span class="p">(</span><span class="s2">"pctbRequest"</span><span class="p">,</span> <span class="n">CERTTRANSBLOB</span><span class="p">),</span>   <span class="c1"># DER-encoded PKCS#10 CSR</span>
+    <span class="p">)</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">CertServerRequestResponse</span><span class="p">(</span><span class="n">NDRCALL</span><span class="p">):</span>
+    <span class="n">structure</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s2">"pdwRequestId"</span><span class="p">,</span> <span class="n">DWORD</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"pdwDisposition"</span><span class="p">,</span> <span class="n">ULONG</span><span class="p">),</span>        <span class="c1"># disposition: 3=issued, 5=pending</span>
+        <span class="p">(</span><span class="s2">"pctbCert"</span><span class="p">,</span> <span class="n">CERTTRANSBLOB</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"pctbEncodedCert"</span><span class="p">,</span> <span class="n">CERTTRANSBLOB</span><span class="p">),</span>       <span class="c1"># issued certificate (DER)</span>
+        <span class="p">(</span><span class="s2">"pctbDispositionMessage"</span><span class="p">,</span> <span class="n">CERTTRANSBLOB</span><span class="p">),</span>
+    <span class="p">)</span>
+</code></pre></div>
+<p>The module ends with a helper, <code>hCertServerRequest</code>, that bundles the whole "join the attributes, convert the CSR, send the request, interpret the disposition" flow:</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">hCertServerRequest</span><span class="p">(</span>
+    <span class="n">dce</span><span class="p">:</span> <span class="n">DCERPC_v5</span><span class="p">,</span>
+    <span class="n">csr</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span>
+    <span class="n">attributes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">request_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">ca</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">attribs</span> <span class="o">=</span> <span class="n">checkNullString</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">attributes</span><span class="p">))</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf-16le"</span><span class="p">)</span>
+    <span class="n">pctb_attribs</span> <span class="o">=</span> <span class="n">CERTTRANSBLOB</span><span class="p">()</span>
+    <span class="n">pctb_attribs</span><span class="p">[</span><span class="s2">"cb"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">attribs</span><span class="p">)</span>
+    <span class="n">pctb_attribs</span><span class="p">[</span><span class="s2">"pb"</span><span class="p">]</span> <span class="o">=</span> <span class="n">attribs</span>
+
+    <span class="n">pctb_request</span> <span class="o">=</span> <span class="n">CERTTRANSBLOB</span><span class="p">()</span>
+    <span class="n">pctb_request</span><span class="p">[</span><span class="s2">"cb"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">csr</span><span class="p">)</span>
+    <span class="n">pctb_request</span><span class="p">[</span><span class="s2">"pb"</span><span class="p">]</span> <span class="o">=</span> <span class="n">csr</span>
+
+    <span class="n">request</span> <span class="o">=</span> <span class="n">CertServerRequest</span><span class="p">()</span>
+    <span class="n">request</span><span class="p">[</span><span class="s2">"dwFlags"</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">request</span><span class="p">[</span><span class="s2">"pwszAuthority"</span><span class="p">]</span> <span class="o">=</span> <span class="n">checkNullString</span><span class="p">(</span><span class="n">ca</span><span class="p">)</span>
+    <span class="n">request</span><span class="p">[</span><span class="s2">"pdwRequestId"</span><span class="p">]</span> <span class="o">=</span> <span class="n">request_id</span>
+    <span class="n">request</span><span class="p">[</span><span class="s2">"pctbAttribs"</span><span class="p">]</span> <span class="o">=</span> <span class="n">pctb_attribs</span>
+    <span class="n">request</span><span class="p">[</span><span class="s2">"pctbRequest"</span><span class="p">]</span> <span class="o">=</span> <span class="n">pctb_request</span>
+
+    <span class="n">response</span> <span class="o">=</span> <span class="n">dce</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+    <span class="c1"># ... pdwDisposition == 3 means success, == 5 means pending approval</span>
+    <span class="k">return</span> <span class="sa">b</span><span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">response</span><span class="p">[</span><span class="s2">"pctbEncodedCert"</span><span class="p">][</span><span class="s2">"pb"</span><span class="p">])</span>
+</code></pre></div>
+<p>The minimal skeleton of a hand-written PoC follows: generate a key and a CSR with <code>cryptography</code>, then bind to ICertPassage and submit. <code>example/icpr_enroll_cert.py</code> is a complete, runnable version.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># eg.example/icpr_enroll_cert.py (excerpt)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">impacket.dcerpc.v5</span><span class="w"> </span><span class="kn">import</span> <span class="n">transport</span><span class="p">,</span> <span class="n">epm</span><span class="p">,</span> <span class="n">icpr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">impacket.dcerpc.v5.rpcrt</span><span class="w"> </span><span class="kn">import</span> <span class="n">RPC_C_AUTHN_LEVEL_PKT_PRIVACY</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">enroll</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">ca_name</span><span class="p">,</span> <span class="n">template</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">domain</span><span class="p">):</span>
+    <span class="c1"># 1. Resolve the dynamic ICertPassage endpoint via EPM, over ncacn_ip_tcp</span>
+    <span class="n">binding</span> <span class="o">=</span> <span class="n">epm</span><span class="o">.</span><span class="n">hept_map</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">icpr</span><span class="o">.</span><span class="n">MSRPC_UUID_ICPR</span><span class="p">,</span> <span class="n">protocol</span><span class="o">=</span><span class="s2">"ncacn_ip_tcp"</span><span class="p">)</span>
+    <span class="n">rpctransport</span> <span class="o">=</span> <span class="n">transport</span><span class="o">.</span><span class="n">DCERPCTransportFactory</span><span class="p">(</span><span class="n">binding</span><span class="p">)</span>
+    <span class="n">rpctransport</span><span class="o">.</span><span class="n">set_credentials</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">domain</span><span class="p">)</span>
+    <span class="n">dce</span> <span class="o">=</span> <span class="n">rpctransport</span><span class="o">.</span><span class="n">get_dce_rpc</span><span class="p">()</span>
+    <span class="n">dce</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+    <span class="n">dce</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">icpr</span><span class="o">.</span><span class="n">MSRPC_UUID_ICPR</span><span class="p">)</span>
+
+    <span class="c1"># 2. Generate a private key and a CSR with cryptography</span>
+    <span class="n">key</span><span class="p">,</span> <span class="n">csr_der</span> <span class="o">=</span> <span class="n">build_csr</span><span class="p">(</span><span class="n">template</span><span class="p">)</span>
+
+    <span class="c1"># 3. Submit: attributes are newline-separated; ca is the CA name (netbios\CA or its name)</span>
+    <span class="n">cert_der</span> <span class="o">=</span> <span class="n">icpr</span><span class="o">.</span><span class="n">hCertServerRequest</span><span class="p">(</span><span class="n">dce</span><span class="p">,</span> <span class="n">csr_der</span><span class="p">,</span> <span class="p">[</span><span class="s2">"CertificateTemplate:</span><span class="si">%s</span><span class="s2">"</span> <span class="o">%</span> <span class="n">template</span><span class="p">],</span> <span class="n">ca</span><span class="o">=</span><span class="n">ca_name</span><span class="p">)</span>
+    <span class="n">dce</span><span class="o">.</span><span class="n">disconnect</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">key</span><span class="p">,</span> <span class="n">cert_der</span>
+</code></pre></div>
+<p>In the wild, <code>rpcattack.py</code> inside ntlmrelayx uses exactly this interface for its "relay to ICPR and enroll" attack (<code>ICPRRPCAttack</code>): after obtaining a relayed session it builds a CSR with <code>ADCSAttack.generate_csr</code>, calls <code>icpr.hCertServerRequest(...)</code>, and writes the certificate out as PKCS#12 (pfx). Because ICPR is a plaintext RPC channel, <strong>if the CA enforces encryption / EPA the path fails</strong> - which is why attackers still prefer the HTTP endpoint, but it also shows that closing one channel does not close the whole attack surface.</p>
+<h3 id="82-ms-gkdi-gkdipy-group-key-distribution-protocol">8.2 [MS-GKDI] gkdi.py - Group Key Distribution Protocol</h3>
+<p>[MS-GKDI] (Group Key Distribution Protocol) is how a client requests a "group key envelope" (Group Key Envelope, GKE) from the domain KDS (Key Distribution Service) root key. It serves two typical scenarios: DNSSEC root key protection, and <strong>DPAPI-NG (CNG)</strong> - that is, decryption of the "managed passwords" behind gMSA, dMSA and Windows LAPS v2.</p>
+<div class="highlight"><pre><span></span><code><span class="n">MSRPC_UUID_GKDI</span> <span class="o">=</span> <span class="n">uuidtup_to_bin</span><span class="p">((</span><span class="s1">'B9785960-524F-11DF-8B6D-83DCDED72085'</span><span class="p">,</span> <span class="s1">'1.0'</span><span class="p">))</span>
+</code></pre></div>
+<p>This interface also has a single opnum 0 method, <code>GkdiRpcGetKey</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">GkdiRpcGetKey</span><span class="p">(</span><span class="n">NDRCALL</span><span class="p">):</span>
+    <span class="n">opnum</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">structure</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s1">'cbTargetSD'</span><span class="p">,</span> <span class="n">ULONG</span><span class="p">),</span>       <span class="c1"># length of the target security descriptor</span>
+        <span class="p">(</span><span class="s1">'pbTargetSD'</span><span class="p">,</span> <span class="n">BYTE_ARRAY</span><span class="p">),</span>  <span class="c1"># target security descriptor: the server decides from it whether you may read the key</span>
+        <span class="p">(</span><span class="s1">'pRootKeyID'</span><span class="p">,</span> <span class="n">PGUID</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">'L0KeyID'</span><span class="p">,</span> <span class="n">LONG</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">'L1KeyID'</span><span class="p">,</span> <span class="n">LONG</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">'L2KeyID'</span><span class="p">,</span> <span class="n">LONG</span><span class="p">),</span>
+    <span class="p">)</span>
+</code></pre></div>
+<p>The helper <code>GkdiGetKey</code> is straightforward - pass the target security descriptor and the three index levels:</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">GkdiGetKey</span><span class="p">(</span><span class="n">dce</span><span class="p">,</span> <span class="n">target_sd</span><span class="p">,</span> <span class="n">l0</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">l1</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">l2</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">root_key_id</span><span class="o">=</span><span class="n">NULL</span><span class="p">):</span>
+    <span class="n">request</span> <span class="o">=</span> <span class="n">GkdiRpcGetKey</span><span class="p">()</span>
+    <span class="n">request</span><span class="p">[</span><span class="s1">'cbTargetSD'</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">target_sd</span><span class="p">)</span>
+    <span class="n">request</span><span class="p">[</span><span class="s1">'pbTargetSD'</span><span class="p">]</span> <span class="o">=</span> <span class="n">target_sd</span><span class="o">.</span><span class="n">getData</span><span class="p">()</span>
+    <span class="n">request</span><span class="p">[</span><span class="s1">'pRootKeyID'</span><span class="p">]</span> <span class="o">=</span> <span class="n">root_key_id</span>
+    <span class="n">request</span><span class="p">[</span><span class="s1">'L0KeyID'</span><span class="p">]</span> <span class="o">=</span> <span class="n">l0</span>
+    <span class="n">request</span><span class="p">[</span><span class="s1">'L1KeyID'</span><span class="p">]</span> <span class="o">=</span> <span class="n">l1</span>
+    <span class="n">request</span><span class="p">[</span><span class="s1">'L2KeyID'</span><span class="p">]</span> <span class="o">=</span> <span class="n">l2</span>
+    <span class="k">return</span> <span class="n">dce</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+</code></pre></div>
+<p>The response is a byte string that must be parsed by <code>GroupKeyEnvelope</code>. The genuinely useful fields are <strong>L1Key / L2Key</strong> plus the KDF and encryption parameters - the raw material for deriving the concrete data key (KEK):</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">GroupKeyEnvelope</span><span class="p">(</span><span class="n">Structure</span><span class="p">):</span>
+    <span class="n">structure</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s1">'Version'</span><span class="p">,</span> <span class="s1">'&lt;L=0'</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">'Magic'</span><span class="p">,</span> <span class="s1">'&lt;L=0'</span><span class="p">),</span>
+        <span class="c1"># ... L0Index / L1Index / L2Index / RootKeyId ...</span>
+        <span class="p">(</span><span class="s1">'KdfAlgo'</span><span class="p">,</span> <span class="s1">':'</span><span class="p">),</span> <span class="p">(</span><span class="s1">'KdfPara'</span><span class="p">,</span> <span class="s1">':'</span><span class="p">,</span> <span class="n">KDFParameter</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">'SecAlgo'</span><span class="p">,</span> <span class="s1">':'</span><span class="p">),</span> <span class="p">(</span><span class="s1">'SecPara'</span><span class="p">,</span> <span class="s1">':'</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">'L1Key'</span><span class="p">,</span> <span class="s1">':'</span><span class="p">),</span> <span class="p">(</span><span class="s1">'L2Key'</span><span class="p">,</span> <span class="s1">':'</span><span class="p">),</span>
+    <span class="p">)</span>
+</code></pre></div>
+<p>The call path (see <code>getLAPSv2Decrypt</code> in <code>examples/GetLAPSPassword.py</code>) is fixed: parse the <code>KeyIdentifier</code> (carrying L0/L1/L2 and RootKeyId) out of the LAPS blob read from LDAP, then resolve GKDI's dynamic <code>ncacn_ip_tcp</code> endpoint with <code>hept_map</code> and bind:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">impacket.dcerpc.v5.gkdi</span><span class="w"> </span><span class="kn">import</span> <span class="n">MSRPC_UUID_GKDI</span><span class="p">,</span> <span class="n">GkdiGetKey</span><span class="p">,</span> <span class="n">GroupKeyEnvelope</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">impacket.dpapi_ng</span><span class="w"> </span><span class="kn">import</span> <span class="n">EncryptedPasswordBlob</span><span class="p">,</span> <span class="n">KeyIdentifier</span><span class="p">,</span> <span class="n">compute_kek</span><span class="p">,</span> <span class="n">unwrap_cek</span><span class="p">,</span> <span class="n">decrypt_plaintext</span>
+
+<span class="n">stringBinding</span> <span class="o">=</span> <span class="n">hept_map</span><span class="p">(</span><span class="n">destHost</span><span class="o">=</span><span class="n">target</span><span class="p">,</span> <span class="n">remoteIf</span><span class="o">=</span><span class="n">MSRPC_UUID_GKDI</span><span class="p">,</span> <span class="n">protocol</span><span class="o">=</span><span class="s1">'ncacn_ip_tcp'</span><span class="p">)</span>
+<span class="n">resp</span> <span class="o">=</span> <span class="n">GkdiGetKey</span><span class="p">(</span><span class="n">dce</span><span class="p">,</span> <span class="n">target_sd</span><span class="o">=</span><span class="n">target_sd</span><span class="p">,</span> <span class="n">l0</span><span class="o">=</span><span class="n">key_id</span><span class="p">[</span><span class="s1">'L0Index'</span><span class="p">],</span> <span class="n">l1</span><span class="o">=</span><span class="n">key_id</span><span class="p">[</span><span class="s1">'L1Index'</span><span class="p">],</span>
+                  <span class="n">l2</span><span class="o">=</span><span class="n">key_id</span><span class="p">[</span><span class="s1">'L2Index'</span><span class="p">],</span> <span class="n">root_key_id</span><span class="o">=</span><span class="n">key_id</span><span class="p">[</span><span class="s1">'RootKeyId'</span><span class="p">])</span>
+<span class="n">gke</span> <span class="o">=</span> <span class="n">GroupKeyEnvelope</span><span class="p">(</span><span class="sa">b</span><span class="s1">''</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">resp</span><span class="p">[</span><span class="s1">'pbbOut'</span><span class="p">]))</span>
+<span class="n">kek</span> <span class="o">=</span> <span class="n">compute_kek</span><span class="p">(</span><span class="n">gke</span><span class="p">,</span> <span class="n">key_id</span><span class="p">)</span>
+</code></pre></div>
+<p>The actual decryption once you hold the GKE belongs to DPAPI-NG (see section 8.7). <code>example/gkdi_get_key.py</code> is a standalone runnable example that fetches a key.</p>
+<h3 id="83-ms-negoex-negoexpy-spnego-extended-negotiation">8.3 [MS-NEGOEX] negoex.py - SPNEGO Extended Negotiation</h3>
+<p>[MS-NEGOEX] (SPNEGO Extended Negotiation Security Mechanism) extends SPNEGO: plain SPNEGO does only a single OID exchange and cannot express "authentication mechanisms that need several round trips", nor metadata; NEGOEX adds an independent state machine for both. Inside SPNEGO, NEGOEX is identified by OID <code>1.3.6.1.4.1.311.2.2.30</code> and its messages carry the little-endian magic <code>NEGOEXTS</code> (<code>0x535458454f47454e</code>).</p>
+<div class="highlight"><pre><span></span><code><span class="n">MESSAGE_SIGNATURE</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">'NEGOEXTS'</span>
+<span class="n">NEGOEX_OID</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">'</span><span class="se">\x2b\x06\x01\x04\x01\x82\x37\x02\x02\x1e</span><span class="s1">'</span>
+<span class="n">AUTH_SCHEME_PKU2U</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">UUID</span><span class="p">(</span><span class="s1">'235f69ad-73fb-4dbc-8203-0629e739339b'</span><span class="p">)</span>
+<span class="n">CHECKSUM_SCHEME_RFC3961</span> <span class="o">=</span> <span class="mi">1</span>
+</code></pre></div>
+<p>NEGOEX defines eight message types, all preceded by a <code>MessageHeader</code> (signature + type + sequence number + header length + total length + ConversationId):</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">MESSAGE_TYPE</span><span class="p">(</span><span class="n">IntEnum</span><span class="p">):</span>
+    <span class="n">INITIATOR_NEGO</span>   <span class="o">=</span> <span class="mi">0</span>   <span class="c1"># initiator negotiation (advertises supported mechanisms)</span>
+    <span class="n">ACCEPTOR_NEGO</span>    <span class="o">=</span> <span class="mi">1</span>   <span class="c1"># acceptor negotiation</span>
+    <span class="n">INITIATOR_META_DATA</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">ACCEPTOR_META_DATA</span>  <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">CHALLENGE</span>        <span class="o">=</span> <span class="mi">4</span>   <span class="c1"># mechanism-specific challenge data</span>
+    <span class="n">AP_REQUEST</span>       <span class="o">=</span> <span class="mi">5</span>   <span class="c1"># mechanism-specific authentication request data</span>
+    <span class="n">VERIFY</span>           <span class="o">=</span> <span class="mi">6</span>   <span class="c1"># integrity check (RFC 3961 checksum)</span>
+    <span class="n">ALERT</span>            <span class="o">=</span> <span class="mi">7</span>   <span class="c1"># alert</span>
+</code></pre></div>
+<p>Every message type is wrapped in a <code>Structure</code> subclass - <code>NegoMessage</code>, <code>ExchangeMessage</code>, <code>VerifyMessage</code>, <code>AlertMessage</code> - and the module provides <code>parseNegoExToken</code> (split a concatenated NEGOEX token into its messages) and <code>createNegoMessage</code> / <code>createExchangeMessage</code> / <code>createVerifyMessage</code> / <code>createAlertMessage</code> (build messages). The actual exchange is driven by the <code>NegoExContext</code> state machine:</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">NegoExContext</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Drives a NEGOEX negotiation as either initiator or acceptor."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">registerAuthScheme</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scheme</span><span class="p">):</span> <span class="o">...</span>          <span class="c1"># register a locally supported mechanism</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">createInitialToken</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">optimisticToken</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># build INITIATOR_NEGO; an optimisticToken can save a round trip ([MS-NEGOEX] 3.1.5.4)</span>
+        <span class="o">...</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">processToken</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="c1"># parse the peer token, advance the state machine, return the exchange payload for the mechanism</span>
+        <span class="o">...</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_processVerify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">verifyMsg</span><span class="p">):</span>
+        <span class="c1"># validate the VERIFY RFC3961 checksum using the key the scheme provides</span>
+        <span class="n">keyUsage</span> <span class="o">=</span> <span class="n">NEGOEX_KEYUSAGE_ACCEPTOR</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isInitiator</span> <span class="k">else</span> <span class="n">NEGOEX_KEYUSAGE_INITIATOR</span>
+        <span class="n">expected</span> <span class="o">=</span> <span class="n">make_checksum</span><span class="p">(</span><span class="n">checksumType</span><span class="p">,</span> <span class="n">Key</span><span class="p">(</span><span class="n">enctype</span><span class="p">,</span> <span class="n">keyBytes</span><span class="p">),</span> <span class="n">keyUsage</span><span class="p">,</span> <span class="sa">b</span><span class="s1">''</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_messageHistory</span><span class="p">))</span>
+        <span class="o">...</span>
+</code></pre></div>
+<p>The checksum uses the RFC 3961 key usage numbers: <strong>23 when signed by the initiator, 25 when signed by the acceptor</strong>. <code>parseNegoExToken</code> is the most practical piece here - it splits a NEGOEX token into an ordered list of messages, each carrying its raw bytes (<code>raw_data</code>), which is convenient for protocol analysis or checksum recomputation:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">impacket.negoex</span><span class="w"> </span><span class="kn">import</span> <span class="n">parseNegoExToken</span><span class="p">,</span> <span class="n">MESSAGE_TYPE</span>
+
+<span class="k">for</span> <span class="n">pm</span> <span class="ow">in</span> <span class="n">parseNegoExToken</span><span class="p">(</span><span class="n">token_bytes</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">pm</span><span class="o">.</span><span class="n">getMessageType</span><span class="p">()</span> <span class="o">==</span> <span class="n">MESSAGE_TYPE</span><span class="o">.</span><span class="n">INITIATOR_NEGO</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">pm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">getAuthSchemeList</span><span class="p">())</span>   <span class="c1"># peer-supported auth scheme GUID list</span>
+</code></pre></div>
+<p>For attack research, NEGOEX matters because it puts the alternative authentication mechanisms on the table: in 0.13.1, <code>ntlmrelayx</code> deliberately <strong>stopped advertising NEGOEX to SMB peers</strong> (ChangeLog: "avoiding unsupported NEGOEX advertisement"), precisely because an inappropriate NEGOEX advertisement changes the negotiation outcome and interferes with relaying. Understanding this state machine is the key to judging "will this negotiation end in Kerberos or NTLM". <code>example/negoex_parse_token.py</code> shows how to recompute the checksum from a hex token.</p>
+<blockquote>
+<p>Version note: as of writing, <code>negoex.py</code> is still an unreleased master feature (0.14.0.dev); the API may shift, so use it for research and parsing rather than production.</p>
+</blockquote>
+<h3 id="84-ms-raa-raapy-remote-authorization-enumeration">8.4 [MS-RAA] raa.py - Remote Authorization Enumeration</h3>
+<p>[MS-RAA] (Remote Authorization API Protocol) lifts the local Windows Authz API onto RPC. Its most elegant property: <strong>you can send a security descriptor to the server and directly ask "for this identity (SID), what does this descriptor actually grant?" - with the server performing all inheritance and ScopedPolicyID stripping.</strong> This is far more precise than hand-rolling DACL logic locally, and is especially useful for permission confirmation before an attack like BadSuccessor.</p>
+<div class="highlight"><pre><span></span><code><span class="n">MSRPC_UUID_RAA</span> <span class="o">=</span> <span class="n">uuidtup_to_bin</span><span class="p">((</span><span class="s1">'0b1c2170-5732-4e0e-8cd3-d9b16f3b84d7'</span><span class="p">,</span> <span class="s1">'0.0'</span><span class="p">))</span>
+
+<span class="c1"># Two object UUIDs: the latter disables the server-side stripping</span>
+<span class="c1"># of SYSTEM_SCOPED_POLICY_ID_ACEs from the security descriptor.</span>
+<span class="n">RAA_OBJECT_UUID_DEFAULT</span>           <span class="o">=</span> <span class="s1">'9a81c2bd-a525-471d-a4ed-49907c0b23da'</span>
+<span class="n">RAA_OBJECT_UUID_NO_SCOPED_POLICY</span>  <span class="o">=</span> <span class="s1">'5fc860e0-6f6e-4fc2-83cd-46324f25e90b'</span>
+</code></pre></div>
+<p>The interface has seven opnums:</p>
+<div class="highlight"><pre><span></span><code><span class="n">OPNUMS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="mi">0</span> <span class="p">:</span> <span class="p">(</span><span class="n">AuthzrFreeContext</span><span class="p">,</span> <span class="n">AuthzrFreeContextResponse</span><span class="p">),</span>
+    <span class="mi">1</span> <span class="p">:</span> <span class="p">(</span><span class="n">AuthzrInitializeContextFromSid</span><span class="p">,</span> <span class="n">AuthzrInitializeContextFromSidResponse</span><span class="p">),</span>   <span class="c1"># SID -&gt; authz context</span>
+    <span class="mi">2</span> <span class="p">:</span> <span class="p">(</span><span class="n">AuthzrInitializeCompoundContext</span><span class="p">,</span> <span class="n">AuthzrInitializeCompoundContextResponse</span><span class="p">),</span> <span class="c1"># user+device compound context</span>
+    <span class="mi">3</span> <span class="p">:</span> <span class="p">(</span><span class="n">AuthzrAccessCheck</span><span class="p">,</span> <span class="n">AuthzrAccessCheckResponse</span><span class="p">),</span>   <span class="c1"># the core: access decision on a security descriptor</span>
+    <span class="mi">4</span> <span class="p">:</span> <span class="p">(</span><span class="n">AuthzGetInformationFromContext</span><span class="p">,</span> <span class="n">AuthzGetInformationFromContextResponse</span><span class="p">),</span>   <span class="c1"># group memberships / claims</span>
+    <span class="mi">5</span> <span class="p">:</span> <span class="p">(</span><span class="n">AuthzrModifyClaims</span><span class="p">,</span> <span class="n">AuthzrModifyClaimsResponse</span><span class="p">),</span>
+    <span class="mi">6</span> <span class="p">:</span> <span class="p">(</span><span class="n">AuthzrModifySids</span><span class="p">,</span> <span class="n">AuthzrModifySidsResponse</span><span class="p">),</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>The test case (<code>tests/dcerpc/test_raa.py</code>) shows the interface runs over <strong><code>ncacn_ip_tcp</code> and requires <code>RPC_C_AUTHN_LEVEL_PKT_PRIVACY</code></strong>, since the server must act on the caller's identity. The typical flow is to turn a SID into a context with <code>hAuthzrInitializeContextFromSid</code>, then call <code>hAuthzrAccessCheck</code> with the security descriptor and the desired access mask:</p>
+<div class="highlight"><pre><span></span><code><span class="n">sid_ctx</span> <span class="o">=</span> <span class="n">raa</span><span class="o">.</span><span class="n">hAuthzrInitializeContextFromSid</span><span class="p">(</span><span class="n">dce</span><span class="p">,</span> <span class="n">target_sid</span><span class="p">,</span> <span class="n">flags</span><span class="o">=</span><span class="n">raa</span><span class="o">.</span><span class="n">AUTHZ_COMPUTE_PRIVILEGES</span><span class="p">)</span>
+<span class="n">resp</span> <span class="o">=</span> <span class="n">raa</span><span class="o">.</span><span class="n">hAuthzrAccessCheck</span><span class="p">(</span><span class="n">dce</span><span class="p">,</span> <span class="n">sid_ctx</span><span class="p">[</span><span class="s1">'ContextHandle'</span><span class="p">],</span> <span class="n">securityDescriptor</span><span class="p">,</span> <span class="n">desiredAccess</span><span class="p">,</span>
+                              <span class="n">objectTypeList</span><span class="o">=</span><span class="p">[],</span> <span class="n">resultListLength</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">granted</span> <span class="o">=</span> <span class="n">resp</span><span class="p">[</span><span class="s1">'pReply'</span><span class="p">][</span><span class="s1">'GrantedAccessMask'</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>   <span class="c1"># the server-computed final authorization result</span>
+</code></pre></div>
+<p>With it, questions such as "does this ordinary user have <code>CreateChild</code> (0x1) on this OU, or the right to create an <code>msDS-DelegatedManagedServiceAccount</code>" can be answered by the server directly, instead of you implementing a (bug-prone) ACL inheritance algorithm yourself. <code>example/raa_enum_permissions.py</code> uses it to decide whether a given SID can create child objects under a target OU.</p>
+<h3 id="85-ms-scmr-scmrpy-service-control-manager">8.5 [MS-SCMR] scmr.py - Service Control Manager</h3>
+<p>[MS-SCMR] is the remote service management protocol, on the <code>\pipe\svcctl</code> endpoint. It is the layer under <code>psexec.py</code> / <code>smbexec.py</code> / <code>services.py</code> - <strong>lateral movement in a domain almost always ends in "start a service on the target"</strong>, so it cannot be skipped.</p>
+<div class="highlight"><pre><span></span><code><span class="n">MSRPC_UUID_SCMR</span> <span class="o">=</span> <span class="n">uuidtup_to_bin</span><span class="p">((</span><span class="s1">'367ABB81-9844-35F1-AD32-98F038001003'</span><span class="p">,</span> <span class="s1">'2.0'</span><span class="p">))</span>
+</code></pre></div>
+<p>The module ships a coherent set of helpers covering the service lifecycle:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">impacket.dcerpc.v5</span><span class="w"> </span><span class="kn">import</span> <span class="n">scmr</span>
+
+<span class="c1"># open the SCM database -&gt; open/create a service -&gt; start/control it</span>
+<span class="n">scHandle</span> <span class="o">=</span> <span class="n">scmr</span><span class="o">.</span><span class="n">hROpenSCManagerW</span><span class="p">(</span><span class="n">dce</span><span class="p">,</span> <span class="s1">'DUMMY</span><span class="se">\x00</span><span class="s1">'</span><span class="p">,</span> <span class="s1">'ServicesActive</span><span class="se">\x00</span><span class="s1">'</span><span class="p">,</span> <span class="n">scmr</span><span class="o">.</span><span class="n">SC_MANAGER_ALL_ACCESS</span><span class="p">)[</span><span class="s1">'lpScHandle'</span><span class="p">]</span>
+<span class="n">svcHandle</span> <span class="o">=</span> <span class="n">scmr</span><span class="o">.</span><span class="n">hROpenServiceW</span><span class="p">(</span><span class="n">dce</span><span class="p">,</span> <span class="n">scHandle</span><span class="p">,</span> <span class="s1">'MyService</span><span class="se">\x00</span><span class="s1">'</span><span class="p">)</span>
+<span class="n">scmr</span><span class="o">.</span><span class="n">hRQueryServiceStatus</span><span class="p">(</span><span class="n">dce</span><span class="p">,</span> <span class="n">svcHandle</span><span class="p">)</span>
+<span class="n">scmr</span><span class="o">.</span><span class="n">hRQueryServiceConfigW</span><span class="p">(</span><span class="n">dce</span><span class="p">,</span> <span class="n">svcHandle</span><span class="p">)</span>      <span class="c1"># query the binary path and other config</span>
+<span class="n">scmr</span><span class="o">.</span><span class="n">hRChangeServiceConfigW</span><span class="p">(</span><span class="n">dce</span><span class="p">,</span> <span class="n">svcHandle</span><span class="p">,</span> <span class="n">lpBinaryPathName</span><span class="o">=</span><span class="s1">'C:</span><span class="se">\\</span><span class="s1">evil.exe</span><span class="se">\x00</span><span class="s1">'</span><span class="p">)</span>
+<span class="n">scmr</span><span class="o">.</span><span class="n">hRStartServiceW</span><span class="p">(</span><span class="n">dce</span><span class="p">,</span> <span class="n">svcHandle</span><span class="p">)</span>
+</code></pre></div>
+<p>A common "write your own script" scenario is to <strong>enumerate services and note those with a writable binary path for DLL hijacking / service replacement</strong>:</p>
+<div class="highlight"><pre><span></span><code><span class="n">resp</span> <span class="o">=</span> <span class="n">scmr</span><span class="o">.</span><span class="n">hREnumServicesStatusW</span><span class="p">(</span><span class="n">dce</span><span class="p">,</span> <span class="n">scHandle</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">svc</span> <span class="ow">in</span> <span class="n">resp</span><span class="p">[</span><span class="s1">'lpServiceStatus'</span><span class="p">]:</span>
+    <span class="n">cfg</span> <span class="o">=</span> <span class="n">scmr</span><span class="o">.</span><span class="n">hRQueryServiceConfigW</span><span class="p">(</span><span class="n">dce</span><span class="p">,</span> <span class="n">scmr</span><span class="o">.</span><span class="n">hROpenServiceW</span><span class="p">(</span><span class="n">dce</span><span class="p">,</span> <span class="n">scHandle</span><span class="p">,</span> <span class="n">svc</span><span class="p">[</span><span class="s1">'lpServiceName'</span><span class="p">])[</span><span class="s1">'lpServiceHandle'</span><span class="p">])</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">svc</span><span class="p">[</span><span class="s1">'lpServiceName'</span><span class="p">],</span> <span class="n">cfg</span><span class="p">[</span><span class="s1">'lpServiceConfig'</span><span class="p">][</span><span class="s1">'lpBinaryPathName'</span><span class="p">])</span>
+</code></pre></div>
+<blockquote>
+<p>Version note: 0.13.1 fixed SCMR "failure action" marshaling (ChangeLog #2046/#2152); if <code>RChangeServiceConfig2W</code> used to throw when setting failure actions on an older version, upgrading resolves it.</p>
+</blockquote>
+<h3 id="86-aclpy-acl-helpers-for-smbntfs">8.6 acl.py - ACL Helpers for SMB/NTFS</h3>
+<p>0.13.1 added a <strong>reusable</strong> ACL helper module, <code>impacket/acl.py</code> (by Gefen Altshuler). Previously, modifying a remote file's ACL meant constantly converting between <code>ldaptypes</code> and <code>smb3structs</code>; now this is wrapped into classes such as <code>SecurityAttributes</code> and <code>SMBFileACL</code>, reusing <code>ldaptypes</code>' ACE/DACL structures.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Supported permission shorthands mapped to NT access masks</span>
+<span class="n">SUPPORTED_PERMISSIONS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"R"</span><span class="p">:</span> <span class="mh">0x00120089</span><span class="p">,</span>   <span class="c1"># read</span>
+    <span class="s2">"W"</span><span class="p">:</span> <span class="mh">0x00100116</span><span class="p">,</span>   <span class="c1"># write</span>
+    <span class="s2">"D"</span><span class="p">:</span> <span class="mh">0x00110000</span><span class="p">,</span>   <span class="c1"># delete</span>
+    <span class="s2">"X"</span><span class="p">:</span> <span class="mh">0x00000020</span><span class="p">,</span>   <span class="c1"># execute</span>
+    <span class="s2">"F"</span><span class="p">:</span> <span class="mh">0x001F01FF</span><span class="p">,</span>   <span class="c1"># full control</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>It targets the "read/write file security descriptors over SMB" scenario and pairs with the ACL management that 0.13.1 added to <code>smbclient.py</code>. (use the ACL commands built into upstream <code>examples/smbclient.py</code>; there is no need to re-implement this locally.) The point of this module is that <strong>it extends "ACL manipulation" from the LDAP scenario to the SMB file scenario</strong>, filling the gap left by <code>dacledit</code> (LDAP only) with no SMB-side tool.</p>
+<h3 id="87-dpapi_ngpy-dpapi-next-generation-cng">8.7 dpapi_ng.py - DPAPI Next Generation (CNG)</h3>
+<p><code>impacket/dpapi_ng.py</code> implements the DPAPI-NG (a.k.a. DPAPI CNG) decryption flow. It is upstream/downstream of <code>gkdi.py</code>: <strong>GKDI fetches the group key envelope, and dpapi_ng uses it to unprotect the data.</strong> It covers gMSA / dMSA <code>msDS-ManagedPassword</code>, Windows LAPS v2 <code>msLAPS-EncryptedPassword</code>, and certificate private keys (<code>msDS-KeyCredentialLink</code>).</p>
+<p>The key functions form a clear chain:</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">SP800_108_Counter</span><span class="p">(</span><span class="n">master</span><span class="p">,</span> <span class="n">key_len</span><span class="p">,</span> <span class="n">prf</span><span class="p">,</span> <span class="n">num_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">b</span><span class="s1">''</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="sa">b</span><span class="s1">''</span><span class="p">):</span> <span class="o">...</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_kdf_context</span><span class="p">(</span><span class="n">key_guid</span><span class="p">,</span> <span class="n">l0</span><span class="p">,</span> <span class="n">l1</span><span class="p">,</span> <span class="n">l2</span><span class="p">):</span> <span class="o">...</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_l2_key</span><span class="p">(</span><span class="n">key_id</span><span class="p">:</span> <span class="n">KeyIdentifier</span><span class="p">,</span> <span class="n">gke</span><span class="p">:</span> <span class="n">GroupKeyEnvelope</span><span class="p">):</span> <span class="o">...</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_kek</span><span class="p">(</span><span class="n">gke</span><span class="p">:</span> <span class="n">GroupKeyEnvelope</span><span class="p">,</span> <span class="n">key_id</span><span class="p">:</span> <span class="n">KeyIdentifier</span><span class="p">):</span> <span class="o">...</span>      <span class="c1"># derive the KEK from the GKE</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">aes_unwrap</span><span class="p">(</span><span class="n">wrapping_key</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">wrapped_key</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">):</span> <span class="o">...</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">unwrap_cek</span><span class="p">(</span><span class="n">kek</span><span class="p">,</span> <span class="n">encrypted_cek</span><span class="p">):</span> <span class="o">...</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">decrypt_plaintext</span><span class="p">(</span><span class="n">cek</span><span class="p">,</span> <span class="n">iv</span><span class="p">,</span> <span class="n">encrypted_blob</span><span class="p">):</span> <span class="o">...</span>
+</code></pre></div>
+<p>The KDF uses NIST SP 800-108 counter mode (<code>SP800_108_Counter</code>) with fixed labels such as <code>KDS service</code> (for KEK derivation):</p>
+<div class="highlight"><pre><span></span><code><span class="n">KDS_SERVICE_LABEL</span>  <span class="o">=</span> <span class="s2">"KDS service</span><span class="se">\0</span><span class="s2">"</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf-16-le"</span><span class="p">)</span>
+<span class="n">KEK_PUBLIC_KEY_LABEL</span> <span class="o">=</span> <span class="s2">"KDS public key</span><span class="se">\0</span><span class="s2">"</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf-16le"</span><span class="p">)</span>
+</code></pre></div>
+<p>The full decryption chain can be read straight from <code>examples/GetLAPSPassword.py</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 1. read msLAPS-EncryptedPassword from LDAP (EncryptedPasswordBlob)</span>
+<span class="n">blob</span> <span class="o">=</span> <span class="n">EncryptedPasswordBlob</span><span class="p">(</span><span class="n">rawEncryptedLAPSBlob</span><span class="p">)</span>
+<span class="n">key_id</span> <span class="o">=</span> <span class="n">blob</span><span class="p">[</span><span class="s1">'KeyIdentifier'</span><span class="p">]</span>
+<span class="c1"># 2. fetch the GroupKeyEnvelope via GKDI (see 8.2)</span>
+<span class="n">gke</span> <span class="o">=</span> <span class="n">GroupKeyEnvelope</span><span class="p">(</span><span class="sa">b</span><span class="s1">''</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">GkdiGetKey</span><span class="p">(</span><span class="o">...</span><span class="p">)[</span><span class="s1">'pbbOut'</span><span class="p">]))</span>
+<span class="c1"># 3. derive the KEK -&gt; unwrap the CEK -&gt; decrypt the plaintext</span>
+<span class="n">kek</span> <span class="o">=</span> <span class="n">compute_kek</span><span class="p">(</span><span class="n">gke</span><span class="p">,</span> <span class="n">key_id</span><span class="p">)</span>
+<span class="n">cek</span> <span class="o">=</span> <span class="n">unwrap_cek</span><span class="p">(</span><span class="n">kek</span><span class="p">,</span> <span class="n">blob</span><span class="p">[</span><span class="s1">'EncryptedCek'</span><span class="p">])</span>
+<span class="n">plaintext</span> <span class="o">=</span> <span class="n">decrypt_plaintext</span><span class="p">(</span><span class="n">cek</span><span class="p">,</span> <span class="n">blob</span><span class="p">[</span><span class="s1">'Iv'</span><span class="p">],</span> <span class="n">blob</span><span class="p">[</span><span class="s1">'EncryptedBlob'</span><span class="p">])</span>
+</code></pre></div>
+<p>This chain is the <strong>generic recipe for reading Windows LAPS v2 and gMSA/dMSA managed passwords</strong>. A complete runnable example is upstream <code>examples/GetLAPSPassword.py</code> (its <code>getLAPSv2Decrypt</code> is exactly this chain).</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../ch-07/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Chapter 7 — A Quick Tour of the Common Libraries">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Chapter 7 — A Quick Tour of the Common Libraries
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../ch-09/" class="md-footer__link md-footer__link--next" aria-label="Next: Chapter 9 — Case Studies: BadSuccessor &amp; CVE-2025-33073">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Chapter 9 — Case Studies: BadSuccessor & CVE-2025-33073
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.top", "navigation.tracking", "navigation.footer", "search.highlight", "search.suggest", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
